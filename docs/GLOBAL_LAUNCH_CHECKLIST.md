@@ -15,9 +15,11 @@ Partner Center içinde uygulamanızın **Add-ons** bölümünden iki eklenti aç
 2. `pro_lifetime` (Durable, Forever, `$9.99` baz fiyat) → `kStoreAddonLifetimeId`
 3. Ana uygulama Store ID (`9N...`) → `kStoreAppProductId`, `kMicrosoftStorePdpUri`, `kMicrosoftStoreReviewUri`
 
-## Adım 3 — 0 TL Gizlilik Politikası Linki (Web Sitesi Gerekmeden)
-1. [website/privacy.html](file:///c:/Users/ooemi/Desktop/Projeler/EzanNamazVak/website/privacy.html) dosyasını ücretsiz **GitHub Pages** veya **Cloudflare Pages** üzerine koyup herkese açık bir `https://...` adresi alın.
-2. Bu bağlantıyı Partner Center'da her dilin **Privacy policy URL** alanına ekleyin.
+## Adım 3 — Gizlilik Politikası Linki (TAMAMLANDI & YAYINDA!)
+Ücretsiz GitHub Pages üzerinden HTTPS gizlilik politikası ve destek siteniz aktif edildi:
+- **Privacy Policy URL (Partner Center için zorunlu):** `https://ooemir23.github.io/VakitCubugu/privacy.html`
+- **Support / Website URL:** `https://ooemir23.github.io/VakitCubugu/`
+- Bu bağlantıyı Partner Center'da her dilin **Privacy policy URL** alanına ekleyin.
 
 ## Adım 4 — Paketleme ve Mağazaya Yükleme
 Store ID'leri kaydettikten sonra tek komutla Store paketini üretin:

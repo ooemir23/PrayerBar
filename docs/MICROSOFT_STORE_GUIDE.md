@@ -42,10 +42,11 @@ Uygulamanın içindeki **"Yıllık Al"** ve **"Ömür Boyu Al"** butonlarının 
 
 ---
 
-## 4. Ücretsiz (0 TL) Gizlilik Politikası Bağlantısı
-Kendi alan adınız veya web siteniz olmadan, Store başvurusunda zorunlu olan **Privacy Policy URL** için:
-1. Ücretsiz bir GitHub deposu açıp repo içindeki `website/` klasörünü (veya yalnızca [website/privacy.html](file:///c:/Users/ooemi/Desktop/Projeler/EzanNamazVak/website/privacy.html) ve [docs/PRIVACY_POLICY.md](file:///c:/Users/ooemi/Desktop/Projeler/EzanNamazVak/docs/PRIVACY_POLICY.md) dosyalarını) yükleyin.
-2. **Settings → Pages** menüsünden **GitHub Pages**'i açın; `https://kullaniciadiniz.github.io/depo-adi/privacy.html` adresini Partner Center → **Submission → Store listings → Privacy policy URL** alanına yapıştırın.
+## 4. Ücretsiz (0 TL) Gizlilik Politikası Bağlantısı (Hazır ve Yayında!)
+GitHub Pages üzerinden ücretsiz, SSL sertifikalı (HTTPS) gizlilik politikası ve destek siteniz yayına alınmıştır:
+- **Privacy Policy URL (Partner Center için zorunlu):** `https://ooemir23.github.io/VakitCubugu/privacy.html`
+- **Support / Website URL:** `https://ooemir23.github.io/VakitCubugu/`
+- **Terms of Service URL:** `https://ooemir23.github.io/VakitCubugu/terms.html`
 
 ---
 
