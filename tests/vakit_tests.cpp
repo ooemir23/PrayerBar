@@ -244,7 +244,7 @@ int TestMultiLanguageHijriAndRamadan() {
     for (int li = 7; li <= 12; ++li) {
         AppLanguage lang = static_cast<AppLanguage>(li);
         int sameAsEnglish = 0;
-        for (int sid = 0; sid <= static_cast<int>(StrId::TrackWeek); ++sid) {
+        for (int sid = 0; sid <= static_cast<int>(StrId::HotkeyNeedsModifier); ++sid) {
             if (std::wstring(Tr(lang, static_cast<StrId>(sid))) == Tr(AppLanguage::English, static_cast<StrId>(sid))) ++sameAsEnglish;
         }
         CHECK(sameAsEnglish <= 16);

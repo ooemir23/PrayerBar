@@ -321,6 +321,8 @@ struct AppSettings {
     bool prayerTracking = false;
     bool modernToasts = true;
     bool globalHotkey = false;
+    int hotkeyMods = 0x0009;     // RegisterHotKey MOD_* flags (default Win+Alt)
+    int hotkeyVk = 'P';          // virtual-key code
     int lastTzHash = 0;          // hash of the last seen Windows time zone key; 0 = not recorded yet
 
     PrayerAlertSchedule alerts{};

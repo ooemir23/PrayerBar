@@ -255,7 +255,10 @@ enum class StrId : int {
     HolidayTomorrow,
     TravelTitle,
     TravelBody,
-    TrackWeek
+    TrackWeek,
+    HotkeyPressKeys,
+    HotkeyInUse,
+    HotkeyNeedsModifier
 };
 
 AppLanguage ResolveEffectiveLanguage(AppLanguage configured);

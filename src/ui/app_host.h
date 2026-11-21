@@ -67,6 +67,7 @@ private:
     std::unique_ptr<ProWindow> proWindow_;
     std::unique_ptr<SettingsWindow> settingsWindow_;
     std::set<std::wstring> sentNotifications_;
+    bool hotkeyOk_ = true;          // false when RegisterHotKey failed (combination taken)
     int pendingBalloonAction_ = 0;  // what a click on the current tray balloon does (see kBalloon*)
 };
 

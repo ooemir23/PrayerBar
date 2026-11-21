@@ -99,6 +99,7 @@ enum CtrlId : WORD {
     IDC_TRACKING_CHK = 447,
     IDC_TOAST_CHK = 448,
     IDC_HOTKEY_CHK = 449,
+    IDC_HOTKEY_BTN = 450,
 
     // Tab 3 (Dil & Sistem)
     IDC_LANG_COMBO = 500,
@@ -211,14 +212,16 @@ SettingsWindow::SettingsWindow(
     std::function<void()> onSettingsSaved,
     std::function<void(const std::wstring&, const std::wstring&, bool)> onTestNotification,
     std::function<void()> onOpenImsakiye,
-    std::function<void(bool)> onRequestUpgrade)
+    std::function<void(bool)> onRequestUpgrade,
+    std::function<bool()> isHotkeyOk)
     : settingsStore_(settingsStore),
       scheduleService_(scheduleService),
       licenseManager_(licenseManager),
       onSettingsSaved_(std::move(onSettingsSaved)),
       onTestNotification_(std::move(onTestNotification)),
       onOpenImsakiye_(std::move(onOpenImsakiye)),
-      onRequestUpgrade_(std::move(onRequestUpgrade)) {
+      onRequestUpgrade_(std::move(onRequestUpgrade)),
+      isHotkeyOk_(std::move(isHotkeyOk)) {
 
     HINSTANCE hInst = GetModuleHandleW(nullptr);
     WNDCLASSEXW wc{};
@@ -704,7 +707,11 @@ void SettingsWindow::CreateControls() {
     ramadanChk_ = feature(IDC_RAMADAN_CHK, 414, StrId::ChkRamadanMode, StrId::ChkRamadanMode, false);
     extraTimesChk_ = feature(IDC_EXTRA_TIMES_CHK, 444, StrId::ChkExtraTimes, StrId::DescExtraTimes, true);
     trackingChk_ = feature(IDC_TRACKING_CHK, 488, StrId::ChkTracking, StrId::DescTracking, true);
-    hotkeyChk_ = feature(IDC_HOTKEY_CHK, 532, StrId::ChkHotkey, StrId::DescHotkey, true);
+    hotkeyChk_ = makeChk(3, IDC_HOTKEY_CHK, 26, 532, 380, 22, Tr(lang, StrId::ChkHotkey));
+    hotkeyBtn_ = makeBtn(3, IDC_HOTKEY_BTN, 412, 527, 190, 26, L"");
+    hotkeyDesc_ = makeLabel(3, 54, 556, 548, 18, Tr(lang, StrId::DescHotkey), false, true);
+    capturingHotkey_ = false;
+    SetWindowSubclass(hotkeyBtn_, HotkeyBtnProc, 1, reinterpret_cast<DWORD_PTR>(this));
 
     // ==================== TAB 4: DİL & SİSTEM ====================
     makeLabel(4, 26, 128, 175, 22, Tr(lang, StrId::LblAppLanguage), true);
@@ -892,6 +899,7 @@ void SettingsWindow::PopulateAllValues() {
     SetFluentCheck(IDC_TRACKING_CHK, trackingChk_, settings_.prayerTracking);
     SetFluentCheck(IDC_TOAST_CHK, toastChk_, settings_.modernToasts);
     SetFluentCheck(IDC_HOTKEY_CHK, hotkeyChk_, settings_.globalHotkey);
+    UpdateHotkeyUi();
 
     // Tab 3
     std::vector<std::pair<int, std::wstring>> langItems;
@@ -952,6 +960,95 @@ void SettingsWindow::SaveAndNotify() {
     settingsStore_.Save(settings_);
     if (onSettingsSaved_) onSettingsSaved_();
     RefreshPreviewAndMemory();
+    UpdateHotkeyUi();  // registration result is known right after the host re-applies settings
+}
+
+namespace {
+std::wstring FormatHotkey(int mods, int vk) {
+    std::wstring out;
+    if (mods & MOD_WIN) out += L"Win+";
+    if (mods & MOD_CONTROL) out += L"Ctrl+";
+    if (mods & MOD_ALT) out += L"Alt+";
+    if (mods & MOD_SHIFT) out += L"Shift+";
+    if (vk >= VK_F1 && vk <= VK_F24) {
+        out += L"F" + std::to_wstring(vk - VK_F1 + 1);
+    } else if ((vk >= '0' && vk <= '9') || (vk >= 'A' && vk <= 'Z')) {
+        out += static_cast<wchar_t>(vk);
+    } else {
+        UINT sc = MapVirtualKeyW(static_cast<UINT>(vk), MAPVK_VK_TO_VSC);
+        bool ext = (vk >= VK_PRIOR && vk <= VK_DELETE) || vk == VK_DIVIDE || vk == VK_NUMLOCK;
+        wchar_t name[64]{};
+        if (GetKeyNameTextW(static_cast<LONG>((sc << 16) | (ext ? (1u << 24) : 0u)), name, 64) > 0) out += name;
+        else out += L"#" + std::to_wstring(vk);
+    }
+    return out;
+}
+} // namespace
+
+void SettingsWindow::UpdateHotkeyUi() {
+    if (!hotkeyBtn_ || capturingHotkey_) return;
+    AppLanguage lang = settings_.language;
+    SetWindowTextW(hotkeyBtn_, FormatHotkey(settings_.hotkeyMods, settings_.hotkeyVk).c_str());
+    bool taken = settings_.globalHotkey && isHotkeyOk_ && !isHotkeyOk_();
+    if (hotkeyDesc_) SetWindowTextW(hotkeyDesc_, Tr(lang, taken ? StrId::HotkeyInUse : StrId::DescHotkey));
+    InvalidateRect(hotkeyBtn_, nullptr, FALSE);
+}
+
+void SettingsWindow::BeginHotkeyCapture() {
+    capturingHotkey_ = true;
+    SetWindowTextW(hotkeyBtn_, Tr(settings_.language, StrId::HotkeyPressKeys));
+    InvalidateRect(hotkeyBtn_, nullptr, FALSE);
+    SetFocus(hotkeyBtn_);
+}
+
+// While capturing, the button swallows keystrokes and turns the first non-modifier key into the shortcut.
+LRESULT CALLBACK SettingsWindow::HotkeyBtnProc(HWND h, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR, DWORD_PTR ref) {
+    auto* self = reinterpret_cast<SettingsWindow*>(ref);
+    if (!self || !self->capturingHotkey_) return DefSubclassProc(h, msg, wp, lp);
+    switch (msg) {
+        case WM_GETDLGCODE:
+            return DLGC_WANTALLKEYS;
+        case WM_CHAR:
+        case WM_SYSCHAR:
+        case WM_KEYUP:
+        case WM_SYSKEYUP:
+            return 0;
+        case WM_KILLFOCUS:
+            self->capturingHotkey_ = false;
+            self->UpdateHotkeyUi();
+            break;
+        case WM_KEYDOWN:
+        case WM_SYSKEYDOWN: {
+            int vk = static_cast<int>(wp);
+            if (vk == VK_SHIFT || vk == VK_CONTROL || vk == VK_MENU || vk == VK_LWIN || vk == VK_RWIN ||
+                vk == VK_LSHIFT || vk == VK_RSHIFT || vk == VK_LCONTROL || vk == VK_RCONTROL ||
+                vk == VK_LMENU || vk == VK_RMENU) {
+                return 0;  // wait for the actual key
+            }
+            int mods = 0;
+            if (GetKeyState(VK_CONTROL) & 0x8000) mods |= MOD_CONTROL;
+            if (GetKeyState(VK_MENU) & 0x8000) mods |= MOD_ALT;
+            if (GetKeyState(VK_SHIFT) & 0x8000) mods |= MOD_SHIFT;
+            if ((GetKeyState(VK_LWIN) | GetKeyState(VK_RWIN)) & 0x8000) mods |= MOD_WIN;
+            if (vk == VK_ESCAPE && mods == 0) {
+                self->capturingHotkey_ = false;
+                self->UpdateHotkeyUi();
+                return 0;
+            }
+            if (mods == 0) {
+                if (self->hotkeyDesc_) SetWindowTextW(self->hotkeyDesc_, Tr(self->settings_.language, StrId::HotkeyNeedsModifier));
+                return 0;
+            }
+            self->capturingHotkey_ = false;
+            self->settings_.hotkeyMods = mods;
+            self->settings_.hotkeyVk = vk;
+            self->settings_.globalHotkey = true;  // choosing a shortcut turns the feature on
+            self->SetFluentCheck(IDC_HOTKEY_CHK, self->hotkeyChk_, true);
+            self->SaveAndNotify();
+            return 0;
+        }
+    }
+    return DefSubclassProc(h, msg, wp, lp);
 }
 
 void SettingsWindow::PaintBackgroundAndCards(HDC hdc, int width, int height) {
@@ -1586,6 +1683,10 @@ void SettingsWindow::HandleCommand(WORD id, WORD code, HWND ctrl) {
         settings_.preNotifySound = static_cast<NotificationSoundKind>(GetComboSelectedData(preSoundCombo_, 1));
         settings_.fajrSound = GetComboSelectedData(fajrSoundCombo_, -1);
         SaveAndNotify();
+        return;
+    }
+    if (id == IDC_HOTKEY_BTN && code == BN_CLICKED) {
+        BeginHotkeyCapture();
         return;
     }
     // Features tab: simple on/off toggles

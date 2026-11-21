@@ -195,6 +195,9 @@ bool ParseSettingsUtf8(const std::string& raw, AppSettings& s) {
     s.prayerTracking = root.GetBool("prayerTracking", s.prayerTracking);
     s.modernToasts = root.GetBool("modernToasts", s.modernToasts);
     s.globalHotkey = root.GetBool("globalHotkey", s.globalHotkey);
+    s.hotkeyMods = root.GetInt("hotkeyMods", s.hotkeyMods) & 0x000F;
+    s.hotkeyVk = std::clamp(root.GetInt("hotkeyVk", s.hotkeyVk), 0x08, 0xFE);
+    if (s.hotkeyMods == 0) s.hotkeyMods = 0x0009;  // never register a bare key globally
     s.lastTzHash = root.GetInt("lastTzHash", s.lastTzHash);
 
     s.entrySound = static_cast<NotificationSoundKind>(std::clamp(root.GetInt("entrySound", static_cast<int>(s.entrySound)), 0, 5));
@@ -288,6 +291,8 @@ std::string SerializeSettingsUtf8(const AppSettings& s) {
     root.Set("prayerTracking", JsonValue::MakeBool(s.prayerTracking));
     root.Set("modernToasts", JsonValue::MakeBool(s.modernToasts));
     root.Set("globalHotkey", JsonValue::MakeBool(s.globalHotkey));
+    root.Set("hotkeyMods", JsonValue::MakeInt(s.hotkeyMods));
+    root.Set("hotkeyVk", JsonValue::MakeInt(s.hotkeyVk));
     root.Set("lastTzHash", JsonValue::MakeInt(s.lastTzHash));
 
     root.Set("entrySound", JsonValue::MakeInt(static_cast<int>(s.entrySound)));

@@ -126,7 +126,8 @@ int AppHost::Run() {
         },
         [this](const std::wstring& title, const std::wstring& body, bool silent) { ShowUserNotification(title, body, silent); },
         [this]() { imsakiyeWindow_->OpenOrFocus(); },
-        [this](bool lockedHint) { if (proWindow_) proWindow_->OpenOrFocus(lockedHint); });
+        [this](bool lockedHint) { if (proWindow_) proWindow_->OpenOrFocus(lockedHint); },
+        [this]() { return hotkeyOk_; });
 
     bandWindow_->SetCallbacks(
         [this](RECT anchor) { ToggleFlyout(anchor); },
@@ -248,9 +249,11 @@ void AppHost::ShowActionBalloon(const std::wstring& title, const std::wstring& b
 void AppHost::ApplyHotkey() {
     if (!hostHwnd_) return;
     UnregisterHotKey(hostHwnd_, kHotkeyId);
+    hotkeyOk_ = true;
     if (settings_.globalHotkey) {
-        // MOD_NOREPEAT (0x4000): one toggle per key press. Fails silently if another app owns Win+Alt+P.
-        RegisterHotKey(hostHwnd_, kHotkeyId, MOD_WIN | MOD_ALT | 0x4000, 'P');
+        // MOD_NOREPEAT (0x4000): one toggle per key press. Fails when another app already owns the combination.
+        hotkeyOk_ = RegisterHotKey(hostHwnd_, kHotkeyId, static_cast<UINT>(settings_.hotkeyMods) | 0x4000,
+                                   static_cast<UINT>(settings_.hotkeyVk)) != FALSE;
     }
 }
 

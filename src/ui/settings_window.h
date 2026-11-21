@@ -33,7 +33,8 @@ public:
         std::function<void()> onSettingsSaved,
         std::function<void(const std::wstring&, const std::wstring&, bool)> onTestNotification,
         std::function<void()> onOpenImsakiye,
-        std::function<void(bool)> onRequestUpgrade);
+        std::function<void(bool)> onRequestUpgrade,
+        std::function<bool()> isHotkeyOk = nullptr);
     ~SettingsWindow();
 
     bool IsOpen() const { return hwnd_ != nullptr && IsWindowVisible(hwnd_); }
@@ -70,6 +71,9 @@ private:
     void HandleCommand(WORD id, WORD code, HWND ctrl);
     void StartAutoDetectLocation();
     void StartManualSync();
+    void UpdateHotkeyUi();
+    void BeginHotkeyCapture();
+    static LRESULT CALLBACK HotkeyBtnProc(HWND h, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR id, DWORD_PTR ref);
 
     SettingsStore& settingsStore_;
     ScheduleService& scheduleService_;
@@ -78,6 +82,8 @@ private:
     std::function<void(const std::wstring&, const std::wstring&, bool)> onTestNotification_;
     std::function<void()> onOpenImsakiye_;
     std::function<void(bool)> onRequestUpgrade_;
+    std::function<bool()> isHotkeyOk_;
+    bool capturingHotkey_ = false;
 
     HWND hwnd_ = nullptr;
     double scale_ = 1.0;
@@ -164,6 +170,8 @@ private:
     HWND trackingChk_ = nullptr;
     HWND toastChk_ = nullptr;
     HWND hotkeyChk_ = nullptr;
+    HWND hotkeyBtn_ = nullptr;
+    HWND hotkeyDesc_ = nullptr;
 
     // Tab 3 (Dil & Sistem)
     HWND langCombo_ = nullptr;
