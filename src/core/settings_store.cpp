@@ -31,7 +31,7 @@ std::wstring GetDefaultLocalAppDataDir() {
         if (len > 0 && len < MAX_PATH) base = envBuf;
     }
     if (base.empty()) base = L".";
-    return base + L"\\VakitCubugu";
+    return base + L"\\PrayerBar";
 }
 
 void EnsureDirectoryRecursive(const std::wstring& dir) {

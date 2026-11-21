@@ -122,7 +122,7 @@ bool SaveTrayPreviewBmp(const std::wstring& bmpPath, const vakit::PrayerCountdow
 int RunDiagnosticSmoke(const std::wstring& previewBmpPath, const std::wstring& flyoutPreviewDir, int langOverride) {
     wchar_t tmpRoot[MAX_PATH]{};
     GetTempPathW(MAX_PATH, tmpRoot);
-    std::wstring tempDir = std::wstring(tmpRoot) + L"VakitCubuguSmoke_" + std::to_wstring(GetCurrentProcessId());
+    std::wstring tempDir = std::wstring(tmpRoot) + L"PrayerBarSmoke_" + std::to_wstring(GetCurrentProcessId());
 
     vakit::SettingsStore store(tempDir);
     vakit::AppSettings settings = store.Load();
@@ -295,7 +295,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
         return code;
     }
 
-    HANDLE hMutex = CreateMutexW(nullptr, TRUE, L"Local\\VakitCubugu_SingleInstance_v1");
+    HANDLE hMutex = CreateMutexW(nullptr, TRUE, L"Local\\PrayerBar_SingleInstance_v1");
     if (hMutex && GetLastError() == ERROR_ALREADY_EXISTS) {
         HWND existing = FindWindowW(vakit::AppHost::kHostWindowClassName, nullptr);
         if (existing) {

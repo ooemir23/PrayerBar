@@ -18,7 +18,7 @@ namespace vakit {
 
 namespace {
 
-constexpr wchar_t kImsakiyeClassName[] = L"VakitCubuguImsakiyeWindow";
+constexpr wchar_t kImsakiyeClassName[] = L"PrayerBarImsakiyeWindow";
 constexpr int kDipWidth = 740;
 constexpr int kDipHeight = 560;
 constexpr int kHeaderDipY = 86;

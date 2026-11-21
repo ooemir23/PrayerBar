@@ -12,7 +12,7 @@ $configPath = Join-Path $repoRoot "packaging\store.config.json"
 $templatePath = Join-Path $repoRoot "packaging\msix\AppxManifest.template.xml"
 $assetsSrc = Join-Path $repoRoot "packaging\msix\Assets"
 $soundsSrc = Join-Path $repoRoot "assets\sounds"
-$buildExe = Join-Path $repoRoot "build\VakitCubugu.exe"
+$buildExe = Join-Path $repoRoot "build\PrayerBar.exe"
 $distDir = Join-Path $repoRoot "dist"
 $stagingDir = Join-Path $repoRoot "dist\_stage_win-${Arch}_$PID"
 $toolsDir = Join-Path $repoRoot ".tools\winsdk-buildtools"
@@ -27,7 +27,7 @@ if (-not (Test-Path (Join-Path $assetsSrc "app.ico"))) {
 
 # 2. Native C++20 derleme
 if (-not $SkipBuild) {
-    Write-Host "[2/5] Building Native C++20 VakitCubugu.exe..."
+    Write-Host "[2/5] Building Native C++20 PrayerBar.exe..."
     & (Join-Path $PSScriptRoot "build.ps1")
 }
 if (-not (Test-Path $buildExe)) {
@@ -43,7 +43,7 @@ try {
     }
     New-Item -ItemType Directory -Force -Path $stagingDir | Out-Null
 
-    Copy-Item -Path $buildExe -Destination (Join-Path $stagingDir "VakitCubugu.exe") -Force
+    Copy-Item -Path $buildExe -Destination (Join-Path $stagingDir "PrayerBar.exe") -Force
 
     $assetsDest = Join-Path $stagingDir "Assets"
     New-Item -ItemType Directory -Force -Path $assetsDest | Out-Null
@@ -112,7 +112,7 @@ try {
     }
 
     # 5. Store MSIX paketle
-    $storeMsixPath = Join-Path $distDir "VakitCubugu_$($config.Version)_${Arch}_Store.msix"
+    $storeMsixPath = Join-Path $distDir "PrayerBar_$($config.Version)_${Arch}_Store.msix"
     Write-Host "[5/5] Packing MSIX -> $storeMsixPath"
     & $makeappx pack /d $stagingDir /p $storeMsixPath /o
     if ($LASTEXITCODE -ne 0) {
@@ -130,11 +130,11 @@ if ($CreateTestCert) {
         throw "signtool.exe not found for -CreateTestCert"
     }
 
-    $localMsixPath = Join-Path $distDir "VakitCubugu_$($config.Version)_${Arch}_LocalTest.msix"
+    $localMsixPath = Join-Path $distDir "PrayerBar_$($config.Version)_${Arch}_LocalTest.msix"
     Copy-Item $storeMsixPath $localMsixPath -Force
 
-    $pfxPath = Join-Path $distDir "VakitCubugu_TestCert.pfx"
-    $cerPath = Join-Path $distDir "VakitCubugu_TestCert.cer"
+    $pfxPath = Join-Path $distDir "PrayerBar_TestCert.pfx"
+    $cerPath = Join-Path $distDir "PrayerBar_TestCert.cer"
     $certPass = "VakitTest123!"
 
     $existing = Get-ChildItem Cert:\CurrentUser\My | Where-Object { $_.Subject -eq $config.Publisher } | Select-Object -First 1
@@ -143,7 +143,7 @@ if ($CreateTestCert) {
             -Type Custom `
             -Subject $config.Publisher `
             -KeyUsage DigitalSignature `
-            -FriendlyName "VakitCubugu Local Sideload Test Cert" `
+            -FriendlyName "PrayerBar Local Sideload Test Cert" `
             -CertStoreLocation "Cert:\CurrentUser\My" `
             -TextExtension @("2.5.29.37={text}1.3.6.1.5.5.7.3.3", "2.5.29.19={text}")
     }

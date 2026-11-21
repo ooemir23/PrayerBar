@@ -18,7 +18,7 @@ namespace vakit {
 
 namespace {
 
-constexpr wchar_t kRegSubKey[] = L"Software\\VakitCubugu";
+constexpr wchar_t kRegSubKey[] = L"Software\\PrayerBar";
 constexpr wchar_t kRegInstallDayVal[] = L"InstallDay";
 
 bool ParseCompactYmd(const std::string& s, DateYMD& out) {

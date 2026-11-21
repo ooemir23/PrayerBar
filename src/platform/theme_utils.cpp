@@ -9,7 +9,7 @@ namespace {
 
 constexpr wchar_t kPersonalizeKey[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
 constexpr wchar_t kRunKey[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Run";
-constexpr wchar_t kRunValueName[] = L"VakitCubugu";
+constexpr wchar_t kRunValueName[] = L"PrayerBar";
 
 int ReadPersonalizeDword(const wchar_t* valueName, int defVal) {
     DWORD val = 0;

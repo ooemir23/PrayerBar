@@ -23,7 +23,7 @@ std::optional<std::string> WinHttpExecuteUtf8(
     int timeoutMs) {
 
     HINTERNET hSession = WinHttpOpen(
-        L"VakitCubugu/2.0",
+        L"PrayerBar/2.1",
         WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,
         WINHTTP_NO_PROXY_NAME,
         WINHTTP_NO_PROXY_BYPASS,

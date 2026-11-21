@@ -40,7 +40,7 @@ $resFile = Join-Path $buildDir "app.res"
 & $windres $rcFile -O coff -o $resFile
 if ($LASTEXITCODE -ne 0) { throw "windres failed with exit code $LASTEXITCODE" }
 
-Write-Host "[2/4] Compiling VakitCubugu.exe (Pure Native C++20)..."
+Write-Host "[2/4] Compiling PrayerBar.exe (Pure Native C++20)..."
 $appSources = @(
     "src\core\city_catalog.cpp",
     "src\core\prayer_calc.cpp",
@@ -68,7 +68,7 @@ $appSources = @(
     "src\main.cpp"
 ) | ForEach-Object { Join-Path $repoRoot $_ }
 
-$appExe = Join-Path $buildDir "VakitCubugu.exe"
+$appExe = Join-Path $buildDir "PrayerBar.exe"
 $commonFlags = @(
     "-std=c++20", "-O2", "-s",
     "-Wall", "-Wextra",
@@ -86,7 +86,7 @@ $linkFlags = @(
 )
 
 & $clangxx @commonFlags @appSources $resFile -o $appExe @linkFlags
-if ($LASTEXITCODE -ne 0) { throw "clang++ failed compiling VakitCubugu.exe with exit code $LASTEXITCODE" }
+if ($LASTEXITCODE -ne 0) { throw "clang++ failed compiling PrayerBar.exe with exit code $LASTEXITCODE" }
 
 $soundsDest = Join-Path $buildDir "Assets\Sounds"
 New-Item -ItemType Directory -Force -Path $soundsDest | Out-Null

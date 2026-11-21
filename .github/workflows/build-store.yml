@@ -29,7 +29,7 @@ jobs:
 
       - name: Run Diagnostic Smoke Test
         shell: pwsh
-        run: ./build/VakitCubugu.exe --diag-smoke
+        run: ./build/PrayerBar.exe --diag-smoke
 
       - name: Build Store MSIX (x64)
         shell: pwsh
@@ -38,5 +38,5 @@ jobs:
       - name: Upload MSIX Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: VakitCubugu-Store-MSIX-x64
+          name: PrayerBar-Store-MSIX-x64
           path: dist/*_Store.msix

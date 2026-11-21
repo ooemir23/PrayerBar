@@ -44,9 +44,9 @@ Uygulamanın içindeki **"Yıllık Al"** ve **"Ömür Boyu Al"** butonlarının 
 
 ## 4. Ücretsiz (0 TL) Gizlilik Politikası Bağlantısı (Hazır ve Yayında!)
 GitHub Pages üzerinden ücretsiz, SSL sertifikalı (HTTPS) gizlilik politikası ve destek siteniz yayına alınmıştır:
-- **Privacy Policy URL (Partner Center için zorunlu):** `https://ooemir23.github.io/VakitCubugu/privacy.html`
-- **Support / Website URL:** `https://ooemir23.github.io/VakitCubugu/`
-- **Terms of Service URL:** `https://ooemir23.github.io/VakitCubugu/terms.html`
+- **Privacy Policy URL (Partner Center için zorunlu):** `https://ooemir23.github.io/PrayerBar/privacy.html`
+- **Support / Website URL:** `https://ooemir23.github.io/PrayerBar/`
+- **Terms of Service URL:** `https://ooemir23.github.io/PrayerBar/terms.html`
 
 ---
 
@@ -66,7 +66,7 @@ powershell -ExecutionPolicy Bypass -File scripts\build-msix.ps1
 powershell -ExecutionPolicy Bypass -File scripts\build-msix.ps1 -CreateTestCert
 ```
 
-Oluşan `dist\release\VakitCubugu_2.1.0.0_x64_Store.msix` paketini Partner Center → **Packages** alanına yükleyin.
+Oluşan `dist\release\PrayerBar_2.1.0.0_x64_Store.msix` paketini Partner Center → **Packages** alanına yükleyin.
 - **6 Dilli Mağaza Açıklamaları (TR/EN/AR/DE/FR/ID):** [docs/STORE_LISTINGS_GLOBAL.md](file:///c:/Users/ooemi/Desktop/Projeler/EzanNamazVak/docs/STORE_LISTINGS_GLOBAL.md)
 - **Notes for certification** alanına eklenecek açıklama *(manifest `runFullTrust` kullandığı için)*:
 

@@ -27,13 +27,13 @@ Windows 10/11 görev çubuğunun istediğiniz bölümünde (sistem tepsisi yanı
 powershell -ExecutionPolicy Bypass -File scripts\build.ps1
 
 # Çalışma zamanı, bellek ve lisans doğrulama testi
-.\build\VakitCubugu.exe --diag-smoke
+.\build\PrayerBar.exe --diag-smoke
 
 # Açılır pencereyi istenen dilde BMP olarak kaydet (mağaza görselleri için; --lang 1-12)
-.\build\VakitCubugu.exe --diag-smoke --lang 2 --flyout-preview C:\Temp\en
+.\build\PrayerBar.exe --diag-smoke --lang 2 --flyout-preview C:\Temp\en
 
 # Çalışan uygulamada ayarları belirli sekmede aç (0-4)
-.\build\VakitCubugu.exe --settings 3
+.\build\PrayerBar.exe --settings 3
 
 # Global Store (.msix) + Portable (.zip) + SHA256SUMS.txt yayın paketlerini dist\release\ altına üret
 powershell -ExecutionPolicy Bypass -File scripts\build-release.ps1

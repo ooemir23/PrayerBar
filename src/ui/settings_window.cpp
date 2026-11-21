@@ -25,7 +25,7 @@ namespace vakit {
 
 namespace {
 
-constexpr wchar_t kSettingsClassName[] = L"VakitCubuguSettingsWindow";
+constexpr wchar_t kSettingsClassName[] = L"PrayerBarSettingsWindow";
 constexpr int kBaseW = 648;
 constexpr int kBaseH = 716;
 
@@ -1846,7 +1846,7 @@ void SettingsWindow::HandleCommand(WORD id, WORD code, HWND ctrl) {
             if (onRequestUpgrade_) onRequestUpgrade_(true);
             return;
         }
-        wchar_t fileBuf[MAX_PATH] = L"vakitcubugu_settings.json";
+        wchar_t fileBuf[MAX_PATH] = L"prayerbar_settings.json";
         OPENFILENAMEW ofn{};
         ofn.lStructSize = sizeof(ofn);
         ofn.hwndOwner = hwnd_;

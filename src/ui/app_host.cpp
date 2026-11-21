@@ -76,7 +76,7 @@ int AppHost::Run() {
     RegisterClassExW(&wc);
 
     hostHwnd_ = CreateWindowExW(
-        0, kHostWindowClassName, L"VakitCubuguHost", 0,
+        0, kHostWindowClassName, L"PrayerBarHost", 0,
         0, 0, 0, 0, nullptr, nullptr, hInst, this);
     if (!hostHwnd_) return 1;
     // Capture the HWND by value: background fetch threads may fire after AppHost is gone.

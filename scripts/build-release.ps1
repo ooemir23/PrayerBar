@@ -1,4 +1,4 @@
-param(
+﻿param(
     [ValidateSet("x64")]
     [string]$Arch = "x64",
     [switch]$CreateTestCert
@@ -16,7 +16,7 @@ Write-Host "=== [1/4] Building & Running Unit Tests ==="
 if ($LASTEXITCODE -ne 0) { throw "build.ps1 failed." }
 
 Write-Host "=== [2/4] Running Diagnostic Smoke Test ==="
-$appExe = Join-Path $repoRoot "build\VakitCubugu.exe"
+$appExe = Join-Path $repoRoot "build\PrayerBar.exe"
 & $appExe --diag-smoke | Out-Host
 if ($LASTEXITCODE -ne 0) { throw "Diagnostic smoke test failed with exit code $LASTEXITCODE" }
 
@@ -32,15 +32,15 @@ Write-Host "=== [4/4] Assembling Global Release Folder ==="
 $releaseDir = Join-Path $repoRoot "dist\release"
 New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
 
-$storeMsixSrc = Join-Path $repoRoot "dist\VakitCubugu_${ver}_${Arch}_Store.msix"
-$storeMsixDst = Join-Path $releaseDir "VakitCubugu_${ver}_${Arch}_Store.msix"
+$storeMsixSrc = Join-Path $repoRoot "dist\PrayerBar_${ver}_${Arch}_Store.msix"
+$storeMsixDst = Join-Path $releaseDir "PrayerBar_${ver}_${Arch}_Store.msix"
 Copy-Item -Path $storeMsixSrc -Destination $storeMsixDst -Force
 
 $portableStage = Join-Path $repoRoot "dist\_portable_${Arch}_$PID"
-$portableZip = Join-Path $releaseDir "VakitCubugu_${ver}_${Arch}_Portable.zip"
+$portableZip = Join-Path $releaseDir "PrayerBar_${ver}_${Arch}_Portable.zip"
 try {
     New-Item -ItemType Directory -Force -Path (Join-Path $portableStage "Assets\Sounds") | Out-Null
-    Copy-Item -Path $appExe -Destination (Join-Path $portableStage "VakitCubugu.exe") -Force
+    Copy-Item -Path $appExe -Destination (Join-Path $portableStage "PrayerBar.exe") -Force
     Copy-Item -Path (Join-Path $repoRoot "assets\sounds\*.mp3") -Destination (Join-Path $portableStage "Assets\Sounds") -Force
     Copy-Item -Path (Join-Path $repoRoot "docs\AUDIO_LICENSES.md") -Destination (Join-Path $portableStage "AUDIO_LICENSES.md") -Force
     Copy-Item -Path (Join-Path $repoRoot "README.md") -Destination (Join-Path $portableStage "README.md") -Force

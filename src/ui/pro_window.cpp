@@ -17,7 +17,7 @@ namespace vakit {
 
 namespace {
 
-constexpr wchar_t kProClassName[] = L"VakitCubuguProWindow";
+constexpr wchar_t kProClassName[] = L"PrayerBarProWindow";
 constexpr int kDipW = 576;
 constexpr int kDipH = 432;
 

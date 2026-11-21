@@ -17,8 +17,8 @@ Partner Center içinde uygulamanızın **Add-ons** bölümünden iki eklenti aç
 
 ## Adım 3 — Gizlilik Politikası Linki (TAMAMLANDI & YAYINDA!)
 Ücretsiz GitHub Pages üzerinden HTTPS gizlilik politikası ve destek siteniz aktif edildi:
-- **Privacy Policy URL (Partner Center için zorunlu):** `https://ooemir23.github.io/VakitCubugu/privacy.html`
-- **Support / Website URL:** `https://ooemir23.github.io/VakitCubugu/`
+- **Privacy Policy URL (Partner Center için zorunlu):** `https://ooemir23.github.io/PrayerBar/privacy.html`
+- **Support / Website URL:** `https://ooemir23.github.io/PrayerBar/`
 - Bu bağlantıyı Partner Center'da her dilin **Privacy policy URL** alanına ekleyin.
 
 ## Adım 4 — Paketleme ve Mağazaya Yükleme
@@ -28,7 +28,7 @@ Store ID'leri kaydettikten sonra tek komutla Store paketini üretin:
 powershell -ExecutionPolicy Bypass -File scripts\build-release.ps1
 ```
 
-Çıktı dosyası: `dist\release\VakitCubugu_2.1.0.0_x64_Store.msix`
+Çıktı dosyası: `dist\release\PrayerBar_2.1.0.0_x64_Store.msix`
 - 12 dildeki mağaza başlık ve açıklamalarını [docs/STORE_LISTINGS_GLOBAL.md](file:///c:/Users/ooemi/Desktop/Projeler/EzanNamazVak/docs/STORE_LISTINGS_GLOBAL.md) dosyasından kopyalayın.
 - 1920×1080 ekran görüntülerini (Görev Çubuğu + Açılır Kart + Ayarlar + İmsakiye) ekleyip **Submit to the Store** deyin.
 

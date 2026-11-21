@@ -27,7 +27,7 @@ namespace vakit {
 
 class AppHost {
 public:
-    static constexpr wchar_t kHostWindowClassName[] = L"VakitCubuguHostClass";
+    static constexpr wchar_t kHostWindowClassName[] = L"PrayerBarHostClass";
     static constexpr UINT kMsgShowFlyout = WM_APP + 101;
     static constexpr UINT kMsgScheduleRefreshed = WM_APP + 103;
     static constexpr UINT kMsgStoreLicenseSynced = WM_APP + 104;

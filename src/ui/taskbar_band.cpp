@@ -17,7 +17,7 @@ namespace vakit {
 
 namespace {
 
-constexpr wchar_t kBandClassName[] = L"VakitCubuguTaskbarBand";
+constexpr wchar_t kBandClassName[] = L"PrayerBarTaskbarBand";
 constexpr int kCmdToggleFlyout = 1001;
 constexpr int kCmdRefresh = 1002;
 constexpr int kCmdOpenSettings = 1003;

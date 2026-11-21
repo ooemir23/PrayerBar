@@ -40,7 +40,7 @@
   <Applications>
     <Application
       Id="App"
-      Executable="VakitCubugu.exe"
+      Executable="PrayerBar.exe"
       EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
         DisplayName="{{DISPLAY_NAME}}"
@@ -56,10 +56,10 @@
       <Extensions>
         <desktop:Extension
           Category="windows.startupTask"
-          Executable="VakitCubugu.exe"
+          Executable="PrayerBar.exe"
           EntryPoint="Windows.FullTrustApplication">
           <desktop:StartupTask
-            TaskId="VakitCubuguStartup"
+            TaskId="PrayerBarStartup"
             Enabled="false"
             DisplayName="PrayerBar" />
         </desktop:Extension>

@@ -15,7 +15,7 @@ namespace vakit {
 
 namespace {
 
-constexpr wchar_t kFlyoutClassName[] = L"VakitCubuguFluentFlyout";
+constexpr wchar_t kFlyoutClassName[] = L"PrayerBarFluentFlyout";
 constexpr UINT_PTR kTimerCountdownId = 1;
 constexpr double kPi = 3.14159265358979323846;
 
