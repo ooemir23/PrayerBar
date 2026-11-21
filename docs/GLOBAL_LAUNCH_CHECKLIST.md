@@ -1,4 +1,4 @@
-# Microsoft Store Lansman Kontrol Listesi (PrayerBar v2.0)
+# Microsoft Store Lansman Kontrol Listesi (PrayerBar v2.1)
 
 Bu liste, uygulamayı **yalnızca Microsoft Store** üzerinden yayınlayıp tüm dünya gelirlerini tek **Partner Center** panelinden yöneterek doğrudan **TR IBAN** hesabınıza almak için gereken son adımları özetler.
 
@@ -28,7 +28,7 @@ Store ID'leri kaydettikten sonra tek komutla Store paketini üretin:
 powershell -ExecutionPolicy Bypass -File scripts\build-release.ps1
 ```
 
-Çıktı dosyası: `dist\release\VakitCubugu_2.0.0.0_x64_Store.msix`
+Çıktı dosyası: `dist\release\VakitCubugu_2.1.0.0_x64_Store.msix`
 - 12 dildeki mağaza başlık ve açıklamalarını [docs/STORE_LISTINGS_GLOBAL.md](file:///c:/Users/ooemi/Desktop/Projeler/EzanNamazVak/docs/STORE_LISTINGS_GLOBAL.md) dosyasından kopyalayın.
 - 1920×1080 ekran görüntülerini (Görev Çubuğu + Açılır Kart + Ayarlar + İmsakiye) ekleyip **Submit to the Store** deyin.
 

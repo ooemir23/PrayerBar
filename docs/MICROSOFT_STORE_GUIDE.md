@@ -1,4 +1,4 @@
-# Microsoft Store Yayınlama ve Uygulama İçi Satın Alma Rehberi (PrayerBar v2.0)
+# Microsoft Store Yayınlama ve Uygulama İçi Satın Alma Rehberi (PrayerBar v2.1)
 
 Bu proje, harici web sitesi veya ödeme sağlayıcısı olmadan **%100 Microsoft Store üzerinden** satış, abonelik yönetimi, iade ve doğrudan **TR IBAN'a ödeme** alacak şekilde hazırlanmıştır. Tek yönetim (admin) paneliniz **Microsoft Partner Center** (`partner.microsoft.com`) hesabıdır.
 
@@ -38,7 +38,7 @@ Uygulamanın içindeki **"Yıllık Al"** ve **"Ömür Boyu Al"** butonlarının 
    - `kStoreAddonAnnualId` → Yıllık abonelik eklentisi Store ID (`9N...`)
    - `kStoreAddonLifetimeId` → Ömür boyu eklenti Store ID (`9N...`)
    - `kMicrosoftStorePdpUri` ve `kMicrosoftStoreReviewUri` → Sonundaki `9NBLGGH00000` yerine uygulamanızın Store ID'si.
-2. [packaging/store.config.json](file:///c:/Users/ooemi/Desktop/Projeler/EzanNamazVak/packaging/store.config.json) içinde `IdentityName`, `Publisher`, `PublisherDisplayName` ve `Commercial` bölümündeki `StoreProductId` değerlerini güncelleyin (Version: `2.0.0.0`).
+2. [packaging/store.config.json](file:///c:/Users/ooemi/Desktop/Projeler/EzanNamazVak/packaging/store.config.json) içinde `IdentityName`, `Publisher`, `PublisherDisplayName` ve `Commercial` bölümündeki `StoreProductId` değerlerini güncelleyin (Version: `2.1.0.0`).
 
 ---
 
@@ -66,7 +66,7 @@ powershell -ExecutionPolicy Bypass -File scripts\build-msix.ps1
 powershell -ExecutionPolicy Bypass -File scripts\build-msix.ps1 -CreateTestCert
 ```
 
-Oluşan `dist\release\VakitCubugu_2.0.0.0_x64_Store.msix` paketini Partner Center → **Packages** alanına yükleyin.
+Oluşan `dist\release\VakitCubugu_2.1.0.0_x64_Store.msix` paketini Partner Center → **Packages** alanına yükleyin.
 - **6 Dilli Mağaza Açıklamaları (TR/EN/AR/DE/FR/ID):** [docs/STORE_LISTINGS_GLOBAL.md](file:///c:/Users/ooemi/Desktop/Projeler/EzanNamazVak/docs/STORE_LISTINGS_GLOBAL.md)
 - **Notes for certification** alanına eklenecek açıklama *(manifest `runFullTrust` kullandığı için)*:
 
