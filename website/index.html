@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VakitÇubuğu — Ultra-Light Windows 11 Prayer Times &amp; Imsakiye</title>
+  <meta name="description" content="Live prayer countdown directly on your Windows 11 taskbar. Pure C++20 native (~3 MB RAM, 0% idle CPU), 23 global methods, 6 languages, Ramadan Iftar mode." />
+  <style>
+    :root {
+      --bg: #0c1014;
+      --surface: #151b23;
+      --card: #1b222c;
+      --border: rgba(255,255,255,0.09);
+      --text: #f3f6fa;
+      --muted: #98a2b3;
+      --accent: #2dd4bf;
+      --accent-dark: #0f766e;
+      --gold: #fbbf24;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at 20% 0%, rgba(45,212,191,0.12), transparent 45%), var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .container { max-width: 1080px; margin: 0 auto; padding: 0 22px; }
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 18px 0; border-bottom: 1px solid var(--border);
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; }
+    .brand-dot { width: 12px; height: 12px; border-radius: 3px; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+    .nav-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    select.lang-picker {
+      background: var(--card); color: var(--text); border: 1px solid var(--border);
+      padding: 7px 12px; border-radius: 8px; font-size: 14px; cursor: pointer;
+    }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 14px;
+      text-decoration: none; cursor: pointer; border: 1px solid var(--border); transition: transform .12s;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { background: var(--accent); color: #091314; border-color: var(--accent); }
+    .btn-ghost { background: var(--card); color: var(--text); }
+    .hero { text-align: center; padding: 62px 0 42px; }
+    .pill-tag {
+      display: inline-block; padding: 5px 14px; border-radius: 99px; font-size: 13px; font-weight: 600;
+      background: rgba(45,212,191,0.14); color: var(--accent); border: 1px solid rgba(45,212,191,0.3); margin-bottom: 16px;
+    }
+    h1 {
+      font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif;
+      font-size: clamp(30px, 5vw, 48px); line-height: 1.15; margin: 0 0 16px;
+    }
+    .hero p { max-width: 680px; margin: 0 auto 28px; color: var(--muted); font-size: 17px; }
+    .cta-row { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin-bottom: 40px; }
+    .taskbar-mockup {
+      max-width: 780px; margin: 0 auto; background: #1a1d24; border: 1px solid var(--border);
+      border-radius: 12px; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+    }
+    .tb-icons { display: flex; gap: 14px; color: var(--muted); font-size: 13px; }
+    .tb-right { display: flex; align-items: center; gap: 14px; }
+    .tb-widget {
+      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 6px; padding: 4px 12px; text-align: center; border-bottom: 2px solid var(--accent);
+    }
+    .tb-widget .l1 { font-size: 11px; color: var(--muted); display: block; }
+    .tb-widget .l2 { font-size: 13px; font-weight: 700; color: #fff; }
+    .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin: 44px 0; }
+    .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+    .stat strong { display: block; font-size: 22px; color: var(--accent); }
+    .stat span { font-size: 13px; color: var(--muted); }
+    section { padding: 44px 0; }
+    section h2 { text-align: center; font-size: 28px; margin-bottom: 28px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 18px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 22px; }
+    .card h3 { margin: 0 0 8px; font-size: 17px; }
+    .card p { margin: 0; color: var(--muted); font-size: 14px; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; align-items: stretch; }
+    .price-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 26px; display: flex; flex-direction: column; }
+    .price-card.featured { border: 2px solid var(--accent); position: relative; }
+    .pop-badge {
+      position: absolute; top: -12px; left: 24px; background: var(--accent); color: #091314;
+      font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 99px;
+    }
+    .price-val { font-size: 32px; font-weight: 800; margin: 10px 0 4px; }
+    .price-sub { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
+    .feat-list { list-style: none; padding: 0; margin: 0 0 22px; flex: 1; }
+    .feat-list li { padding: 5px 0; font-size: 14px; color: #dbe2ea; }
+    footer { border-top: 1px solid var(--border); padding: 28px 0 42px; text-align: center; color: var(--muted); font-size: 13px; }
+    footer a { color: var(--accent); text-decoration: none; margin: 0 10px; }
+    [dir="rtl"] .feat-list li { text-align: right; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav>
+      <div class="brand"><span class="brand-dot"></span><span>VakitÇubuğu</span></div>
+      <div class="nav-actions">
+        <select id="langPicker" class="lang-picker" aria-label="Language">
+          <option value="en">English</option>
+          <option value="tr">Türkçe</option>
+          <option value="ar">العربية</option>
+          <option value="de">Deutsch</option>
+          <option value="fr">Français</option>
+          <option value="id">Bahasa Indonesia</option>
+        </select>
+        <a href="#pricing" class="btn btn-primary" data-i18n="navGetPro">Get Pro</a>
+      </div>
+    </nav>
+
+    <header class="hero">
+      <div class="pill-tag" data-i18n="heroBadge">Pure Native C++20 · Windows 10 &amp; 11</div>
+      <h1 data-i18n="heroTitle">Live Prayer Countdown Right on Your Windows 11 Taskbar</h1>
+      <p data-i18n="heroDesc">Never miss a prayer while working, coding, or gaming. Built in native C++20 with ~3 MB RAM, 0% idle CPU, 23 worldwide calculation methods, and Monthly/Ramadan Imsakiye.</p>
+      <div class="cta-row">
+        <a href="#download" class="btn btn-primary" data-i18n="ctaFree">Download Free (14-Day Pro Trial)</a>
+        <a href="ms-windows-store://pdp/?productid=9NBLGGH00000" class="btn btn-ghost" data-i18n="ctaStore">Get from Microsoft Store</a>
+      </div>
+
+      <div class="taskbar-mockup">
+        <div class="tb-icons">⊞ &nbsp; ⌕ &nbsp; Chrome &nbsp; VS Code</div>
+        <div class="tb-right">
+          <div class="tb-widget">
+            <span class="l1" data-i18n="mockLine1">Until Asr</span>
+            <span class="l2" data-i18n="mockLine2">23 min</span>
+          </div>
+          <div class="tb-icons">^ &nbsp; 📶 &nbsp; 🔋 78% &nbsp; 15:02</div>
+        </div>
+      </div>
+
+      <div class="stats-bar">
+        <div class="stat"><strong>~3 MB RAM</strong><span data-i18n="statRam">Auto-trimmed in background</span></div>
+        <div class="stat"><strong>0.00% CPU</strong><span data-i18n="statCpu">Laptop battery friendly</span></div>
+        <div class="stat"><strong data-i18n="statMethodsVal">23 Methods</strong><span data-i18n="statMethods">Diyanet, MWL, ISNA, Umm al-Qura…</span></div>
+        <div class="stat"><strong data-i18n="statLangsVal">6 Languages</strong><span data-i18n="statLangs">EN, TR, AR, DE, FR, ID + Custom Names</span></div>
+      </div>
+    </header>
+
+    <section id="features">
+      <h2 data-i18n="featHeading">Designed as a True Part of Windows 11</h2>
+      <div class="grid-3">
+        <div class="card"><h3 data-i18n="f1Title">4 Taskbar Positions &amp; 9 Styles</h3><p data-i18n="f1Desc">Dock near tray, far right corner, center, or left with pixel-accurate offset and Segoe UI Variable typography.</p></div>
+        <div class="card"><h3 data-i18n="f2Title">4 Fluent Flyout Layouts</h3><p data-i18n="f2Desc">Choose Compact Fluent, Minimal Glass, 2×3 Bento Cards, or Timeline Dashboard with a live vector Qibla compass.</p></div>
+        <div class="card"><h3 data-i18n="f3Title">Monthly &amp; Ramadan Imsakiye</h3><p data-i18n="f3Desc">Browse any month or full 30-day Ramadan Suhoor/Iftar calendar, plus export to CSV or printable HTML.</p></div>
+        <div class="card"><h3 data-i18n="f4Title">Per-Prayer Alerts &amp; Free Adhan</h3><p data-i18n="f4Desc">Set independent pre-prayer reminders (5–60 min), built-in Public Domain Adhans, or load your own MP3/WAV.</p></div>
+        <div class="card"><h3 data-i18n="f5Title">Fullscreen Quiet Mode &amp; Kerahat</h3><p data-i18n="f5Desc">Automatically mutes audio during games, presentations, or Focus Assist and displays subtle Makruh/Jumu'ah indicators.</p></div>
+        <div class="card"><h3 data-i18n="f6Title">Custom Prayer Names &amp; Privacy First</h3><p data-i18n="f6Desc">Rename prayers in your preferred script or transliteration. Zero analytics, zero ads, works offline anytime.</p></div>
+      </div>
+    </section>
+
+    <section id="pricing">
+      <h2 data-i18n="priceHeading">Simple, Ethical Pricing — Core Prayer Times Are Forever Free</h2>
+      <div class="pricing-grid">
+        <div class="price-card" id="download">
+          <h3 data-i18n="planFree">Free Edition</h3>
+          <div class="price-val">$0</div>
+          <div class="price-sub" data-i18n="planFreeSub">Forever free · Zero ads</div>
+          <ul class="feat-list">
+            <li>✓ <span data-i18n="pf1">All 23 global calculation methods &amp; offline fallback</span></li>
+            <li>✓ <span data-i18n="pf2">Core taskbar styles &amp; Compact Fluent flyout</span></li>
+            <li>✓ <span data-i18n="pf3">Per-prayer reminders &amp; built-in Adhan sounds</span></li>
+            <li>✓ <span data-i18n="pf4">View Monthly &amp; 30-day Ramadan Imsakiye</span></li>
+          </ul>
+          <a href="../dist/release/VakitCubugu_2.0.0.0_x64_Portable.zip" class="btn btn-ghost" data-i18n="btnDownloadFree">Download Free Windows x64</a>
+        </div>
+
+        <div class="price-card">
+          <h3 data-i18n="planAnnual">Annual Pro</h3>
+          <div class="price-val">$4.99</div>
+          <div class="price-sub" data-i18n="planAnnualSub">Per year (~₺59 in Türkiye) · Cancel anytime</div>
+          <ul class="feat-list">
+            <li>✓ <span data-i18n="pa1">All 4 Flyout layouts + live Qibla compass</span></li>
+            <li>✓ <span data-i18n="pa2">All 9 taskbar styles + custom template editor</span></li>
+            <li>✓ <span data-i18n="pa3">Custom MP3/WAV Adhan &amp; editable prayer names</span></li>
+            <li>✓ <span data-i18n="pa4">Export/Print CSV &amp; HTML Imsakiye + JSON backup</span></li>
+          </ul>
+          <!-- Replace href with your live Lemon Squeezy / Paddle Annual checkout URL -->
+          <a href="#pricing" class="btn btn-ghost" data-i18n="btnBuyAnnual">Get Annual License</a>
+        </div>
+
+        <div class="price-card featured">
+          <div class="pop-badge" data-i18n="popBadge">MOST POPULAR</div>
+          <h3 data-i18n="planLife">Lifetime Pro</h3>
+          <div class="price-val">$9.99</div>
+          <div class="price-sub" data-i18n="planLifeSub">One-time payment · Up to 3 Windows PCs</div>
+          <ul class="feat-list">
+            <li>✓ <span data-i18n="pl1">Everything in Pro unlocked permanently</span></li>
+            <li>✓ <span data-i18n="pl2">Instant offline-capable license key via email</span></li>
+            <li>✓ <span data-i18n="pl3">Works via Microsoft Store or direct download</span></li>
+            <li>✓ <span data-i18n="pl4">14-day money-back guarantee</span></li>
+          </ul>
+          <!-- Replace href with your live Lemon Squeezy / Paddle Lifetime checkout URL -->
+          <a href="#pricing" class="btn btn-primary" data-i18n="btnBuyLife">Get Lifetime Pro ($9.99)</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="support" style="text-align:center; padding-top:10px;">
+      <p style="color:var(--muted)" data-i18n="supportText">Includes a 14-day free Pro trial right after install. Questions or bulk mosque/office licenses? Contact support@vakitcubugu.com</p>
+    </section>
+
+    <footer>
+      <p>© 2026 VakitÇubuğu · Windows 10 / 11</p>
+      <div>
+        <a href="privacy.html">Privacy Policy</a>
+        <a href="terms.html">Terms &amp; Refund Policy</a>
+        <a href="#download">Download</a>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    const T = {
+      en: {
+        navGetPro: "Get Pro", heroBadge: "Pure Native C++20 · Windows 10 & 11",
+        heroTitle: "Live Prayer Countdown Right on Your Windows 11 Taskbar",
+        heroDesc: "Never miss a prayer while working, coding, or gaming. Built in native C++20 with ~3 MB RAM, 0% idle CPU, 23 worldwide calculation methods, and Monthly/Ramadan Imsakiye.",
+        ctaFree: "Download Free (14-Day Pro Trial)", ctaStore: "Get from Microsoft Store",
+        mockLine1: "Until Asr", mockLine2: "23 min",
+        statRam: "Auto-trimmed in background", statCpu: "Laptop battery friendly",
+        statMethodsVal: "23 Methods", statMethods: "Diyanet, MWL, ISNA, Umm al-Qura…",
+        statLangsVal: "6 Languages", statLangs: "EN, TR, AR, DE, FR, ID + Custom Names",
+        featHeading: "Designed as a True Part of Windows 11",
+        f1Title: "4 Taskbar Positions & 9 Styles", f1Desc: "Dock near tray, far right corner, center, or left with pixel-accurate offset and Segoe UI Variable typography.",
+        f2Title: "4 Fluent Flyout Layouts", f2Desc: "Choose Compact Fluent, Minimal Glass, 2×3 Bento Cards, or Timeline Dashboard with a live vector Qibla compass.",
+        f3Title: "Monthly & Ramadan Imsakiye", f3Desc: "Browse any month or full 30-day Ramadan Suhoor/Iftar calendar, plus export to CSV or printable HTML.",
+        f4Title: "Per-Prayer Alerts & Free Adhan", f4Desc: "Set independent pre-prayer reminders (5–60 min), built-in Public Domain Adhans, or load your own MP3/WAV.",
+        f5Title: "Fullscreen Quiet Mode & Kerahat", f5Desc: "Automatically mutes audio during games, presentations, or Focus Assist and displays subtle Makruh/Jumu'ah indicators.",
+        f6Title: "Custom Prayer Names & Privacy First", f6Desc: "Rename prayers in your preferred script or transliteration. Zero analytics, zero ads, works offline anytime.",
+        priceHeading: "Simple, Ethical Pricing — Core Prayer Times Are Forever Free",
+        planFree: "Free Edition", planFreeSub: "Forever free · Zero ads",
+        btnDownloadFree: "Download Free Windows x64",
+        planAnnual: "Annual Pro", planAnnualSub: "Per year (~₺59 in Türkiye) · Cancel anytime",
+        btnBuyAnnual: "Get Annual License",
+        popBadge: "MOST POPULAR", planLife: "Lifetime Pro", planLifeSub: "One-time payment · Up to 3 Windows PCs",
+        btnBuyLife: "Get Lifetime Pro ($9.99)"
+      },
+      tr: {
+        navGetPro: "Pro'ya Geç", heroBadge: "Saf Yerel C++20 · Windows 10 & 11",
+        heroTitle: "Windows 11 Görev Çubuğunuzda Canlı Namaz Vakti Sayacı",
+        heroDesc: "Çalışırken, kod yazarken veya oyun oynarken vakti kaçırmayın. Yalnızca ~3 MB RAM, %0 boşta CPU, 23 dünya hesaplama metodu ve Aylık/Ramazan İmsakiyesi.",
+        ctaFree: "Ücretsiz İndir (14 Gün Pro Deneme)", ctaStore: "Microsoft Store'dan İndir",
+        mockLine1: "İkindiye kalan", mockLine2: "23 dk",
+        statRam: "Belleği otomatik optimize eder", statCpu: "Laptop pili ve eski PC dostu",
+        statMethodsVal: "23 Metod", statMethods: "Diyanet, MWL, ISNA, Ümmü'l-Kura…",
+        statLangsVal: "6 Dil Desteği", statLangs: "TR, EN, AR, DE, FR, ID + Özel İsimler",
+        featHeading: "Windows 11'in Gerçek Bir Parçası Gibi Tasarlandı",
+        f1Title: "4 Konum & 9 Görev Çubuğu Stili", f1Desc: "Tepsi yanı, saatin sağ köşesi, orta veya sol konuma piksel hassasiyetinde yerleşim ve Windows 11 tipografisi.",
+        f2Title: "4 Fluent Açılır Ekran Tasarımı", f2Desc: "Kompakt Fluent, Minimal Cam, 2×3 Bento Kartları veya canlı Kıble Pusulalı Zaman Çizelgesi arasından seçin.",
+        f3Title: "Aylık & 30 Günlük Ramazan İmsakiyesi", f3Desc: "Tüm ayları veya Ramazan İftar/Sahur takvimini görüntüleyin, CSV ve yazdırılabilir HTML olarak dışa aktarın.",
+        f4Title: "Her Vakit İçin Ayrı Bildirim & Ezan", f4Desc: "Her vakte ayrı ön hatırlatma (5–60 dk), ücretsiz dahili ezanlar veya kendi özel MP3/WAV dosyanız.",
+        f5Title: "Tam Ekran Sessiz Modu & Kerahat", f5Desc: "Oyun, video veya sunumda sesi otomatik susturur; açılır ekranda Kerahat ve Cuma vurgusu gösterir.",
+        f6Title: "Özel Vakit İsimleri & Tam Gizlilik", f6Desc: "Vakit isimlerini manuel değiştirin. Reklam yok, telemetri yok, internetsiz dahi eksiksiz çalışır.",
+        priceHeading: "Etik Fiyatlandırma — Temel Namaz Vakitleri Daima Ücretsiz",
+        planFree: "Ücretsiz Sürüm", planFreeSub: "Daima ücretsiz · Sıfır reklam",
+        btnDownloadFree: "Ücretsiz İndir (Windows x64)",
+        planAnnual: "Yıllık Pro", planAnnualSub: "Yıllık $4.99 (TR ~₺59) · İstediğiniz an iptal",
+        btnBuyAnnual: "Yıllık Lisans Al",
+        popBadge: "EN ÇOK TERCİH EDİLEN", planLife: "Ömür Boyu Pro", planLifeSub: "Tek seferlik ödeme · 3 Windows PC",
+        btnBuyLife: "Ömür Boyu Al ($9.99)"
+      },
+      ar: {
+        navGetPro: "الترقية لـ Pro", heroBadge: "C++20 أصلي · ويندوز 10 و 11",
+        heroTitle: "عدّاد مباشر لمواقيت الصلاة على شريط مهام ويندوز 11",
+        heroDesc: "لا تفوّت صلاة أثناء العمل أو البرمجة. استهلاك ~3 ميجابايت للذاكرة فقط مع 23 طريقة حساب عالمية وإمساكية رمضان.",
+        ctaFree: "تنزيل مجاني (تجربة 14 يوماً)", ctaStore: "احصل عليه من Microsoft Store",
+        mockLine1: "متبقي للعصر", mockLine2: "23 د",
+        priceHeading: "أسعار واضحة — مواقيت الصلاة الأساسية مجانية للأبد",
+        planFree: "النسخة المجانية", btnDownloadFree: "تنزيل مجاني Windows x64",
+        planAnnual: "Pro سنوي", btnBuyAnnual: "اشتراك سنوي ($4.99)",
+        popBadge: "الأكثر طلباً", planLife: "Pro مدى الحياة", btnBuyLife: "شراء مدى الحياة ($9.99)"
+      },
+      de: {
+        navGetPro: "Pro holen", heroTitle: "Live-Gebetszeiten direkt in Ihrer Windows-11-Taskleiste",
+        ctaFree: "Kostenlos laden (14 Tage Pro-Test)", ctaStore: "Im Microsoft Store laden",
+        mockLine1: "Bis Asr", mockLine2: "23 Min", popBadge: "AM BELIEBTESTEN",
+        btnBuyAnnual: "Jährlich (4,99 €)", btnBuyLife: "Lebenslang (9,99 €)"
+      },
+      fr: {
+        navGetPro: "Passer à Pro", heroTitle: "Compte à rebours des prières en direct sur Windows 11",
+        ctaFree: "Télécharger (Essai Pro 14 jours)", ctaStore: "Sur Microsoft Store",
+        mockLine1: "Avant Asr", mockLine2: "23 min", popBadge: "LE PLUS POPULAIRE",
+        btnBuyAnnual: "Annuel (4,99 €)", btnBuyLife: "À vie (9,99 €)"
+      },
+      id: {
+        navGetPro: "Upgrade Pro", heroTitle: "Hitung Mundur Waktu Sholat Langsung di Taskbar Windows 11",
+        ctaFree: "Unduh Gratis (Uji Pro 14 Hari)", ctaStore: "Unduh di Microsoft Store",
+        mockLine1: "Menuju Ashar", mockLine2: "23 mnt", popBadge: "PALING POPULER",
+        btnBuyAnnual: "Tahunan ($4.99)", btnBuyLife: "Selamanya ($9.99)"
+      }
+    };
+    const picker = document.getElementById("langPicker");
+    function applyLang(l) {
+      const dict = Object.assign({}, T.en, T[l] || {});
+      document.documentElement.dir = (l === "ar") ? "rtl" : "ltr";
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const k = el.getAttribute("data-i18n");
+        if (dict[k]) el.textContent = dict[k];
+      });
+    }
+    picker.addEventListener("change", () => applyLang(picker.value));
+    const navLang = (navigator.language || "en").slice(0,2).toLowerCase();
+    if (T[navLang]) { picker.value = navLang; applyLang(navLang); }
+  </script>
+</body>
+</html>

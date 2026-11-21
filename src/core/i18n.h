@@ -1,0 +1,243 @@
+#pragma once
+
+#include "models.h"
+#include <string>
+#include <string_view>
+
+namespace vakit {
+
+enum class StrId : int {
+    ToggleFlyout = 0,
+    OpenImsakiye,
+    TaskbarStyleMenu,
+    FlyoutDesignMenu,
+    ShowInTrayMenu,
+    ShowInTaskbarMenu,
+    RefreshNow,
+    SettingsEllipsis,
+    ExitApp,
+    StopSoundMenu,
+
+    BadgeNext,
+    BadgeCurrent,
+    BadgeJumuah,
+    PrayerTimeHeader,
+    KerahatAfterSunrise,
+    KerahatBeforeDhuhr,
+    KerahatBeforeMaghrib,
+    SourcePrefix,
+    SourceLocalCalc,
+    TipStopAudio,
+    TipImsakiye,
+    TipRefresh,
+    TipSettings,
+
+    TestNotifTitle,
+    TestNotifBody,
+
+    ImsakiyeWindowTitle,
+    BtnToday,
+    BtnRamadan,
+    BtnMonthly,
+    BtnSync,
+    BtnExportCsv,
+    BtnExportHtml,
+    ColDate,
+    ColHijri,
+    RamadanTitlePrefix,
+    RamadanDayPrefix,
+    StatusExportSaved,
+    StatusSyncDone,
+    StatusSyncOffline,
+    ImsakiyeFooterHint,
+
+    SettingsWindowTitle,
+    TabAppearance,
+    TabLocation,
+    TabNotifications,
+    TabLanguageSystem,
+    LivePreviewLabel,
+    FooterAutoSave,
+    BtnOk,
+
+    LblTaskbarStyle,
+    LblCustomTemplate,
+    LblFlyoutDesign,
+    LblDockPos,
+    DockRightTray,
+    DockFarRight,
+    DockCenter,
+    DockLeft,
+    LblOffset,
+    ChkShowPill,
+    ChkOpaqueBg,
+    ChkShowTray,
+    ChkShowBar,
+    ChkShowSec,
+    ChkAccentSync,
+    LblTrayStyle,
+    TrayTwoLine,
+    TrayRing,
+    TrayCrescent,
+    LblFontSize,
+    FontSmall,
+    FontNormal,
+    FontLarge,
+    LblUrgentColor,
+    UrgentOff,
+    Urgent10,
+    Urgent15,
+    Urgent20,
+    Urgent30,
+    LblTheme,
+    ThemeSystem,
+    ThemeDark,
+    ThemeLight,
+
+    BtnDetectLocation,
+    LocDetectHint,
+    LocDetecting,
+    LocDetectFailed,
+    ChkAutoMethod,
+    LblCitySearch,
+    ChkCustomCoord,
+    LblLat,
+    LblLon,
+    BtnApplyCoord,
+    LblCalcMethod,
+    LblAsrMethod,
+    AsrStandard,
+    AsrHanafi,
+    ChkOnlineSync,
+    BtnSyncNow,
+    BtnOpenImsakiye,
+    SyncingText,
+    SyncOkText,
+    SyncOfflineText,
+    LblOffsets,
+    BtnApplyOffsets,
+
+    ColPrayer,
+    ColAtTime,
+    ColPreRemind,
+    ColSoundEzan,
+    ChkNotify,
+    ChkPlaySound,
+    PreOff,
+    Pre5,
+    Pre10,
+    Pre15,
+    Pre20,
+    Pre30,
+    Pre45,
+    Pre60,
+    LblEntrySound,
+    LblPreSound,
+    SoundNone,
+    SoundChime,
+    SoundBell,
+    SoundAdhanShort,
+    SoundAdhanMakkah,
+    SoundCustom,
+    LblCustomSound,
+    BtnBrowse,
+    LblVolume,
+    BtnTestEntry,
+    BtnTestPre,
+    BtnStopSound,
+    BtnTestNotif,
+    ChkQuietFullscreen,
+    ChkKerahatIndicator,
+
+    LblAppLanguage,
+    SectionCustomNames,
+    ColDefaultName,
+    ColCustomName,
+    ColShortCode,
+    BtnApplyNames,
+    BtnResetNames,
+    SectionSystem,
+    ChkStartup,
+    ChkAutoMem,
+    BtnExportSettings,
+    BtnImportSettings,
+    MsgSettingsExported,
+    MsgSettingsImported,
+
+    ChkRamadanMode,
+    MenuUpgradePro,
+    MenuManageLicense,
+    ProWindowTitle,
+    ProStatusTrial,
+    ProStatusFree,
+    ProStatusActiveAnnual,
+    ProStatusActiveLifetime,
+    ProPlanAnnualTitle,
+    ProPlanAnnualPrice,
+    ProPlanLifetimeTitle,
+    ProPlanLifetimePrice,
+    ProBadgePopular,
+    ProFeat1,
+    ProFeat2,
+    ProFeat3,
+    ProFeat4,
+    ProFeat5,
+    BtnBuyAnnual,
+    BtnBuyLifetime,
+    BtnOpenStore,
+    BtnSupportDev,
+    BtnActivateKey,
+    BtnDeactivateKey,
+    LblLicenseKey,
+    ProActivating,
+    ProActivatedOk,
+    ProKeyInvalid,
+    ProKeyExpired,
+    ProOnlineRequired,
+    ProLockedHint,
+    SectionLicense,
+    BtnOpenProWindow,
+
+    BtnRestorePurchases,
+    BtnManageSubscription,
+    BtnRateStore,
+    StorePurchasing,
+    StoreRestoring,
+    StorePurchasedOk,
+    StorePurchaseCanceled,
+    StorePurchaseFailed,
+    StoreNotPackaged,
+    StoreRestoredNone,
+    StoreAddonNotConfigured
+};
+
+AppLanguage ResolveEffectiveLanguage(AppLanguage configured);
+bool IsRtlLanguage(AppLanguage lang);
+const wchar_t* GetLanguageDisplayName(AppLanguage lang);
+const wchar_t* Tr(AppLanguage lang, StrId id);
+
+const wchar_t* GetDefaultPrayerName(PrayerKind kind, AppLanguage lang);
+const wchar_t* GetDefaultPrayerShortCode(PrayerKind kind, AppLanguage lang);
+std::wstring GetEffectivePrayerName(PrayerKind kind, const AppSettings& settings);
+std::wstring GetEffectivePrayerShortCode(PrayerKind kind, const AppSettings& settings);
+std::wstring GetEffectivePrayerDativeName(PrayerKind kind, const AppSettings& settings);
+std::wstring FormatUntilPrayerLine(PrayerKind kind, const AppSettings& settings, bool isRamadan = false);
+std::wstring FormatHeroHeading(PrayerKind kind, const AppSettings& settings, bool isRamadan = false);
+
+const wchar_t* GetShortMonthName(int month1To12, AppLanguage lang);
+const wchar_t* GetFullMonthName(int month1To12, AppLanguage lang);
+const wchar_t* GetShortWeekdayName(int dow0SunTo6Sat, AppLanguage lang);
+const wchar_t* GetHijriMonthNameLocalized(int month1To12, AppLanguage lang);
+std::wstring FormatHijriDateLocalized(DateYMD date, AppLanguage lang);
+const wchar_t* GetCompassDirectionLocalized(double bearingDegrees, AppLanguage lang);
+std::wstring FormatQiblaLabelLocalized(double latitude, double longitude, AppLanguage lang);
+
+const wchar_t* GetStyleFriendlyNameLocalized(TaskbarDisplayStyle style, AppLanguage lang);
+const wchar_t* GetFlyoutDesignFriendlyName(FlyoutDesignStyle design, AppLanguage lang);
+
+std::wstring FormatNotificationAtTimeTitle(PrayerKind kind, const AppSettings& settings);
+std::wstring FormatNotificationAtTimeBody(const std::wstring& cityName, PrayerKind kind, std::wstring_view hhmm, const AppSettings& settings);
+std::wstring FormatNotificationPreTitle(PrayerKind kind, int minutes, const AppSettings& settings);
+std::wstring FormatNotificationPreBody(PrayerKind kind, std::wstring_view hhmm, const std::wstring& cityName, const AppSettings& settings);
+
+} // namespace vakit

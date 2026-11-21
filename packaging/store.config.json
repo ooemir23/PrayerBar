@@ -1,0 +1,16 @@
+{
+  "IdentityName": "VakitCubugu.NamazVakitleri",
+  "Publisher": "CN=VakitCubuguPublisher",
+  "PublisherDisplayName": "VakitÇubuğu",
+  "DisplayName": "VakitÇubuğu — Prayer Times & Imsakiye",
+  "Description": "Ultra-lightweight (~3 MB RAM, 0% idle CPU) Windows 11 taskbar countdown, dynamic tray badge, Monthly/Ramadan Imsakiye & customizable prayer notifications in 6 languages.",
+  "Version": "2.0.0.0",
+  "Commercial": {
+    "DistributionChannel": "MicrosoftStoreOnly",
+    "StoreProductId": "9NBLGGH00000",
+    "AddonAnnualStoreId": "",
+    "AddonLifetimeStoreId": "",
+    "AddonAnnualOfferToken": "pro_annual",
+    "AddonLifetimeOfferToken": "pro_lifetime"
+  }
+}

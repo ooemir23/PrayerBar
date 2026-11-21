@@ -1,0 +1,595 @@
+#include "../src/core/city_catalog.h"
+#include "../src/core/formatter.h"
+#include "../src/core/i18n.h"
+#include "../src/core/license_manager.h"
+#include "../src/core/models.h"
+#include "../src/platform/win_store.h"
+#include "../src/core/prayer_calc.h"
+#include "../src/core/schedule_service.h"
+#include "../src/core/settings_store.h"
+#include "../src/core/utf_util.h"
+
+#include <cassert>
+#include <cstdio>
+#include <filesystem>
+#include <string>
+
+using namespace vakit;
+
+namespace {
+
+int g_passed = 0;
+
+#define CHECK(cond)                                                                                   \
+    do {                                                                                              \
+        if (!(cond)) {                                                                                \
+            fprintf(stderr, "TEST FAILED at %s:%d: %s\n", __FILE__, __LINE__, #cond);                 \
+            return 1;                                                                                 \
+        }                                                                                             \
+    } while (0)
+
+PrayerCountdownState MakeSampleState(PrayerKind next, int remainingMinutes, TimeHM nextTime) {
+    DateYMD d{2026, 11, 21};
+    DailyPrayerTimes today;
+    today.date = d;
+    today.imsak = {6, 20};
+    today.gunes = {7, 51};
+    today.ogle = {12, 55};
+    today.ikindi = {15, 25};
+    today.aksam = {17, 48};
+    today.yatsi = {19, 14};
+
+    LocalDateTime nextDt = LocalDateTime::FromDateTime(d, nextTime);
+    LocalDateTime prevDt = LocalDateTime::FromDateTime(d, today.ogle);
+    int64_t remSec = static_cast<int64_t>(remainingMinutes) * 60LL;
+    return PrayerCountdownState{
+        prevDt,
+        PrayerKind::Ogle,
+        next,
+        nextDt,
+        prevDt,
+        remSec,
+        0.75,
+        remainingMinutes <= 15,
+        today,
+        {6, 21}
+    };
+}
+
+int TestAll23CalculationMethodsAndOrder() {
+    DateYMD d{2026, 11, 21};
+    for (CalculationMethod m : kOrderedCalculationMethods) {
+        DailyPrayerTimes res = CalculatePrayerTimes(d, 41.0082, 28.9784, L"Turkey Standard Time", m);
+        CHECK(res.imsak < res.gunes);
+        CHECK(res.gunes < res.ogle);
+        CHECK(res.ogle < res.ikindi);
+        CHECK(res.ikindi < res.aksam);
+        CHECK(res.aksam < res.yatsi);
+        CHECK(GetMethodFriendlyName(m)[0] != L'\0');
+    }
+    ++g_passed;
+    return 0;
+}
+
+int TestIstanbulDiyanetWindowAndHighLatitude() {
+    DateYMD nov21{2026, 11, 21};
+    DailyPrayerTimes ist = CalculatePrayerTimes(nov21, 41.0082, 28.9784, L"Turkey Standard Time", CalculationMethod::Diyanet);
+    CHECK(ist.imsak >= TimeHM({6, 0}) && ist.imsak <= TimeHM({6, 35}));
+    CHECK(ist.gunes >= TimeHM({7, 35}) && ist.gunes <= TimeHM({8, 10}));
+    CHECK(ist.ogle >= TimeHM({12, 40}) && ist.ogle <= TimeHM({13, 10}));
+    CHECK(ist.ikindi >= TimeHM({15, 10}) && ist.ikindi <= TimeHM({15, 45}));
+    CHECK(ist.aksam >= TimeHM({17, 30}) && ist.aksam <= TimeHM({18, 5}));
+    CHECK(ist.yatsi >= TimeHM({18, 55}) && ist.yatsi <= TimeHM({19, 30}));
+
+    DateYMD jun21{2026, 6, 21};
+    DailyPrayerTimes highLat = CalculatePrayerTimes(jun21, 64.0, 10.0, L"W. Europe Standard Time", CalculationMethod::Diyanet);
+    CHECK(highLat.imsak < highLat.gunes);
+    CHECK(highLat.gunes < highLat.ogle);
+    CHECK(highLat.ogle < highLat.ikindi);
+    CHECK(highLat.ikindi < highLat.aksam);
+    CHECK(highLat.aksam < highLat.yatsi);
+    ++g_passed;
+    return 0;
+}
+
+int TestHanafiAsrAndCountryMapping() {
+    DateYMD d{2026, 11, 21};
+    auto stdT = CalculatePrayerTimes(d, 41.0082, 28.9784, L"Turkey Standard Time", CalculationMethod::MWL, {}, AsrJuristicMethod::Standard);
+    auto hanT = CalculatePrayerTimes(d, 41.0082, 28.9784, L"Turkey Standard Time", CalculationMethod::MWL, {}, AsrJuristicMethod::Hanafi);
+    CHECK(hanT.ikindi > stdT.ikindi);
+    CHECK(hanT.ogle == stdT.ogle);
+
+    CHECK(GetRecommendedMethodForCountry(L"TR") == CalculationMethod::Diyanet);
+    CHECK(GetRecommendedMethodForCountry(L"US") == CalculationMethod::ISNA);
+    CHECK(GetRecommendedMethodForCountry(L"SA") == CalculationMethod::UmmAlQura);
+    CHECK(GetRecommendedMethodForCountry(L"FR") == CalculationMethod::FranceUOIF);
+    CHECK(GetRecommendedMethodForCountry(L"ID") == CalculationMethod::IndonesiaKEMENAG);
+    CHECK(GetRecommendedMethodForCountry(L"GB") == CalculationMethod::MWL);
+    ++g_passed;
+    return 0;
+}
+
+int TestDisplayFormatterStylesAndTooltip() {
+    auto state = MakeSampleState(PrayerKind::Ikindi, 23, {15, 25});
+    AppSettings settings;
+    settings.language = AppLanguage::Turkish;
+
+    settings.displayStyle = TaskbarDisplayStyle::TwoLineClassic;
+    auto f1 = FormatTaskbar(state, settings);
+    CHECK(f1.line1 == L"İkindiye kalan");
+    CHECK(f1.hasLine2 && f1.line2 == L"23 dk");
+
+    settings.displayStyle = TaskbarDisplayStyle::CompactArrow;
+    auto f2 = FormatTaskbar(state, settings);
+    CHECK(f2.line1 == L"İ→23Dk");
+    CHECK(!f2.hasLine2);
+
+    settings.displayStyle = TaskbarDisplayStyle::Custom;
+    settings.customTemplate = L"{vakit} ({saat})\\n{kisa}→{kalan_kisa}";
+    auto f3 = FormatTaskbar(state, settings);
+    CHECK(f3.line1 == L"İkindi (15:25)");
+    CHECK(f3.hasLine2 && f3.line2 == L"İ→23Dk");
+
+    for (int i = 0; i <= 8; ++i) {
+        settings.displayStyle = static_cast<TaskbarDisplayStyle>(i);
+        auto fx = FormatTaskbar(state, settings);
+        CHECK(!fx.line1.empty());
+    }
+
+    settings.cityName = std::wstring(100, L'A');
+    settings.showSeconds = true;
+    CHECK(FormatTrayTooltip(state, settings).size() <= 127);
+    ++g_passed;
+    return 0;
+}
+
+int TestMidnightRolloverAndQiblaAndCatalog() {
+    wchar_t tmpRoot[MAX_PATH]{};
+    GetTempPathW(MAX_PATH, tmpRoot);
+    std::wstring tempDir = std::wstring(tmpRoot) + L"VakitCppTests_" + std::to_wstring(GetCurrentProcessId());
+    {
+        ScheduleService svc(tempDir + L"\\cache");
+        AppSettings s;
+        s.useOnlineSync = false;
+
+        LocalDateTime early{{2026, 11, 21}, 3, 30, 0};
+        auto stEarly = svc.ComputeState(early, s);
+        CHECK(stEarly.currentPrayer == PrayerKind::Yatsi);
+        CHECK(stEarly.nextPrayer == PrayerKind::Imsak);
+        CHECK(stEarly.remainingSeconds > 0);
+        CHECK(stEarly.progress >= 0.0 && stEarly.progress <= 1.0);
+
+        LocalDateTime late{{2026, 11, 21}, 23, 30, 0};
+        auto stLate = svc.ComputeState(late, s);
+        CHECK(stLate.currentPrayer == PrayerKind::Yatsi);
+        CHECK(stLate.nextPrayer == PrayerKind::Imsak);
+        CHECK(stLate.nextPrayerDateTime.date == DateYMD({2026, 11, 22}));
+        CHECK(stLate.remainingSeconds > 0);
+        CHECK(stLate.progress >= 0.0 && stLate.progress <= 1.0);
+
+        // Settings JSON round-trip (per-prayer rules + FarRight + AdhanMakkah + Hanafi)
+        SettingsStore store(tempDir);
+        s.dockPosition = TaskbarDockPosition::FarRight;
+        s.asrMethod = AsrJuristicMethod::Hanafi;
+        s.entrySound = NotificationSoundKind::AdhanMakkah;
+        s.preNotifySound = NotificationSoundKind::WarmBell;
+        s.soundVolumePercent = 65;
+        s.alerts.GetRule(PrayerKind::Imsak).preNotifyMinutes = 45;
+        s.alerts.GetRule(PrayerKind::Ikindi).preNotifyMinutes = 10;
+        s.alerts.GetRule(PrayerKind::Gunes).playSound = false;
+        s.alerts.GetRule(PrayerKind::Yatsi).notifyAtTime = false;
+        CHECK(store.Save(s));
+
+        AppSettings loaded = store.Load();
+        CHECK(loaded.dockPosition == TaskbarDockPosition::FarRight);
+        CHECK(loaded.asrMethod == AsrJuristicMethod::Hanafi);
+        CHECK(loaded.entrySound == NotificationSoundKind::AdhanMakkah);
+        CHECK(loaded.preNotifySound == NotificationSoundKind::WarmBell);
+        CHECK(loaded.soundVolumePercent == 65);
+        CHECK(loaded.alerts.GetRule(PrayerKind::Imsak).preNotifyMinutes == 45);
+        CHECK(loaded.alerts.GetRule(PrayerKind::Ikindi).preNotifyMinutes == 10);
+        CHECK(!loaded.alerts.GetRule(PrayerKind::Gunes).playSound);
+        CHECK(!loaded.alerts.GetRule(PrayerKind::Yatsi).notifyAtTime);
+    }
+    std::error_code ec;
+    std::filesystem::remove_all(tempDir, ec);
+
+    // City Catalog & Qibla & Hijri
+    int trCount = 0;
+    for (const auto& c : GetAllCities()) {
+        if (c.country == L"Türkiye") ++trCount;
+    }
+    CHECK(trCount >= 81);
+
+    auto izmir = SearchCities(L"izmir", 20);
+    CHECK(!izmir.empty() && izmir[0].id == L"izmir");
+    auto urfa = SearchCities(L"sanliurfa", 20);
+    CHECK(!urfa.empty() && urfa[0].id == L"sanliurfa");
+
+    auto nearIst = FindNearestCity(41.009, 28.979, 30.0);
+    CHECK(nearIst.has_value() && nearIst->id == L"istanbul");
+    CHECK(!FindNearestCity(0.0, 0.0, 30.0).has_value());
+
+    double bearing = CalculateQiblaBearing(41.0082, 28.9784);
+    CHECK(bearing >= 148.0 && bearing <= 155.0);
+    CHECK(std::wstring(GetTurkishCompassDirection(bearing)) == L"GD");
+    CHECK(!FormatTurkishHijriDate({2026, 11, 21}).empty());
+
+    ++g_passed;
+    return 0;
+}
+
+int TestMultiLanguageHijriAndRamadan() {
+    AppLanguage langs[6] = {
+        AppLanguage::Turkish, AppLanguage::English, AppLanguage::Arabic,
+        AppLanguage::German, AppLanguage::French, AppLanguage::Indonesian
+    };
+
+    for (AppLanguage lang : langs) {
+        CHECK(Tr(lang, StrId::SettingsWindowTitle)[0] != L'\0');
+        CHECK(Tr(lang, StrId::OpenImsakiye)[0] != L'\0');
+        CHECK(GetDefaultPrayerName(PrayerKind::Ikindi, lang)[0] != L'\0');
+        CHECK(GetDefaultPrayerShortCode(PrayerKind::Ikindi, lang)[0] != L'\0');
+        CHECK(!FormatHijriDateLocalized({2026, 11, 21}, lang).empty());
+        CHECK(!FormatQiblaLabelLocalized(41.0082, 28.9784, lang).empty());
+    }
+
+    AppLanguage autoLang = ResolveEffectiveLanguage(AppLanguage::Auto);
+    CHECK(static_cast<int>(autoLang) >= 1 && static_cast<int>(autoLang) <= 6);
+
+    DateYMD ramStart = FindNextOrCurrentRamadanStart({2026, 11, 21});
+    HijriDateYMD hStart = GregorianToHijri(ramStart);
+    CHECK(hStart.month == 9 && hStart.day == 1);
+
+    // Ramazan içindeyken de o Ramazanın 1. gününü bulmalı
+    DateYMD midRam = ramStart.AddDays(12);
+    CHECK(FindNextOrCurrentRamadanStart(midRam) == ramStart);
+
+    ++g_passed;
+    return 0;
+}
+
+int TestCustomPrayerNamesSettingsStoreExportAndLockout() {
+    auto state = MakeSampleState(PrayerKind::Ikindi, 23, {15, 25});
+    AppSettings s;
+    s.language = AppLanguage::English;
+    s.flyoutDesign = FlyoutDesignStyle::TimelineDashboard;
+    s.useSystemAccentColor = false;
+    s.autoOptimizeMemory = false;
+    s.quietDuringFullscreen = false;
+    s.showKerahatIndicator = false;
+    s.customPrayerNames[static_cast<size_t>(PrayerKind::Ikindi)] = L"Afternoon";
+    s.customPrayerShortCodes[static_cast<size_t>(PrayerKind::Ikindi)] = L"Af";
+    s.displayStyle = TaskbarDisplayStyle::CompactArrow;
+
+    auto disp = FormatTaskbar(state, s);
+    CHECK(disp.line1 == L"Af→23m");
+
+    s.displayStyle = TaskbarDisplayStyle::TwoLineClassic;
+    auto disp2 = FormatTaskbar(state, s);
+    CHECK(disp2.line1 == L"Until Afternoon");
+
+    wchar_t tmpRoot[MAX_PATH]{};
+    GetTempPathW(MAX_PATH, tmpRoot);
+    std::wstring tempDir = std::wstring(tmpRoot) + L"VakitCppTests2_" + std::to_wstring(GetCurrentProcessId());
+    {
+        SettingsStore store(tempDir);
+        CHECK(store.Save(s));
+        AppSettings loaded = store.Load();
+        CHECK(loaded.language == AppLanguage::English);
+        CHECK(loaded.flyoutDesign == FlyoutDesignStyle::TimelineDashboard);
+        CHECK(!loaded.useSystemAccentColor);
+        CHECK(!loaded.autoOptimizeMemory);
+        CHECK(!loaded.quietDuringFullscreen);
+        CHECK(!loaded.showKerahatIndicator);
+        CHECK(loaded.customPrayerNames[static_cast<size_t>(PrayerKind::Ikindi)] == L"Afternoon");
+        CHECK(loaded.customPrayerShortCodes[static_cast<size_t>(PrayerKind::Ikindi)] == L"Af");
+
+        // Export & Import test
+        std::wstring exportPath = tempDir + L"\\backup.json";
+        CHECK(store.ExportToFile(loaded, exportPath));
+        auto imported = store.ImportFromFile(exportPath);
+        CHECK(imported.has_value());
+        CHECK(imported->customPrayerNames[static_cast<size_t>(PrayerKind::Ikindi)] == L"Afternoon");
+
+        // Lock-out guard: hem pill hem tepsi kapalıysa tepsi otomatik açılmalı
+        AppSettings locked = s;
+        locked.showTaskbarPill = false;
+        locked.showTrayIcon = false;
+        CHECK(store.Save(locked));
+        AppSettings unlocked = store.Load();
+        CHECK(unlocked.showTrayIcon == true);
+    }
+    std::error_code ec;
+    std::filesystem::remove_all(tempDir, ec);
+
+    ++g_passed;
+    return 0;
+}
+
+int TestMonthlyImsakiyeAndKerahat() {
+    wchar_t tmpRoot[MAX_PATH]{};
+    GetTempPathW(MAX_PATH, tmpRoot);
+    std::wstring tempDir = std::wstring(tmpRoot) + L"VakitCppTests3_" + std::to_wstring(GetCurrentProcessId());
+    {
+        ScheduleService svc(tempDir + L"\\cache");
+        AppSettings s;
+        s.useOnlineSync = false;
+
+        auto feb26 = svc.GetMonthSchedule(2026, 2, s, false);
+        CHECK(feb26.size() == 28);
+        auto feb24 = svc.GetMonthSchedule(2024, 2, s, false);
+        CHECK(feb24.size() == 29);
+        auto nov26 = svc.GetMonthSchedule(2026, 11, s, false);
+        CHECK(nov26.size() == 30);
+
+        for (const auto& d : nov26) {
+            CHECK(d.imsak < d.gunes);
+            CHECK(d.gunes < d.ogle);
+            CHECK(d.ogle < d.ikindi);
+            CHECK(d.ikindi < d.aksam);
+            CHECK(d.aksam < d.yatsi);
+        }
+
+        const auto& day = nov26[20]; // Nov 21
+        CHECK(ComputeKerahatStatus(LocalDateTime::FromDateTime(day.date, day.gunes.AddMinutes(10)), day) == KerahatStatus::AfterSunrise);
+        CHECK(ComputeKerahatStatus(LocalDateTime::FromDateTime(day.date, day.ogle.AddMinutes(-15)), day) == KerahatStatus::BeforeDhuhr);
+        CHECK(ComputeKerahatStatus(LocalDateTime::FromDateTime(day.date, day.aksam.AddMinutes(-15)), day) == KerahatStatus::BeforeMaghrib);
+        CHECK(ComputeKerahatStatus(LocalDateTime::FromDateTime(day.date, day.ogle.AddMinutes(20)), day) == KerahatStatus::None);
+    }
+    std::error_code ec;
+    std::filesystem::remove_all(tempDir, ec);
+
+    ++g_passed;
+    return 0;
+}
+
+int TestLicenseManagerTrialOfflineKeysAndGating() {
+    wchar_t tmpRoot[MAX_PATH]{};
+    GetTempPathW(MAX_PATH, tmpRoot);
+    std::wstring tempDir = std::wstring(tmpRoot) + L"VakitCppLicTests_" + std::to_wstring(GetCurrentProcessId());
+    std::error_code ec;
+    std::filesystem::remove_all(tempDir, ec);
+
+    {
+        LicenseManager lm(tempDir, false);
+        DateYMD day0{2026, 11, 21};
+
+        auto st0 = lm.GetStatus(day0);
+        CHECK(st0.tier == LicenseTier::Trial);
+        CHECK(st0.trialDaysRemaining == 14);
+        CHECK(st0.IsPro());
+
+        auto st13 = lm.GetStatus(day0.AddDays(13));
+        CHECK(st13.tier == LicenseTier::Trial);
+        CHECK(st13.trialDaysRemaining == 1);
+        CHECK(st13.IsPro());
+
+        auto st14 = lm.GetStatus(day0.AddDays(14));
+        CHECK(st14.tier == LicenseTier::Free);
+        CHECK(st14.trialDaysRemaining == 0);
+        CHECK(!st14.IsPro());
+        CHECK(!lm.IsProActive(day0.AddDays(14)));
+
+        // Lifetime signed offline key
+        std::wstring lifeKey = LicenseManager::GenerateSignedKeyForTesting(L"LIFE", L"A1B2C3D4");
+        auto lifeAct = lm.ActivateKey(lifeKey, day0.AddDays(20), false);
+        CHECK(lifeAct.ok);
+        CHECK(lifeAct.tier == LicenseTier::ProLifetime);
+        auto stFuture = lm.GetStatus(day0.AddDays(2000));
+        CHECK(stFuture.tier == LicenseTier::ProLifetime);
+        CHECK(stFuture.IsPro());
+
+        // Tampered signature rejected
+        std::wstring badSig = lifeKey;
+        badSig.back() = (badSig.back() == L'0') ? L'1' : L'0';
+        auto badAct = lm.ActivateKey(badSig, day0, false);
+        CHECK(!badAct.ok);
+        CHECK(badAct.errorCode == L"INVALID");
+
+        // Online-format key blocked when allowOnlineCheck = false
+        auto onlineBlocked = lm.ActivateKey(L"LEMON-KEY-123456", day0, false);
+        CHECK(!onlineBlocked.ok);
+        CHECK(onlineBlocked.errorCode == L"ONLINE_REQUIRED");
+
+        // Annual signed offline key + expiry check
+        std::wstring yearKey = LicenseManager::GenerateSignedKeyForTesting(L"YEAR", L"20271121");
+        auto yearAct = lm.ActivateKey(yearKey, day0, false);
+        CHECK(yearAct.ok);
+        CHECK(yearAct.tier == LicenseTier::ProAnnual);
+        auto stAnnualValid = lm.GetStatus({2027, 11, 21});
+        CHECK(stAnnualValid.tier == LicenseTier::ProAnnual);
+        CHECK(stAnnualValid.expiryIso == L"2027-11-21");
+        CHECK(stAnnualValid.IsPro());
+
+        auto stAnnualExp = lm.GetStatus({2027, 11, 22});
+        CHECK(stAnnualExp.tier == LicenseTier::Free);
+        CHECK(!stAnnualExp.IsPro());
+
+        // Activating an already-expired Annual key returns EXPIRED
+        std::wstring oldYearKey = LicenseManager::GenerateSignedKeyForTesting(L"YEAR", L"20250101");
+        auto oldYearAct = lm.ActivateKey(oldYearKey, day0, false);
+        CHECK(!oldYearAct.ok);
+        CHECK(oldYearAct.errorCode == L"EXPIRED");
+
+        // Deactivate clears active Pro tier (post-trial becomes Free)
+        CHECK(lm.ActivateKey(lifeKey, day0, false).ok);
+        lm.DeactivateLicense();
+        auto stDeact = lm.GetStatus(day0.AddDays(14));
+        CHECK(stDeact.tier == LicenseTier::Free);
+        CHECK(!lm.IsProActive(day0.AddDays(14)));
+
+        // Ethical Pro gating rules
+        for (int i = 0; i <= 3; ++i) {
+            CHECK(!LicenseManager::IsFeatureProOnly(static_cast<TaskbarDisplayStyle>(i)));
+        }
+        for (int i = 4; i <= 8; ++i) {
+            CHECK(LicenseManager::IsFeatureProOnly(static_cast<TaskbarDisplayStyle>(i)));
+        }
+        CHECK(!LicenseManager::IsFeatureProOnly(FlyoutDesignStyle::CompactFluent));
+        CHECK(LicenseManager::IsFeatureProOnly(FlyoutDesignStyle::MinimalGlass));
+        CHECK(LicenseManager::IsFeatureProOnly(FlyoutDesignStyle::CardGrid));
+        CHECK(LicenseManager::IsFeatureProOnly(FlyoutDesignStyle::TimelineDashboard));
+    }
+
+    std::filesystem::remove_all(tempDir, ec);
+    ++g_passed;
+    return 0;
+}
+
+int TestRamadanIftarSahurModeAndGlobalAutoLang() {
+    AppSettings def;
+    CHECK(def.language == AppLanguage::Auto);
+    CHECK(def.ramadanIftarSahurMode == true);
+
+    wchar_t tmpRoot[MAX_PATH]{};
+    GetTempPathW(MAX_PATH, tmpRoot);
+    std::wstring tempDir = std::wstring(tmpRoot) + L"VakitCppRamTests_" + std::to_wstring(GetCurrentProcessId());
+    std::error_code ec;
+    std::filesystem::remove_all(tempDir, ec);
+    {
+        SettingsStore store(tempDir);
+        AppSettings s;
+        s.ramadanIftarSahurMode = false;
+        CHECK(store.Save(s));
+        AppSettings loaded = store.Load();
+        CHECK(loaded.ramadanIftarSahurMode == false);
+    }
+    std::filesystem::remove_all(tempDir, ec);
+
+    DateYMD ramDay = FindNextOrCurrentRamadanStart({2026, 11, 21}).AddDays(5);
+    CHECK(GregorianToHijri(ramDay).month == 9);
+
+    PrayerCountdownState st;
+    st.calculatedAt = {ramDay, 18, 22, 0};
+    st.currentPrayer = PrayerKind::Ikindi;
+    st.nextPrayer = PrayerKind::Aksam;
+    st.nextPrayerDateTime = {ramDay, 18, 45, 0};
+    st.remainingSeconds = 23 * 60;
+
+    AppSettings cfg;
+    cfg.displayStyle = TaskbarDisplayStyle::TwoLineClassic;
+    cfg.ramadanIftarSahurMode = true;
+    cfg.language = AppLanguage::Turkish;
+    CHECK(FormatTaskbar(st, cfg).line1 == L"İftara kalan");
+
+    cfg.language = AppLanguage::English;
+    CHECK(FormatTaskbar(st, cfg).line1 == L"Until Iftar");
+
+    cfg.ramadanIftarSahurMode = false;
+    cfg.language = AppLanguage::Turkish;
+    CHECK(FormatTaskbar(st, cfg).line1 == L"Akşama kalan");
+
+    st.nextPrayer = PrayerKind::Imsak;
+    st.nextPrayerDateTime = {ramDay, 5, 10, 0};
+    cfg.ramadanIftarSahurMode = true;
+    cfg.language = AppLanguage::Turkish;
+    CHECK(FormatTaskbar(st, cfg).line1 == L"Sahura kalan");
+
+    cfg.language = AppLanguage::English;
+    CHECK(FormatTaskbar(st, cfg).line1 == L"Until Suhoor");
+
+    ++g_passed;
+    return 0;
+}
+
+int TestMicrosoftStoreIapHelpersAndLicenseSync() {
+    // 1. WinRT DateTime (100-ns ticks since 1601-01-01) conversion
+    SYSTEMTIME stUtc{2027, 11, 0, 21, 12, 0, 0, 0};
+    FILETIME ft{};
+    CHECK(SystemTimeToFileTime(&stUtc, &ft));
+    int64_t ticks = (static_cast<int64_t>(ft.dwHighDateTime) << 32) | static_cast<int64_t>(ft.dwLowDateTime);
+    DateYMD parsed{};
+    CHECK(ConvertWinRtDateTimeToYmd(ticks, parsed));
+    CHECK(parsed.year == 2027 && parsed.month == 11 && parsed.day == 21);
+
+    DateYMD farFuture{};
+    CHECK(ConvertWinRtDateTimeToYmd(2650467743990000000LL, farFuture));
+    CHECK(farFuture.year == 9999 && farFuture.month == 12 && farFuture.day == 31);
+
+    DateYMD bad{};
+    CHECK(!ConvertWinRtDateTimeToYmd(0, bad));
+    CHECK(!ConvertWinRtDateTimeToYmd(-100, bad));
+
+    // 2. Store Add-On SKU ID & InAppOfferToken classification
+    CHECK(ClassifyStoreAddOn(L"9NANNUAL1234/0010", L"", L"9NANNUAL1234", L"9NLIFE9999") == LicenseTier::ProAnnual);
+    CHECK(ClassifyStoreAddOn(L"9NLIFE9999/0010", L"", L"9NANNUAL1234", L"9NLIFE9999") == LicenseTier::ProLifetime);
+    CHECK(ClassifyStoreAddOn(L"9NUNKNOWN/0010", L"pro_annual", L"", L"") == LicenseTier::ProAnnual);
+    CHECK(ClassifyStoreAddOn(L"9NUNKNOWN/0010", L"PRO_LIFETIME", L"", L"") == LicenseTier::ProLifetime);
+    CHECK(ClassifyStoreAddOn(L"9NOTHER/0010", L"other_addon", L"9NANNUAL1234", L"9NLIFE9999") == LicenseTier::Free);
+
+    // 3. ApplyStoreLicenseSnapshot persistence, offline preservation & refund revocation
+    wchar_t tmpRoot[MAX_PATH]{};
+    GetTempPathW(MAX_PATH, tmpRoot);
+    std::wstring tempDir = std::wstring(tmpRoot) + L"VakitCppStoreTests_" + std::to_wstring(GetCurrentProcessId());
+    std::error_code ec;
+    std::filesystem::remove_all(tempDir, ec);
+    {
+        DateYMD day0{2026, 11, 21};
+        {
+            LicenseManager lm(tempDir, false);
+            StoreLicenseSnapshot lifeSnap;
+            lifeSnap.storeAvailable = true;
+            lifeSnap.appLicenseActive = true;
+            lifeSnap.hasProLifetime = true;
+            CHECK(lm.ApplyStoreLicenseSnapshot(lifeSnap, day0));
+        }
+
+        // Reload fresh instance and verify cached Store license persists
+        LicenseManager lmReloaded(tempDir, false);
+        auto st = lmReloaded.GetStatus(day0.AddDays(30));
+        CHECK(st.tier == LicenseTier::ProLifetime);
+        CHECK(st.maskedKey == L"Microsoft Store");
+        CHECK(st.IsPro());
+
+        // Offline / unavailable Store must NOT revoke cached license
+        StoreLicenseSnapshot offlineSnap;
+        offlineSnap.storeAvailable = false;
+        CHECK(!lmReloaded.ApplyStoreLicenseSnapshot(offlineSnap, day0.AddDays(30)));
+        CHECK(lmReloaded.GetStatus(day0.AddDays(30)).tier == LicenseTier::ProLifetime);
+
+        // Store confirms add-on refunded / removed -> revokes Pro
+        StoreLicenseSnapshot revokedSnap;
+        revokedSnap.storeAvailable = true;
+        revokedSnap.appLicenseActive = true;
+        CHECK(lmReloaded.ApplyStoreLicenseSnapshot(revokedSnap, day0.AddDays(30)));
+        auto stRevoked = lmReloaded.GetStatus(day0.AddDays(30));
+        CHECK(stRevoked.tier == LicenseTier::Free);
+        CHECK(!stRevoked.IsPro());
+
+        // Annual subscription snapshot + expiration boundary
+        StoreLicenseSnapshot annSnap;
+        annSnap.storeAvailable = true;
+        annSnap.hasProAnnual = true;
+        annSnap.annualExpiryIso = L"2027-11-21";
+        CHECK(lmReloaded.ApplyStoreLicenseSnapshot(annSnap, day0));
+        CHECK(lmReloaded.GetStatus({2027, 11, 21}).tier == LicenseTier::ProAnnual);
+        CHECK(lmReloaded.GetStatus({2027, 11, 22}).tier == LicenseTier::Free);
+    }
+    std::filesystem::remove_all(tempDir, ec);
+
+    // 4. Unpackaged runtime safety check
+    StoreLicenseSnapshot liveUnpackaged = QueryMicrosoftStoreLicenseSync();
+    CHECK(!liveUnpackaged.storeAvailable);
+
+    ++g_passed;
+    return 0;
+}
+
+} // namespace
+
+int main() {
+    if (TestAll23CalculationMethodsAndOrder() != 0) return 1;
+    if (TestIstanbulDiyanetWindowAndHighLatitude() != 0) return 1;
+    if (TestHanafiAsrAndCountryMapping() != 0) return 1;
+    if (TestDisplayFormatterStylesAndTooltip() != 0) return 1;
+    if (TestMidnightRolloverAndQiblaAndCatalog() != 0) return 1;
+    if (TestMultiLanguageHijriAndRamadan() != 0) return 1;
+    if (TestCustomPrayerNamesSettingsStoreExportAndLockout() != 0) return 1;
+    if (TestMonthlyImsakiyeAndKerahat() != 0) return 1;
+    if (TestLicenseManagerTrialOfflineKeysAndGating() != 0) return 1;
+    if (TestRamadanIftarSahurModeAndGlobalAutoLang() != 0) return 1;
+    if (TestMicrosoftStoreIapHelpersAndLicenseSync() != 0) return 1;
+    printf("All %d native C++20 unit test suites passed!\n", g_passed);
+    return 0;
+}

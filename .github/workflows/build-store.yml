@@ -1,0 +1,42 @@
+name: Build & Package Store MSIX
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-and-package:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install LLVM-MinGW UCRT
+        shell: pwsh
+        run: |
+          winget install --id MartinStorsjo.LLVM-MinGW.UCRT --exact --accept-source-agreements --accept-package-agreements
+
+      - name: Generate Visual Assets
+        shell: pwsh
+        run: ./scripts/generate-assets.ps1
+
+      - name: Build Native C++20 & Run Unit Tests
+        shell: pwsh
+        run: ./scripts/build.ps1
+
+      - name: Run Diagnostic Smoke Test
+        shell: pwsh
+        run: ./build/VakitCubugu.exe --diag-smoke
+
+      - name: Build Store MSIX (x64)
+        shell: pwsh
+        run: ./scripts/build-msix.ps1 -SkipBuild
+
+      - name: Upload MSIX Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VakitCubugu-Store-MSIX-x64
+          path: dist/*_Store.msix
