@@ -8,12 +8,6 @@ namespace vakit {
 
 class LicenseManager {
 public:
-    struct ActivationResult {
-        bool ok = false;
-        LicenseTier tier = LicenseTier::Free;
-        std::wstring errorCode;
-    };
-
     explicit LicenseManager(std::wstring customBaseDir = {}, bool useRegistry = true);
 
     static DateYMD CurrentLocalDate();
@@ -24,24 +18,15 @@ public:
     bool IsProActive() const { return IsProActive(CurrentLocalDate()); }
     bool IsProActive(DateYMD today) const { return GetStatus(today).IsPro(); }
 
-    ActivationResult ActivateKey(const std::wstring& rawKey) {
-        return ActivateKey(rawKey, CurrentLocalDate(), true);
-    }
-    ActivationResult ActivateKey(const std::wstring& rawKey, DateYMD today, bool allowOnlineCheck = true);
-    void DeactivateLicense();
+    int64_t FirstLaunchEpochDays() const { return LoadData(CurrentLocalDate()).firstLaunchEpochDays; }
     bool ApplyStoreLicenseSnapshot(const StoreLicenseSnapshot& snap, DateYMD today);
 
-    static std::wstring GenerateSignedKeyForTesting(const std::wstring& tierCode, const std::wstring& idPart);
     static bool IsFeatureProOnly(TaskbarDisplayStyle style);
     static bool IsFeatureProOnly(FlyoutDesignStyle design);
 
 private:
     struct StoredLicenseData {
         int64_t firstLaunchEpochDays = -1;
-        LicenseTier tier = LicenseTier::Free;
-        bool fromMicrosoftStore = false;
-        std::wstring storedKey;
-        std::wstring expiryIso;
     };
 
     StoredLicenseData LoadData(DateYMD today) const;
@@ -50,6 +35,8 @@ private:
 
     std::wstring licensePath_;
     bool useRegistry_ = true;
+    LicenseTier storeTier_ = LicenseTier::Free;  // in-memory only, set from Store each launch
+    std::wstring storeExpiryIso_;
 };
 
 } // namespace vakit

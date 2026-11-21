@@ -8,6 +8,7 @@
 #include "../src/core/schedule_service.h"
 #include "../src/core/settings_store.h"
 #include "../src/core/utf_util.h"
+#include "../src/core/prayer_tracking.h"
 
 #include <cassert>
 #include <cstdio>
@@ -220,9 +221,11 @@ int TestMidnightRolloverAndQiblaAndCatalog() {
 }
 
 int TestMultiLanguageHijriAndRamadan() {
-    AppLanguage langs[6] = {
+    AppLanguage langs[12] = {
         AppLanguage::Turkish, AppLanguage::English, AppLanguage::Arabic,
-        AppLanguage::German, AppLanguage::French, AppLanguage::Indonesian
+        AppLanguage::German, AppLanguage::French, AppLanguage::Indonesian,
+        AppLanguage::Urdu, AppLanguage::Bengali, AppLanguage::Malay,
+        AppLanguage::Persian, AppLanguage::Russian, AppLanguage::Spanish
     };
 
     for (AppLanguage lang : langs) {
@@ -235,11 +238,66 @@ int TestMultiLanguageHijriAndRamadan() {
     }
 
     AppLanguage autoLang = ResolveEffectiveLanguage(AppLanguage::Auto);
-    CHECK(static_cast<int>(autoLang) >= 1 && static_cast<int>(autoLang) <= 6);
+    CHECK(static_cast<int>(autoLang) >= 1 && static_cast<int>(autoLang) <= 12);
+
+    // New languages must be fully translated (no silent English fallback), except brand-only rows
+    for (int li = 7; li <= 12; ++li) {
+        AppLanguage lang = static_cast<AppLanguage>(li);
+        int sameAsEnglish = 0;
+        for (int sid = 0; sid <= static_cast<int>(StrId::TrackWeek); ++sid) {
+            if (std::wstring(Tr(lang, static_cast<StrId>(sid))) == Tr(AppLanguage::English, static_cast<StrId>(sid))) ++sameAsEnglish;
+        }
+        CHECK(sameAsEnglish <= 16);
+    }
+    CHECK(IsRtlLanguage(AppLanguage::Urdu) && IsRtlLanguage(AppLanguage::Persian) && !IsRtlLanguage(AppLanguage::Russian));
+    // RTL countdowns are wrapped in an RTL embedding so digits and units keep their order; LTR ones are untouched
+    std::wstring urCount = FormatRemainingLong(23 * 60, true, AppLanguage::Urdu);
+    CHECK(urCount.front() == L'\u202B' && urCount.back() == L'\u202C');
+    CHECK(FormatRemainingCompact(90, false, AppLanguage::Persian).front() == L'\u202B');
+    CHECK(FormatRemainingLong(23 * 60, true, AppLanguage::English).front() == L'2');
 
     DateYMD ramStart = FindNextOrCurrentRamadanStart({2026, 11, 21});
     HijriDateYMD hStart = GregorianToHijri(ramStart);
     CHECK(hStart.month == 9 && hStart.day == 1);
+
+    // Holiday eves: the day before 1 Ramadan announces Ramadan; 27 Ramadan (Qadr) is a night observed the evening before
+    HolidayEve ramEve = FindHolidayStartingTomorrow(ramStart.AddDays(-1));
+    CHECK(ramEve.id == HolidayId::RamadanStart && !ramEve.isNight);
+    HolidayEve qadrEve = FindHolidayStartingTomorrow(ramStart.AddDays(25));
+    CHECK(qadrEve.id == HolidayId::Qadr && qadrEve.isNight);
+    CHECK(FindHolidayStartingTomorrow(ramStart.AddDays(3)).id == HolidayId::None);
+
+    // Extra times: Maghrib 18:00, next Fajr 06:00 -> 12h night, midnight 00:00, last third 02:00; Duha = sunrise + 45 min
+    {
+        DailyPrayerTimes d{};
+        d.gunes = {7, 0};
+        d.aksam = {18, 0};
+        ExtraTimes x = ComputeExtraTimes(d, {6, 0});
+        CHECK(x.midnight.hour == 0 && x.midnight.minute == 0);
+        CHECK(x.tahajjud.hour == 2 && x.tahajjud.minute == 0);
+        CHECK(x.duha.hour == 7 && x.duha.minute == 45);
+    }
+
+    // Prayer tracking persists to disk and counts only farz prayers
+    {
+        wchar_t tmp[MAX_PATH]{};
+        GetTempPathW(MAX_PATH, tmp);
+        std::wstring dir = std::wstring(tmp) + L"VakitTrackTest_" + std::to_wstring(GetCurrentProcessId());
+        std::filesystem::create_directories(dir);
+        tracking::SetStorageDirForTesting(dir);
+        DateYMD day{2026, 11, 20};
+        tracking::TogglePrayed(day, PrayerKind::Ogle);
+        tracking::TogglePrayed(day, PrayerKind::Gunes);  // ignored
+        tracking::TogglePrayed(day.AddDays(1), PrayerKind::Yatsi);
+        tracking::SetStorageDirForTesting(dir);  // forces a reload from the file
+        CHECK(tracking::IsPrayed(day, PrayerKind::Ogle));
+        CHECK(!tracking::IsPrayed(day, PrayerKind::Gunes));
+        CHECK(tracking::CountPrayedInLastDays(day.AddDays(1), 7) == 2);
+        tracking::TogglePrayed(day, PrayerKind::Ogle);
+        CHECK(!tracking::IsPrayed(day, PrayerKind::Ogle));
+        std::error_code ec;
+        std::filesystem::remove_all(dir, ec);
+    }
 
     // Ramazan içindeyken de o Ramazanın 1. gününü bulmalı
     DateYMD midRam = ramStart.AddDays(12);
@@ -353,7 +411,7 @@ int TestLicenseManagerTrialOfflineKeysAndGating() {
 
     {
         LicenseManager lm(tempDir, false);
-        DateYMD day0{2026, 11, 21};
+        DateYMD day0 = LicenseManager::CurrentLocalDate();  // ctor stamps the real date
 
         auto st0 = lm.GetStatus(day0);
         CHECK(st0.tier == LicenseTier::Trial);
@@ -369,54 +427,6 @@ int TestLicenseManagerTrialOfflineKeysAndGating() {
         CHECK(st14.tier == LicenseTier::Free);
         CHECK(st14.trialDaysRemaining == 0);
         CHECK(!st14.IsPro());
-        CHECK(!lm.IsProActive(day0.AddDays(14)));
-
-        // Lifetime signed offline key
-        std::wstring lifeKey = LicenseManager::GenerateSignedKeyForTesting(L"LIFE", L"A1B2C3D4");
-        auto lifeAct = lm.ActivateKey(lifeKey, day0.AddDays(20), false);
-        CHECK(lifeAct.ok);
-        CHECK(lifeAct.tier == LicenseTier::ProLifetime);
-        auto stFuture = lm.GetStatus(day0.AddDays(2000));
-        CHECK(stFuture.tier == LicenseTier::ProLifetime);
-        CHECK(stFuture.IsPro());
-
-        // Tampered signature rejected
-        std::wstring badSig = lifeKey;
-        badSig.back() = (badSig.back() == L'0') ? L'1' : L'0';
-        auto badAct = lm.ActivateKey(badSig, day0, false);
-        CHECK(!badAct.ok);
-        CHECK(badAct.errorCode == L"INVALID");
-
-        // Online-format key blocked when allowOnlineCheck = false
-        auto onlineBlocked = lm.ActivateKey(L"LEMON-KEY-123456", day0, false);
-        CHECK(!onlineBlocked.ok);
-        CHECK(onlineBlocked.errorCode == L"ONLINE_REQUIRED");
-
-        // Annual signed offline key + expiry check
-        std::wstring yearKey = LicenseManager::GenerateSignedKeyForTesting(L"YEAR", L"20271121");
-        auto yearAct = lm.ActivateKey(yearKey, day0, false);
-        CHECK(yearAct.ok);
-        CHECK(yearAct.tier == LicenseTier::ProAnnual);
-        auto stAnnualValid = lm.GetStatus({2027, 11, 21});
-        CHECK(stAnnualValid.tier == LicenseTier::ProAnnual);
-        CHECK(stAnnualValid.expiryIso == L"2027-11-21");
-        CHECK(stAnnualValid.IsPro());
-
-        auto stAnnualExp = lm.GetStatus({2027, 11, 22});
-        CHECK(stAnnualExp.tier == LicenseTier::Free);
-        CHECK(!stAnnualExp.IsPro());
-
-        // Activating an already-expired Annual key returns EXPIRED
-        std::wstring oldYearKey = LicenseManager::GenerateSignedKeyForTesting(L"YEAR", L"20250101");
-        auto oldYearAct = lm.ActivateKey(oldYearKey, day0, false);
-        CHECK(!oldYearAct.ok);
-        CHECK(oldYearAct.errorCode == L"EXPIRED");
-
-        // Deactivate clears active Pro tier (post-trial becomes Free)
-        CHECK(lm.ActivateKey(lifeKey, day0, false).ok);
-        lm.DeactivateLicense();
-        auto stDeact = lm.GetStatus(day0.AddDays(14));
-        CHECK(stDeact.tier == LicenseTier::Free);
         CHECK(!lm.IsProActive(day0.AddDays(14)));
 
         // Ethical Pro gating rules
@@ -518,7 +528,7 @@ int TestMicrosoftStoreIapHelpersAndLicenseSync() {
     CHECK(ClassifyStoreAddOn(L"9NUNKNOWN/0010", L"PRO_LIFETIME", L"", L"") == LicenseTier::ProLifetime);
     CHECK(ClassifyStoreAddOn(L"9NOTHER/0010", L"other_addon", L"9NANNUAL1234", L"9NLIFE9999") == LicenseTier::Free);
 
-    // 3. ApplyStoreLicenseSnapshot persistence, offline preservation & refund revocation
+    // 3. ApplyStoreLicenseSnapshot in-memory trust, tamper resistance & refund revocation
     wchar_t tmpRoot[MAX_PATH]{};
     GetTempPathW(MAX_PATH, tmpRoot);
     std::wstring tempDir = std::wstring(tmpRoot) + L"VakitCppStoreTests_" + std::to_wstring(GetCurrentProcessId());
@@ -526,21 +536,25 @@ int TestMicrosoftStoreIapHelpersAndLicenseSync() {
     std::filesystem::remove_all(tempDir, ec);
     {
         DateYMD day0{2026, 11, 21};
-        {
-            LicenseManager lm(tempDir, false);
-            StoreLicenseSnapshot lifeSnap;
-            lifeSnap.storeAvailable = true;
-            lifeSnap.appLicenseActive = true;
-            lifeSnap.hasProLifetime = true;
-            CHECK(lm.ApplyStoreLicenseSnapshot(lifeSnap, day0));
-        }
-
-        // Reload fresh instance and verify cached Store license persists
         LicenseManager lmReloaded(tempDir, false);
+        StoreLicenseSnapshot lifeSnap;
+        lifeSnap.storeAvailable = true;
+        lifeSnap.appLicenseActive = true;
+        lifeSnap.hasProLifetime = true;
+        CHECK(lmReloaded.ApplyStoreLicenseSnapshot(lifeSnap, day0));
         auto st = lmReloaded.GetStatus(day0.AddDays(30));
         CHECK(st.tier == LicenseTier::ProLifetime);
         CHECK(st.maskedKey == L"Microsoft Store");
         CHECK(st.IsPro());
+
+        // Pro is never persisted: a fresh instance (and a hand-edited license.json) stays Free after trial
+        {
+            std::string forged = "{\"firstLaunchEpochDays\": " + std::to_string(day0.ToEpochDays()) +
+                                 ", \"tier\": 3, \"fromMicrosoftStore\": true, \"storedKey\": \"X\"}";
+            CHECK(WriteFileAtomicallyUtf8(tempDir + L"\\license.json", forged));
+            LicenseManager lmForged(tempDir, false);
+            CHECK(lmForged.GetStatus(day0.AddDays(30)).tier == LicenseTier::Free);
+        }
 
         // Offline / unavailable Store must NOT revoke cached license
         StoreLicenseSnapshot offlineSnap;

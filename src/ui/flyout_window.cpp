@@ -1,4 +1,5 @@
 #include "flyout_window.h"
+#include "../core/prayer_tracking.h"
 #include "gdiplus_flat.h"
 #include "../core/formatter.h"
 #include "../core/i18n.h"
@@ -23,14 +24,21 @@ struct FlyoutDipSize {
     int height = 356;
 };
 
-FlyoutDipSize GetFlyoutDipSize(FlyoutDesignStyle design) {
+int FlyoutExtraFooterDip(const AppSettings& settings) {
+    return settings.showExtraTimes ? 18 : 0;
+}
+
+FlyoutDipSize GetFlyoutDipSize(FlyoutDesignStyle design, const AppSettings& settings) {
+    FlyoutDipSize d;
     switch (design) {
-        case FlyoutDesignStyle::MinimalGlass:      return {276, 304};
-        case FlyoutDesignStyle::CardGrid:          return {332, 348};
-        case FlyoutDesignStyle::TimelineDashboard: return {352, 404};
+        case FlyoutDesignStyle::MinimalGlass:      d = {276, 304}; break;
+        case FlyoutDesignStyle::CardGrid:          d = {332, 348}; break;
+        case FlyoutDesignStyle::TimelineDashboard: d = {352, 404}; break;
         case FlyoutDesignStyle::CompactFluent:
-        default:                                   return {308, 356};
+        default:                                   d = {308, 356}; break;
     }
+    d.height += FlyoutExtraFooterDip(settings);
+    return d;
 }
 
 uint32_t WithAlpha(uint8_t alpha, uint32_t argb) {
@@ -193,6 +201,7 @@ struct FlyoutButtonsOut {
     RECT imsakiyeRc{};
     RECT refreshRc{};
     RECT settingsRc{};
+    RECT prayerRc[6]{};  // clickable rows for prayer tracking (Güneş stays empty)
 };
 
 template <typename H>
@@ -232,6 +241,28 @@ void RenderFlyoutSurface(
     void* iconFamily = gdip::CreateFluentIconFontFamily();
 
     gdip::StrokeRoundedRect(g, 0.5f, 0.5f, w - 1.0f, h - 1.0f, 9.0f * s, pal.borderCol, 1.0f);
+
+    const float footerH = (22.0f + static_cast<float>(FlyoutExtraFooterDip(settings))) * s;
+    const bool tracking = settings.prayerTracking;
+    // Tracking: remember each farz row as a click target and overlay a check on prayed ones.
+    auto trackRow = [&](PrayerKind kind, float rx, float ry, float rw, float rh, float dotCx, float dotCy) {
+        if (!tracking || kind == PrayerKind::Gunes) return;
+        outBtns.prayerRc[static_cast<int>(kind)] = {static_cast<LONG>(rx), static_cast<LONG>(ry),
+                                                    static_cast<LONG>(rx + rw), static_cast<LONG>(ry + rh)};
+        bool prayed = tracking::IsPrayed(now.date, kind);
+        float r = 7.0f * s;
+        void* br = nullptr;
+        gdip::GdipCreateSolidFill(prayed ? pal.accent : pal.chipBg, &br);
+        if (br) {
+            gdip::GdipFillEllipse(g, br, dotCx - r, dotCy - r, r * 2.0f, r * 2.0f);
+            gdip::GdipDeleteBrush(br);
+        }
+        if (prayed) {
+            gdip::DrawTextBox(g, L"\u2713", uiFamily, 9.0f * s, true, pal.bgSurf,
+                              dotCx - r, dotCy - r, r * 2.0f, r * 2.0f,
+                              gdip::kStringAlignmentCenter, gdip::kStringAlignmentCenter);
+        }
+    };
 
     // Üst araç çubuğu butonları (sağ üst)
     float btnSz = 26.0f * s;
@@ -313,7 +344,7 @@ void RenderFlyoutSurface(
             rowY += 22.0f * s;
         }
 
-        float availH = h - 22.0f * s - rowY;
+        float availH = h - footerH - rowY;
         float rowH = availH / 6.0f;
         for (size_t i = 0; i < entries.size(); ++i) {
             PrayerKind kind = entries[i].first;
@@ -340,6 +371,7 @@ void RenderFlyoutSurface(
                 gdip::GdipFillEllipse(g, dotBrush, pad + 6.0f * s, rowY + (rowH - dSz) * 0.5f, dSz, dSz);
                 gdip::GdipDeleteBrush(dotBrush);
             }
+            trackRow(kind, pad, rowY, contentW, rowH, pad + 8.75f * s, rowY + rowH * 0.5f);
 
             std::wstring pName = GetEffectivePrayerName(kind, settings);
             if (isFriday && kind == PrayerKind::Ogle) {
@@ -405,7 +437,7 @@ void RenderFlyoutSurface(
 
         float gap = 6.0f * s;
         float cardW = (contentW - gap) * 0.5f;
-        float availH = h - 22.0f * s - gridY;
+        float availH = h - footerH - gridY;
         float cardH = (availH - gap * 2.0f) / 3.0f;
 
         for (size_t i = 0; i < entries.size(); ++i) {
@@ -430,6 +462,7 @@ void RenderFlyoutSurface(
                 gdip::GdipFillEllipse(g, dotBrush, cx + 10.0f * s, cy + 12.0f * s, dSz, dSz);
                 gdip::GdipDeleteBrush(dotBrush);
             }
+            trackRow(kind, cx, cy, cardW, cardH, cx + 13.25f * s, cy + 15.25f * s);
 
             uint32_t textCol = isPassed ? pal.textSecondary : pal.textPrimary;
             gdip::DrawTextBox(g, GetEffectivePrayerName(kind, settings), uiFamily, 11.2f * s, isNext, textCol,
@@ -513,7 +546,7 @@ void RenderFlyoutSurface(
             listY += 23.0f * s;
         }
 
-        float availH = h - 22.0f * s - listY;
+        float availH = h - footerH - listY;
         float gap = 3.0f * s;
         float rowH = (availH - gap * 5.0f) / 6.0f;
         int nowMin = now.hour * 60 + now.minute;
@@ -536,6 +569,7 @@ void RenderFlyoutSurface(
                 gdip::GdipFillEllipse(g, dotBrush, pad + 9.0f * s, listY + (rowH - dSz) * 0.5f, dSz, dSz);
                 gdip::GdipDeleteBrush(dotBrush);
             }
+            trackRow(kind, pad, listY, contentW, rowH, pad + 12.25f * s, listY + rowH * 0.5f);
 
             uint32_t textCol = isPassed ? pal.textSecondary : pal.textPrimary;
             std::wstring pName = GetEffectivePrayerName(kind, settings);
@@ -602,7 +636,7 @@ void RenderFlyoutSurface(
             rowY += 24.0f * s;
         }
 
-        float availH = h - 22.0f * s - rowY;
+        float availH = h - footerH - rowY;
         float rowGap = 3.5f * s;
         float rowH = (availH - rowGap * 5.0f) / 6.0f;
 
@@ -626,6 +660,7 @@ void RenderFlyoutSurface(
                 gdip::GdipFillEllipse(g, dotBrush, pad + 9.0f * s, rowY + (rowH - dSz) * 0.5f, dSz, dSz);
                 gdip::GdipDeleteBrush(dotBrush);
             }
+            trackRow(kind, pad, rowY, contentW, rowH, pad + 12.25f * s, rowY + rowH * 0.5f);
 
             uint32_t rTextCol = isPassed ? pal.textSecondary : pal.textPrimary;
             gdip::DrawTextBox(g, GetEffectivePrayerName(kind, settings), uiFamily, 12.0f * s, isNext, rTextCol,
@@ -656,8 +691,28 @@ void RenderFlyoutSurface(
         ? std::wstring(Tr(lang, StrId::SourceLocalCalc))
         : state.today.source;
     std::wstring footer = std::wstring(Tr(lang, StrId::SourcePrefix)) + srcText;
+    if (settings.showExtraTimes) {
+        ExtraTimes x = ComputeExtraTimes(state.today, state.tomorrowImsak);
+        std::wstring extra = std::wstring(Tr(lang, StrId::ExtraDuha)) + L" " + x.duha.FormatHHMM() + L"  ·  " +
+                             Tr(lang, StrId::ExtraMidnight) + L" " + x.midnight.FormatHHMM() + L"  ·  " +
+                             Tr(lang, StrId::ExtraTahajjud) + L" " + x.tahajjud.FormatHHMM();
+        gdip::DrawTextBox(g, extra, uiFamily, 9.8f * s, true, pal.textPrimary,
+                          pad, h - footerH + 2.0f * s, contentW, 15.0f * s,
+                          gdip::kStringAlignmentCenter, gdip::kStringAlignmentCenter);
+    }
+    float sourceW = contentW;
+    if (tracking) {
+        wchar_t cnt[16];
+        swprintf_s(cnt, L"%d/35", tracking::CountPrayedInLastDays(now.date, 7));
+        wchar_t weekBuf[96];
+        swprintf_s(weekBuf, Tr(lang, StrId::TrackWeek), cnt);
+        gdip::DrawTextBox(g, weekBuf, uiFamily, 9.8f * s, true, pal.accent,
+                          pad + contentW * 0.5f, h - 20.0f * s, contentW * 0.5f, 15.0f * s,
+                          gdip::kStringAlignmentFar, gdip::kStringAlignmentCenter);
+        sourceW = contentW * 0.5f;
+    }
     gdip::DrawTextBox(g, footer, uiFamily, 9.8f * s, false, pal.textSecondary,
-                      pad, h - 20.0f * s, contentW, 15.0f * s,
+                      pad, h - 20.0f * s, sourceW, 15.0f * s,
                       gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
 
     if (iconFamily) gdip::GdipDeleteFontFamily(iconFamily);
@@ -705,7 +760,8 @@ void FlyoutWindow::ShowRightDocked(RECT anchorRect) {
     hovered_ = HoverTarget::None;
     trackingLeave_ = false;
 
-    AppSettings settings = settingsStore_.Load();
+    settings_ = settingsStore_.Load();
+    const AppSettings& settings = settings_;
     autoOptimizeMemory_ = settings.autoOptimizeMemory;
     openedDesign_ = settings.flyoutDesign;
 
@@ -713,7 +769,7 @@ void FlyoutWindow::ShowRightDocked(RECT anchorRect) {
     UINT dpi = taskbarHwnd ? GetDpiForWindowCompat(taskbarHwnd) : 96;
     scale_ = dpi >= 96 ? static_cast<double>(dpi) / 96.0 : 1.0;
 
-    FlyoutDipSize dip = GetFlyoutDipSize(openedDesign_);
+    FlyoutDipSize dip = GetFlyoutDipSize(openedDesign_, settings);
     int winW = static_cast<int>(std::llround(dip.width * scale_));
     int winH = static_cast<int>(std::llround(dip.height * scale_));
 
@@ -721,7 +777,7 @@ void FlyoutWindow::ShowRightDocked(RECT anchorRect) {
     hwnd_ = CreateWindowExW(
         WS_EX_TOPMOST | WS_EX_TOOLWINDOW,
         kFlyoutClassName,
-        L"VakitÇubuğu",
+        L"PrayerBar",
         WS_POPUP,
         0, 0, winW, winH,
         nullptr, nullptr, hInst, this);
@@ -754,11 +810,13 @@ void FlyoutWindow::CloseNow() {
 
 void FlyoutWindow::RefreshView() {
     if (!hwnd_) return;
-    AppSettings settings = settingsStore_.Load();
+    int oldExtra = FlyoutExtraFooterDip(settings_);
+    settings_ = settingsStore_.Load();
+    const AppSettings& settings = settings_;
     autoOptimizeMemory_ = settings.autoOptimizeMemory;
-    if (settings.flyoutDesign != openedDesign_) {
+    if (settings.flyoutDesign != openedDesign_ || FlyoutExtraFooterDip(settings) != oldExtra) {
         openedDesign_ = settings.flyoutDesign;
-        FlyoutDipSize dip = GetFlyoutDipSize(openedDesign_);
+        FlyoutDipSize dip = GetFlyoutDipSize(openedDesign_, settings);
         int winW = static_cast<int>(std::llround(dip.width * scale_));
         int winH = static_cast<int>(std::llround(dip.height * scale_));
         PositionRightDocked({}, winW, winH);
@@ -842,8 +900,7 @@ void FlyoutWindow::PaintClient(HDC hdc, int width, int height) {
 
     if (gdip::GdipCreateBitmapFromScan0(width, height, width * 4, gdip::kPixelFormat32bppPARGB, bits, &gdiBmp) == 0 && gdiBmp) {
         if (gdip::GdipGetImageGraphicsContext(gdiBmp, &g) == 0 && g) {
-            AppSettings settings = settingsStore_.Load();
-            autoOptimizeMemory_ = settings.autoOptimizeMemory;
+            const AppSettings& settings = settings_;
             bool isLight = IsAppLight(settings.themeMode);
             LocalDateTime now = ScheduleService::GetCurrentLocalDateTime();
             PrayerCountdownState state = scheduleService_.ComputeState(now, settings);
@@ -858,6 +915,7 @@ void FlyoutWindow::PaintClient(HDC hdc, int width, int height) {
             btnImsakiyeRc_ = btns.imsakiyeRc;
             btnRefreshRc_ = btns.refreshRc;
             btnSettingsRc_ = btns.settingsRc;
+            for (int i = 0; i < 6; ++i) prayerRc_[i] = btns.prayerRc[i];
             gdip::GdipDeleteGraphics(g);
         }
         gdip::GdipDisposeImage(gdiBmp);
@@ -943,6 +1001,15 @@ LRESULT FlyoutWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             } else if (hit == HoverTarget::Settings) {
                 CloseNow();
                 if (onOpenSettings_) onOpenSettings_();
+            } else if (settings_.prayerTracking) {
+                POINT pt{x, y};
+                for (int i = 0; i < 6; ++i) {
+                    if (!IsRectEmpty(&prayerRc_[i]) && PtInRect(&prayerRc_[i], pt)) {
+                        tracking::TogglePrayed(ScheduleService::GetCurrentLocalDateTime().date, static_cast<PrayerKind>(i));
+                        InvalidateRect(hWnd, nullptr, FALSE);
+                        break;
+                    }
+                }
             }
             return 0;
         }
@@ -973,12 +1040,15 @@ PillRenderResult SmokeTestFlyoutRender(
     FlyoutDesignStyle design,
     const PrayerCountdownState& state,
     const AppSettings& settings,
-    double scale) {
+    double scale,
+    std::vector<uint32_t>* outPixels,
+    int* outWidth,
+    int* outHeight) {
 
     gdip::EnsureInitialized();
     AppSettings copy = settings;
     copy.flyoutDesign = design;
-    FlyoutDipSize dip = GetFlyoutDipSize(design);
+    FlyoutDipSize dip = GetFlyoutDipSize(design, copy);
     int width = static_cast<int>(std::llround(dip.width * scale));
     int height = static_cast<int>(std::llround(dip.height * scale));
 
@@ -1018,6 +1088,9 @@ PillRenderResult SmokeTestFlyoutRender(
                 }
                 res.status = 0;
                 res.nonZeroPixels = nonZero;
+                if (outPixels) outPixels->assign(px, px + total);
+                if (outWidth) *outWidth = width;
+                if (outHeight) *outHeight = height;
                 gdip::GdipDeleteGraphics(g);
             } else {
                 res.status = st == 0 ? -4 : st;

@@ -29,6 +29,12 @@
     <Resource Language="de-DE" />
     <Resource Language="fr-FR" />
     <Resource Language="id-ID" />
+    <Resource Language="ur-PK" />
+    <Resource Language="bn-BD" />
+    <Resource Language="ms-MY" />
+    <Resource Language="fa-IR" />
+    <Resource Language="ru-RU" />
+    <Resource Language="es-ES" />
   </Resources>
 
   <Applications>
@@ -55,7 +61,7 @@
           <desktop:StartupTask
             TaskId="VakitCubuguStartup"
             Enabled="false"
-            DisplayName="VakitÇubuğu" />
+            DisplayName="PrayerBar" />
         </desktop:Extension>
       </Extensions>
     </Application>

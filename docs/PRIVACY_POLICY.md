@@ -1,10 +1,10 @@
-# Gizlilik Politikası — VakitÇubuğu (Privacy Policy)
+# Gizlilik Politikası — PrayerBar (Privacy Policy)
 
 Son güncelleme: 2026-11-21
 
 ## Türkçe
 
-**VakitÇubuğu**, kullanıcı gizliliğine tam saygı gösterir:
+**PrayerBar**, kullanıcı gizliliğine tam saygı gösterir:
 
 1. **Kişisel Veri Toplanmaz:** Uygulama ad, e-posta, konum geçmişi, cihaz kimliği veya kullanım telemetrisi toplamaz ve üçüncü taraflarla paylaşmaz.
 2. **Yerel Depolama:** Seçtiğiniz şehir, bildirim kuralları, görünüm tercihleri ve aylık namaz vakitleri önbelleği yalnızca kendi bilgisayarınızda (`%LocalAppData%\VakitCubugu`) saklanır.
@@ -17,7 +17,7 @@ Son güncelleme: 2026-11-21
 
 ## English
 
-**VakitÇubuğu** respects your privacy:
+**PrayerBar** respects your privacy:
 
 1. **No Personal Data Collection:** The app does not collect, track, store, or share personal information, analytics, device identifiers, or background location telemetry.
 2. **Local Storage Only:** Your selected city, notification rules, display preferences, and monthly cached prayer schedules are stored exclusively on your local device under `%LocalAppData%\VakitCubugu`.

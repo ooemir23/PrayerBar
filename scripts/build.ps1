@@ -1,4 +1,4 @@
-param(
+﻿param(
     [switch]$SkipTests
 )
 
@@ -50,8 +50,10 @@ $appSources = @(
     "src\core\settings_store.cpp",
     "src\core\schedule_service.cpp",
     "src\core\license_manager.cpp",
+    "src\core\prayer_tracking.cpp",
     "src\platform\win_http.cpp",
     "src\platform\win_store.cpp",
+    "src\platform\toast.cpp",
     "src\platform\audio_player.cpp",
     "src\platform\theme_utils.cpp",
     "src\platform\taskbar_geom.cpp",
@@ -80,7 +82,7 @@ $linkFlags = @(
     "-Wl,--dynamicbase,--nxcompat,--high-entropy-va,--tsaware",
     "-luser32", "-lgdi32", "-lgdiplus", "-lshell32", "-ldwmapi",
     "-lwinmm", "-lwinhttp", "-lole32", "-lcomctl32", "-lcomdlg32",
-    "-luxtheme", "-ladvapi32", "-lpsapi"
+    "-luxtheme", "-ladvapi32", "-lpsapi", "-lruntimeobject", "-loleacc", "-loleaut32", "-luuid"
 )
 
 & $clangxx @commonFlags @appSources $resFile -o $appExe @linkFlags
@@ -127,6 +129,7 @@ if (-not $SkipTests) {
         "src\core\settings_store.cpp",
         "src\core\schedule_service.cpp",
         "src\core\license_manager.cpp",
+        "src\core\prayer_tracking.cpp",
         "src\platform\win_http.cpp",
         "src\platform\win_store.cpp",
         "tests\vakit_tests.cpp"

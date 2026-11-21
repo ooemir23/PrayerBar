@@ -1,4 +1,4 @@
-# VakitÇubuğu (Saf Native C++20 + Win32)
+# PrayerBar (Saf Native C++20 + Win32)
 
 Windows 10/11 görev çubuğunun istediğiniz bölümünde (sistem tepsisi yanı, en sağ / saatin sağ köşesi, orta veya sol) ve sistem tepsisinde çalışan, **ultra düşük RAM (~3–5 MB) ve sıfır boşta CPU (%0.000)** tüketimli modern namaz vakitleri uygulaması.
 
@@ -12,10 +12,13 @@ Windows 10/11 görev çubuğunun istediğiniz bölümünde (sistem tepsisi yanı
 - **Microsoft Store Hazır:** ASLR / DEP / High-Entropy VA uyumlu statik tek `.exe` ve ~3–4 MB kompakt Store `.msix` paketi.
 
 ## v2.0 Global & Ticari Özellikler
-- **6 Dilli Global Arayüz (`Auto` OS Dili Algılama):** English, Türkçe, العربية, Deutsch, Français, Bahasa Indonesia.
+- **12 Dilli Global Arayüz (`Auto` OS Dili Algılama):** English, Türkçe, العربية, Deutsch, Français, Bahasa Indonesia, اردو, বাংলা, Bahasa Melayu, فارسی, Русский, Español.
 - **23 Dünya Hesaplama Yöntemi:** Diyanet, ISNA, MWL, Umm al-Qura, Egyptian, Karachi, Singapore, France UOIF, Russia, vb.
 - **Ramazan İftar & Sahur Geri Sayımı + Aylık İmsakiye:** İmsakiye penceresi, CSV/HTML dışa aktarım ve otomatik Ramazan Iftar/Sahur modu.
-- **Etik Hibrit Freemium & 14 Gün Ücretsiz Pro Deneme:** Çekirdek vakitler, günlük bildirimler, dahili ezan sesleri ve İmsakiye görüntüleme daima ücretsizdir. Pro (`$4.99/yıl` veya `$9.99 ömür boyu`) 14 gün tam deneme, çevrimdışı imzalı anahtar (`VKPR-LIFE-...` / `VKPR-YEAR-...`) ve Lemon Squeezy / Gumroad doğrulaması ile tüm görev çubuğu stillerini, açılır kart temalarını, özel sesleri ve yedeklemeyi açar.
+- **Etik Hibrit Freemium & 14 Gün Ücretsiz Pro Deneme:** Çekirdek vakitler, günlük bildirimler, dahili ezan sesleri ve İmsakiye görüntüleme daima ücretsizdir. Pro (`$4.99/yıl` veya `$9.99 ömür boyu`) 14 gün tam deneme sunar; satın alma yalnızca Microsoft Store eklentileriyle yapılır ve lisans her açılışta Store'dan doğrulanır. Pro tüm görev çubuğu stillerini, açılır kart temalarını, özel sesleri ve yedeklemeyi açar.
+
+- **Aç/Kapa Özellikler Sekmesi:** Cuma ve dini gün hatırlatmaları, seyahat modu (saat dilimi değişince uyarı), Ertele düğmeli Windows bildirimleri, Kuşluk / Gece yarısı / Teheccüd vakitleri, haftalık özetli namaz takibi ve Win+Alt+P kısayolu. Hepsi tek tek açılıp kapatılabilir; hiçbiri ek zamanlayıcı veya arka plan işi eklemez.
+- **Sabah Ezanı Seçimi:** İmsak vakti için ayrı ses seçilebilir.
 
 ## Derleme, Test & Paketleme Komutları
 
@@ -26,8 +29,11 @@ powershell -ExecutionPolicy Bypass -File scripts\build.ps1
 # Çalışma zamanı, bellek ve lisans doğrulama testi
 .\build\VakitCubugu.exe --diag-smoke
 
-# Offline imzalı Pro lisans anahtarı üret
-powershell -ExecutionPolicy Bypass -File scripts\generate-license-key.ps1 -Tier Lifetime
+# Açılır pencereyi istenen dilde BMP olarak kaydet (mağaza görselleri için; --lang 1-12)
+.\build\VakitCubugu.exe --diag-smoke --lang 2 --flyout-preview C:\Temp\en
+
+# Çalışan uygulamada ayarları belirli sekmede aç (0-4)
+.\build\VakitCubugu.exe --settings 3
 
 # Global Store (.msix) + Portable (.zip) + SHA256SUMS.txt yayın paketlerini dist\release\ altına üret
 powershell -ExecutionPolicy Bypass -File scripts\build-release.ps1

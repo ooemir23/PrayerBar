@@ -185,7 +185,13 @@ enum class AppLanguage : int {
     Arabic = 3,
     German = 4,
     French = 5,
-    Indonesian = 6
+    Indonesian = 6,
+    Urdu = 7,
+    Bengali = 8,
+    Malay = 9,
+    Persian = 10,
+    Russian = 11,
+    Spanish = 12
 };
 
 enum class FlyoutDesignStyle : int {
@@ -305,6 +311,17 @@ struct AppSettings {
     bool quietDuringFullscreen = true;
     bool showKerahatIndicator = true;
     bool ramadanIftarSahurMode = true;
+    bool fridayReminder = true;
+    bool reviewPrompted = false;
+    int notifyMuteUntilMin = 0;  // local epoch minutes; notifications stay silent until then
+    int fajrSound = -1;          // NotificationSoundKind for Imsak; -1 = same as entrySound
+    bool holidayReminders = true;
+    bool showExtraTimes = false;
+    bool travelMode = true;
+    bool prayerTracking = false;
+    bool modernToasts = true;
+    bool globalHotkey = false;
+    int lastTzHash = 0;          // hash of the last seen Windows time zone key; 0 = not recorded yet
 
     PrayerAlertSchedule alerts{};
     NotificationSoundKind entrySound = NotificationSoundKind::AdhanShort;

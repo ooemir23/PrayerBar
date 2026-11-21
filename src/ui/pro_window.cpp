@@ -302,7 +302,7 @@ void ProWindow::PaintCanvas(HDC hdc, int width, int height) {
             AppLanguage lang = settings_.language;
 
             // Üst Başlık ve Durum Rozeti
-            gdip::DrawTextBox(g, L"VakitÇubuğu Pro", dispFam, 18.0f * s, true, textPrim,
+            gdip::DrawTextBox(g, L"PrayerBar Pro", dispFam, 18.0f * s, true, textPrim,
                               pad, 10.0f * s, 210.0f * s, 26.0f * s,
                               gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
 

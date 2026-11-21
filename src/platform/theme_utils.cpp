@@ -122,22 +122,29 @@ void AllowDarkModeForWindowCompat(HWND hwnd, bool enable) {
     if (fn) fn(hwnd, enable ? TRUE : FALSE);
 }
 
+namespace {
+DWORD g_accentRawCached = 0xFFFFFFFFu;  // 0xFFFFFFFF = not read yet
+}
+
+void InvalidateAccentColorCache() {
+    g_accentRawCached = 0xFFFFFFFFu;
+}
+
 uint32_t GetWindowsAccentColorArgb(bool isDark, bool useSystemAccent) {
     if (!useSystemAccent) {
         return isDark ? 0xFF38C9B2u : 0xFF0D7368u;
     }
 
-    DWORD raw = 0;
-    DWORD sz = sizeof(raw);
-    LSTATUS rc = RegGetValueW(
-        HKEY_CURRENT_USER,
-        L"Software\\Microsoft\\Windows\\DWM",
-        L"AccentColor",
-        RRF_RT_REG_DWORD,
-        nullptr,
-        &raw,
-        &sz);
-    if (rc != ERROR_SUCCESS || raw == 0) {
+    // Read once and cache: this runs on every paint. InvalidateAccentColorCache() runs on colour changes.
+    if (g_accentRawCached == 0xFFFFFFFFu) {
+        DWORD rawRead = 0;
+        DWORD sz = sizeof(rawRead);
+        LSTATUS rc = RegGetValueW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\DWM", L"AccentColor",
+                                  RRF_RT_REG_DWORD, nullptr, &rawRead, &sz);
+        g_accentRawCached = (rc == ERROR_SUCCESS) ? rawRead : 0;
+    }
+    DWORD raw = g_accentRawCached;
+    if (raw == 0) {
         return isDark ? 0xFF38C9B2u : 0xFF0D7368u;
     }
 

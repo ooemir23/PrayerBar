@@ -473,4 +473,37 @@ std::wstring FormatTurkishHijriDate(DateYMD date) {
     return std::wstring(buf);
 }
 
+ExtraTimes ComputeExtraTimes(const DailyPrayerTimes& today, TimeHM tomorrowImsak) {
+    auto fromMin = [](int m) {
+        m = ((m % 1440) + 1440) % 1440;
+        return TimeHM{m / 60, m % 60};
+    };
+    int maghrib = today.aksam.TotalMinutes();
+    int night = tomorrowImsak.TotalMinutes() + 1440 - maghrib;
+    ExtraTimes x;
+    x.duha = fromMin(today.gunes.TotalMinutes() + 45);
+    x.midnight = fromMin(maghrib + night / 2);
+    x.tahajjud = fromMin(maghrib + (night * 2) / 3);
+    return x;
+}
+
+HolidayEve FindHolidayStartingTomorrow(DateYMD today) {
+    DateYMD tomorrow = today.AddDays(1);
+    HijriDateYMD h = GregorianToHijri(tomorrow);
+    struct Entry { int m, d; HolidayId id; bool night; };
+    static constexpr Entry kList[] = {
+        {1, 1, HolidayId::HijriNewYear, false}, {1, 10, HolidayId::Ashura, false},
+        {3, 12, HolidayId::Mawlid, true},       {7, 27, HolidayId::Miraj, true},
+        {8, 15, HolidayId::Barat, true},        {9, 1, HolidayId::RamadanStart, false},
+        {9, 27, HolidayId::Qadr, true},         {10, 1, HolidayId::EidFitr, false},
+        {12, 9, HolidayId::Arafah, false},      {12, 10, HolidayId::EidAdha, false},
+    };
+    for (const auto& e : kList) {
+        if (h.month == e.m && h.day == e.d) return {e.id, e.night};
+    }
+    // Regaib: the night before the first Friday of Rajab
+    if (h.month == 7 && h.day <= 7 && tomorrow.DayOfWeek() == 5) return {HolidayId::Raghaib, true};
+    return {};
+}
+
 } // namespace vakit

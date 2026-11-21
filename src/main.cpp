@@ -21,11 +21,49 @@
 #include <objbase.h>
 #include <shellapi.h>
 
+#include <algorithm>
 #include <cstdio>
+#include <cwctype>
 #include <filesystem>
 #include <string>
+#include <vector>
 
 namespace {
+
+bool WriteBmp32(const std::wstring& bmpPath, const uint32_t* px, int W, int H) {
+    std::filesystem::path p(bmpPath);
+    if (p.has_parent_path()) {
+        std::error_code ec;
+        std::filesystem::create_directories(p.parent_path(), ec);
+    }
+    HANDLE f = CreateFileW(bmpPath.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (f == INVALID_HANDLE_VALUE) return false;
+    uint32_t imgSize = static_cast<uint32_t>(W * H * 4);
+    BITMAPFILEHEADER bfh{};
+    bfh.bfType = 0x4D42;
+    bfh.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
+    bfh.bfSize = bfh.bfOffBits + imgSize;
+
+    BITMAPINFOHEADER bih{};
+    bih.biSize = sizeof(BITMAPINFOHEADER);
+    bih.biWidth = W;
+    bih.biHeight = H;
+    bih.biPlanes = 1;
+    bih.biBitCount = 32;
+    bih.biCompression = BI_RGB;
+    bih.biSizeImage = imgSize;
+
+    DWORD written = 0;
+    WriteFile(f, &bfh, sizeof(bfh), &written, nullptr);
+    WriteFile(f, &bih, sizeof(bih), &written, nullptr);
+    std::vector<uint32_t> row(static_cast<size_t>(W));
+    for (int y = H - 1; y >= 0; --y) {
+        for (int x = 0; x < W; ++x) row[x] = px[y * W + x] | 0xFF000000u;
+        WriteFile(f, row.data(), static_cast<DWORD>(W * 4), &written, nullptr);
+    }
+    CloseHandle(f);
+    return true;
+}
 
 bool SaveTrayPreviewBmp(const std::wstring& bmpPath, const vakit::PrayerCountdownState& state, const vakit::AppSettings& settings) {
     constexpr int W = 280;
@@ -72,40 +110,7 @@ bool SaveTrayPreviewBmp(const std::wstring& bmpPath, const vakit::PrayerCountdow
             }
         }
         GdiFlush();
-
-        std::filesystem::path p(bmpPath);
-        if (p.has_parent_path()) {
-            std::error_code ec;
-            std::filesystem::create_directories(p.parent_path(), ec);
-        }
-
-        HANDLE f = CreateFileW(bmpPath.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-        if (f != INVALID_HANDLE_VALUE) {
-            uint32_t imgSize = static_cast<uint32_t>(W * H * 4);
-            BITMAPFILEHEADER bfh{};
-            bfh.bfType = 0x4D42;
-            bfh.bfOffBits = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPINFOHEADER);
-            bfh.bfSize = bfh.bfOffBits + imgSize;
-
-            BITMAPINFOHEADER bih{};
-            bih.biSize = sizeof(BITMAPINFOHEADER);
-            bih.biWidth = W;
-            bih.biHeight = H;
-            bih.biPlanes = 1;
-            bih.biBitCount = 32;
-            bih.biCompression = BI_RGB;
-            bih.biSizeImage = imgSize;
-
-            DWORD written = 0;
-            WriteFile(f, &bfh, sizeof(bfh), &written, nullptr);
-            WriteFile(f, &bih, sizeof(bih), &written, nullptr);
-            for (int y = H - 1; y >= 0; --y) {
-                for (int x = 0; x < W; ++x) px[y * W + x] |= 0xFF000000u;
-                WriteFile(f, px + y * W, static_cast<DWORD>(W * 4), &written, nullptr);
-            }
-            CloseHandle(f);
-            ok = true;
-        }
+        ok = WriteBmp32(bmpPath, px, W, H);
         SelectObject(memDc, old);
         DeleteObject(hBmp);
     }
@@ -114,7 +119,7 @@ bool SaveTrayPreviewBmp(const std::wstring& bmpPath, const vakit::PrayerCountdow
     return ok;
 }
 
-int RunDiagnosticSmoke(const std::wstring& previewBmpPath, const std::wstring& verifyKey) {
+int RunDiagnosticSmoke(const std::wstring& previewBmpPath, const std::wstring& flyoutPreviewDir, int langOverride) {
     wchar_t tmpRoot[MAX_PATH]{};
     GetTempPathW(MAX_PATH, tmpRoot);
     std::wstring tempDir = std::wstring(tmpRoot) + L"VakitCubuguSmoke_" + std::to_wstring(GetCurrentProcessId());
@@ -122,7 +127,7 @@ int RunDiagnosticSmoke(const std::wstring& previewBmpPath, const std::wstring& v
     vakit::SettingsStore store(tempDir);
     vakit::AppSettings settings = store.Load();
     settings.useOnlineSync = false;
-    settings.language = vakit::AppLanguage::Turkish;
+    settings.language = langOverride > 0 ? static_cast<vakit::AppLanguage>(langOverride) : vakit::AppLanguage::Turkish;
 
     vakit::ScheduleService schedule(tempDir + L"\\cache");
     vakit::LocalDateTime now{{2026, 11, 21}, 15, 2, 0};
@@ -207,19 +212,18 @@ int RunDiagnosticSmoke(const std::wstring& previewBmpPath, const std::wstring& v
         return 5;
     }
 
-    if (!verifyKey.empty()) {
-        vakit::LicenseManager lm(tempDir + L"\\lic", false);
-        auto vr = lm.ActivateKey(verifyKey, {2026, 11, 21}, false);
-        if (!vr.ok) {
-            fprintf(stderr, "Key verification failed: %s\n", vakit::WideToUtf8(vr.errorCode).c_str());
-            std::error_code ec;
-            std::filesystem::remove_all(tempDir, ec);
-            vakit::gdip::Shutdown();
-            return 9;
+    if (!flyoutPreviewDir.empty()) {
+        settings.showExtraTimes = true;  // previews show every optional row
+        settings.prayerTracking = true;
+        for (int f = 0; f <= 3; ++f) {
+            std::vector<uint32_t> px;
+            int w = 0, h = 0;
+            auto fr = vakit::SmokeTestFlyoutRender(static_cast<vakit::FlyoutDesignStyle>(f), state, settings, 1.5, &px, &w, &h);
+            std::wstring out = flyoutPreviewDir + L"\\flyout_" + std::to_wstring(f) + L".bmp";
+            if (fr.status != 0 || !WriteBmp32(out, px.data(), w, h)) {
+                fprintf(stderr, "Failed saving flyout preview %d.\n", f);
+            }
         }
-        const char* tierName = (vr.tier == vakit::LicenseTier::ProLifetime) ? "ProLifetime" :
-                               (vr.tier == vakit::LicenseTier::ProAnnual)   ? "ProAnnual" : "Pro";
-        printf("KeyVerified=%s\n", tierName);
     }
 
     if (!previewBmpPath.empty()) {
@@ -251,15 +255,21 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
     bool isSmoke = false;
     std::wstring previewPath;
-    std::wstring verifyKey;
+    std::wstring flyoutPreviewDir;
+    int langOverride = 0;
+    int openSettingsTab = -1;  // --settings [tab]: open settings (in the running instance if any)
     if (argv) {
         for (int i = 1; i < argc; ++i) {
             if (_wcsicmp(argv[i], L"--diag-smoke") == 0) {
                 isSmoke = true;
             } else if (_wcsicmp(argv[i], L"--tray-preview") == 0 && (i + 1) < argc) {
                 previewPath = argv[++i];
-            } else if (_wcsicmp(argv[i], L"--verify-key") == 0 && (i + 1) < argc) {
-                verifyKey = argv[++i];
+            } else if (_wcsicmp(argv[i], L"--flyout-preview") == 0 && (i + 1) < argc) {
+                flyoutPreviewDir = argv[++i];
+            } else if (_wcsicmp(argv[i], L"--lang") == 0 && (i + 1) < argc) {
+                langOverride = std::clamp(_wtoi(argv[++i]), 0, 12);
+            } else if (_wcsicmp(argv[i], L"--settings") == 0) {
+                openSettingsTab = ((i + 1) < argc && iswdigit(argv[i + 1][0])) ? std::clamp(_wtoi(argv[++i]), 0, 4) : 0;
             }
         }
         LocalFree(argv);
@@ -278,7 +288,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
             freopen_s(&fp, "CONOUT$", "w", stderr);
         }
         SetConsoleOutputCP(CP_UTF8);
-        int code = RunDiagnosticSmoke(previewPath, verifyKey);
+        int code = RunDiagnosticSmoke(previewPath, flyoutPreviewDir, langOverride);
         fflush(stdout);
         fflush(stderr);
         CoUninitialize();
@@ -289,7 +299,11 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     if (hMutex && GetLastError() == ERROR_ALREADY_EXISTS) {
         HWND existing = FindWindowW(vakit::AppHost::kHostWindowClassName, nullptr);
         if (existing) {
-            PostMessageW(existing, vakit::AppHost::kMsgShowFlyout, 0, 0);
+            if (openSettingsTab >= 0) {
+                PostMessageW(existing, vakit::AppHost::kMsgShowSettings, static_cast<WPARAM>(openSettingsTab), 0);
+            } else {
+                PostMessageW(existing, vakit::AppHost::kMsgShowFlyout, 0, 0);
+            }
         }
         CloseHandle(hMutex);
         CoUninitialize();
@@ -306,5 +320,6 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
 
     if (hMutex) CloseHandle(hMutex);
     CoUninitialize();
-    return exitCode;
+    // Detached network threads still hold &scheduleService; end the process before it is destroyed.
+    ExitProcess(static_cast<UINT>(exitCode));
 }

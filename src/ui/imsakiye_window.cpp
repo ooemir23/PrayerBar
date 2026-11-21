@@ -302,7 +302,7 @@ void ImsakiyeWindow::ExportHtml() {
        << L"th{background:#0d7368;color:#fff}tr:nth-child(even){background:#f7f8fa}"
        << L"td.d{text-align:left;font-weight:600}</style></head><body>\n"
        << L"<h2>" << HtmlEscape(heading) << L"</h2><p class=\"sub\">" << HtmlEscape(settings_.countryName)
-       << L" · VakitÇubuğu</p><table><thead><tr><th>" << HtmlEscape(Tr(lang, StrId::ColDate))
+       << L" · PrayerBar</p><table><thead><tr><th>" << HtmlEscape(Tr(lang, StrId::ColDate))
        << L"</th><th>" << HtmlEscape(Tr(lang, StrId::ColHijri)) << L"</th>";
     for (int i = 0; i < 6; ++i) {
         ws << L"<th>" << HtmlEscape(GetEffectivePrayerName(static_cast<PrayerKind>(i), settings_)) << L"</th>";

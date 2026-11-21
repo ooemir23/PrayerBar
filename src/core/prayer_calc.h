@@ -34,6 +34,24 @@ HijriDateYMD GregorianToHijri(DateYMD date);
 DateYMD FindNextOrCurrentRamadanStart(DateYMD refDate);
 KerahatStatus ComputeKerahatStatus(const LocalDateTime& now, const DailyPrayerTimes& today);
 
+// Optional extra times. Duha starts when the post-sunrise makruh window (45 min, see ComputeKerahatStatus) ends.
+struct ExtraTimes {
+    TimeHM duha;      // Kuşluk / Ishraq
+    TimeHM midnight;  // Islamic midnight: half of Maghrib -> next Fajr
+    TimeHM tahajjud;  // start of the last third of the night
+};
+ExtraTimes ComputeExtraTimes(const DailyPrayerTimes& today, TimeHM tomorrowImsak);
+
+enum class HolidayId : int {
+    None = 0, HijriNewYear, Ashura, Mawlid, Raghaib, Miraj, Barat, RamadanStart, Qadr, EidFitr, Arafah, EidAdha
+};
+struct HolidayEve {
+    HolidayId id = HolidayId::None;
+    bool isNight = false;  // kandil-type nights are observed on the evening of `today`
+};
+// Holiday whose day starts tomorrow (tabular Hijri calendar; may differ from local sighting by a day).
+HolidayEve FindHolidayStartingTomorrow(DateYMD today);
+
 std::wstring FormatTurkishHijriDate(DateYMD date);
 const wchar_t* TranslateHijriMonthName(int monthNumber);
 

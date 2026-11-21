@@ -158,7 +158,7 @@ bool ParseSettingsUtf8(const std::string& raw, AppSettings& s) {
     s.themeMode = static_cast<AppThemeMode>(std::clamp(root.GetInt("themeMode", static_cast<int>(s.themeMode)), 0, 2));
     s.useSystemAccentColor = root.GetBool("useSystemAccentColor", s.useSystemAccentColor);
     s.flyoutDesign = static_cast<FlyoutDesignStyle>(std::clamp(root.GetInt("flyoutDesign", static_cast<int>(s.flyoutDesign)), 0, 3));
-    s.language = static_cast<AppLanguage>(std::clamp(root.GetInt("language", static_cast<int>(s.language)), 0, 6));
+    s.language = static_cast<AppLanguage>(std::clamp(root.GetInt("language", static_cast<int>(s.language)), 0, 12));
 
     if (const JsonValue* namesObj = root.Find("customPrayerNames"); namesObj && namesObj->type == JsonValue::Type::Object) {
         for (PrayerKind kind : kOrderedPrayerKinds) {
@@ -185,6 +185,17 @@ bool ParseSettingsUtf8(const std::string& raw, AppSettings& s) {
     s.quietDuringFullscreen = root.GetBool("quietDuringFullscreen", s.quietDuringFullscreen);
     s.showKerahatIndicator = root.GetBool("showKerahatIndicator", s.showKerahatIndicator);
     s.ramadanIftarSahurMode = root.GetBool("ramadanIftarSahurMode", s.ramadanIftarSahurMode);
+    s.fridayReminder = root.GetBool("fridayReminder", s.fridayReminder);
+    s.reviewPrompted = root.GetBool("reviewPrompted", s.reviewPrompted);
+    s.notifyMuteUntilMin = std::max(0, root.GetInt("notifyMuteUntilMin", 0));
+    s.fajrSound = std::clamp(root.GetInt("fajrSound", s.fajrSound), -1, 5);
+    s.holidayReminders = root.GetBool("holidayReminders", s.holidayReminders);
+    s.showExtraTimes = root.GetBool("showExtraTimes", s.showExtraTimes);
+    s.travelMode = root.GetBool("travelMode", s.travelMode);
+    s.prayerTracking = root.GetBool("prayerTracking", s.prayerTracking);
+    s.modernToasts = root.GetBool("modernToasts", s.modernToasts);
+    s.globalHotkey = root.GetBool("globalHotkey", s.globalHotkey);
+    s.lastTzHash = root.GetInt("lastTzHash", s.lastTzHash);
 
     s.entrySound = static_cast<NotificationSoundKind>(std::clamp(root.GetInt("entrySound", static_cast<int>(s.entrySound)), 0, 5));
     s.preNotifySound = static_cast<NotificationSoundKind>(std::clamp(root.GetInt("preNotifySound", static_cast<int>(s.preNotifySound)), 0, 5));
@@ -267,6 +278,17 @@ std::string SerializeSettingsUtf8(const AppSettings& s) {
     root.Set("quietDuringFullscreen", JsonValue::MakeBool(s.quietDuringFullscreen));
     root.Set("showKerahatIndicator", JsonValue::MakeBool(s.showKerahatIndicator));
     root.Set("ramadanIftarSahurMode", JsonValue::MakeBool(s.ramadanIftarSahurMode));
+    root.Set("fridayReminder", JsonValue::MakeBool(s.fridayReminder));
+    root.Set("reviewPrompted", JsonValue::MakeBool(s.reviewPrompted));
+    root.Set("notifyMuteUntilMin", JsonValue::MakeInt(s.notifyMuteUntilMin));
+    root.Set("fajrSound", JsonValue::MakeInt(s.fajrSound));
+    root.Set("holidayReminders", JsonValue::MakeBool(s.holidayReminders));
+    root.Set("showExtraTimes", JsonValue::MakeBool(s.showExtraTimes));
+    root.Set("travelMode", JsonValue::MakeBool(s.travelMode));
+    root.Set("prayerTracking", JsonValue::MakeBool(s.prayerTracking));
+    root.Set("modernToasts", JsonValue::MakeBool(s.modernToasts));
+    root.Set("globalHotkey", JsonValue::MakeBool(s.globalHotkey));
+    root.Set("lastTzHash", JsonValue::MakeInt(s.lastTzHash));
 
     root.Set("entrySound", JsonValue::MakeInt(static_cast<int>(s.entrySound)));
     root.Set("preNotifySound", JsonValue::MakeInt(static_cast<int>(s.preNotifySound)));

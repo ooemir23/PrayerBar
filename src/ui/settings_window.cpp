@@ -12,6 +12,8 @@
 #include <commctrl.h>
 #include <commdlg.h>
 #include <uxtheme.h>
+#include <initguid.h>
+#include <oleacc.h>
 
 #include <algorithm>
 #include <cmath>
@@ -32,6 +34,7 @@ enum CtrlId : WORD {
     IDC_TAB_1 = 101,
     IDC_TAB_2 = 102,
     IDC_TAB_3 = 103,
+    IDC_TAB_4 = 104,
     IDC_PREVIEW_BOX = 105,
     IDC_OK_BTN = 106,
 
@@ -88,6 +91,14 @@ enum CtrlId : WORD {
     IDC_QUIET_FULLSCREEN_CHK = 439,
     IDC_KERAHAT_CHK = 440,
     IDC_RAMADAN_CHK = 441,
+    IDC_FRIDAY_CHK = 442,
+    IDC_FAJR_SOUND_COMBO = 443,
+    IDC_HOLIDAY_CHK = 444,
+    IDC_EXTRA_TIMES_CHK = 445,
+    IDC_TRAVEL_CHK = 446,
+    IDC_TRACKING_CHK = 447,
+    IDC_TOAST_CHK = 448,
+    IDC_HOTKEY_CHK = 449,
 
     // Tab 3 (Dil & Sistem)
     IDC_LANG_COMBO = 500,
@@ -139,8 +150,9 @@ std::vector<CardBox> GetCardsForTab(int tab) {
     switch (tab) {
         case 0: return {{14, 110, 602, 210}, {14, 326, 602, 302}};
         case 1: return {{14, 110, 602, 248}, {14, 364, 602, 264}};
-        case 2: return {{14, 110, 602, 212}, {14, 328, 602, 300}};
-        case 3: return {{14, 110, 602, 56},  {14, 172, 602, 274}, {14, 452, 602, 176}};
+        case 2: return {{14, 110, 602, 244}, {14, 360, 602, 236}};
+        case 3: return {{14, 110, 602, 234}, {14, 350, 602, 240}};
+        case 4: return {{14, 110, 602, 56},  {14, 172, 602, 274}, {14, 452, 602, 176}};
         default: return {};
     }
 }
@@ -229,8 +241,10 @@ SettingsWindow::~SettingsWindow() {
     if (editBrush_) DeleteObject(editBrush_);
 }
 
-void SettingsWindow::OpenOrFocus() {
+void SettingsWindow::OpenOrFocus(int tab) {
+    if (tab >= 0) activeTab_ = tab;
     if (hwnd_) {
+        if (tab >= 0) SwitchTab(tab);
         if (IsIconic(hwnd_)) ShowWindow(hwnd_, SW_RESTORE);
         ShowWindow(hwnd_, SW_SHOW);
         SetForegroundWindow(hwnd_);
@@ -386,9 +400,31 @@ void SettingsWindow::ApplyThemeBrushes() {
     }
 }
 
+namespace {
+// Dynamic annotation (no custom IAccessible): owner-drawn BUTTONs otherwise read as plain push buttons.
+void AnnotateAccessible(HWND h, long role, long state) {
+    static IAccPropServices* svc = [] {
+        IAccPropServices* p = nullptr;
+        CoCreateInstance(CLSID_AccPropServices, nullptr, CLSCTX_INPROC_SERVER, IID_IAccPropServices, reinterpret_cast<void**>(&p));
+        return p;
+    }();
+    if (!svc || !h) return;
+    VARIANT v;
+    VariantInit(&v);
+    v.vt = VT_I4;
+    v.lVal = role;
+    svc->SetHwndProp(h, static_cast<DWORD>(OBJID_CLIENT), CHILDID_SELF, PROPID_ACC_ROLE, v);
+    v.lVal = state;
+    svc->SetHwndProp(h, static_cast<DWORD>(OBJID_CLIENT), CHILDID_SELF, PROPID_ACC_STATE, v);
+}
+} // namespace
+
 void SettingsWindow::SetFluentCheck(WORD id, HWND h, bool checked) {
     checkStates_[id] = checked;
-    if (h && IsWindow(h)) InvalidateRect(h, nullptr, FALSE);
+    if (h && IsWindow(h)) {
+        AnnotateAccessible(h, ROLE_SYSTEM_CHECKBUTTON, STATE_SYSTEM_FOCUSABLE | (checked ? STATE_SYSTEM_CHECKED : 0));
+        InvalidateRect(h, nullptr, FALSE);
+    }
 }
 
 bool SettingsWindow::GetFluentCheck(WORD id) const {
@@ -435,7 +471,7 @@ void SettingsWindow::CreateControls() {
 
     auto track = [&](int tab, HWND c) {
         allCreatedControls_.push_back(c);
-        if (tab >= 0 && tab < 4) tabControls_[tab].push_back(c);
+        if (tab >= 0 && tab < 5) tabControls_[tab].push_back(c);
     };
 
     auto makeLabel = [&](int tab, int x, int y, int w, int h, const wchar_t* txt, bool bold = false, bool small = false) -> HWND {
@@ -493,10 +529,11 @@ void SettingsWindow::CreateControls() {
                                   reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_PREVIEW_BOX)), hInst, nullptr);
     allCreatedControls_.push_back(previewBox_);
 
-    tabBtns_[0] = makeBtn(-1, IDC_TAB_0, 14,  72, 134, 30, Tr(lang, StrId::TabAppearance));
-    tabBtns_[1] = makeBtn(-1, IDC_TAB_1, 152, 72, 156, 30, Tr(lang, StrId::TabLocation));
-    tabBtns_[2] = makeBtn(-1, IDC_TAB_2, 312, 72, 152, 30, Tr(lang, StrId::TabNotifications));
-    tabBtns_[3] = makeBtn(-1, IDC_TAB_3, 468, 72, 148, 30, Tr(lang, StrId::TabLanguageSystem));
+    tabBtns_[0] = makeBtn(-1, IDC_TAB_0, 14,  72, 110, 30, Tr(lang, StrId::TabAppearance));
+    tabBtns_[1] = makeBtn(-1, IDC_TAB_1, 126, 72, 136, 30, Tr(lang, StrId::TabLocation));
+    tabBtns_[2] = makeBtn(-1, IDC_TAB_2, 264, 72, 126, 30, Tr(lang, StrId::TabNotifications));
+    tabBtns_[3] = makeBtn(-1, IDC_TAB_3, 392, 72, 106, 30, Tr(lang, StrId::TabFeatures));
+    tabBtns_[4] = makeBtn(-1, IDC_TAB_4, 500, 72, 116, 30, Tr(lang, StrId::TabLanguageSystem));
     for (HWND b : tabBtns_) ShowWindow(b, SW_SHOW);
 
     footerInfo_ = makeLabel(-1, 14, 642, 480, 20, Tr(lang, StrId::FooterAutoSave), false, true);
@@ -605,78 +642,100 @@ void SettingsWindow::CreateControls() {
         offsetEdits_[i] = makeEdit(1, static_cast<WORD>(IDC_OFFSET_EDIT_BASE + i), bx + 80, by, 72, 24);
     }
 
-    // ==================== TAB 2: BİLDİRİM & SES ====================
-    makeLabel(2, 26, 118, 100, 20, Tr(lang, StrId::ColPrayer), true);
-    makeLabel(2, 140, 118, 95, 20, Tr(lang, StrId::ColAtTime), true);
-    makeLabel(2, 245, 118, 195, 20, Tr(lang, StrId::ColPreRemind), true);
-    makeLabel(2, 466, 118, 120, 20, Tr(lang, StrId::ColSoundEzan), true);
+    // ==================== TAB 2: BİLDİRİMLER ====================
+    // Card 1: per-prayer alerts (one row per prayer, roomy 30px rhythm)
+    makeLabel(2, 26, 118, 400, 22, Tr(lang, StrId::SectionPrayerAlerts), true);
+    makeLabel(2, 26, 144, 118, 18, Tr(lang, StrId::ColPrayer), false, true);
+    makeLabel(2, 150, 144, 104, 18, Tr(lang, StrId::ColAtTime), false, true);
+    makeLabel(2, 262, 144, 200, 18, Tr(lang, StrId::ColPreRemind), false, true);
+    makeLabel(2, 478, 144, 124, 18, Tr(lang, StrId::ColSoundEzan), false, true);
 
     for (int i = 0; i < 6; ++i) {
-        int ry = 143 + i * 29;
-        makeLabel(2, 26, ry + 3, 108, 20, GetEffectivePrayerName(static_cast<PrayerKind>(i), settings_).c_str(), true);
-        alertAtTimeChk_[i] = makeChk(2, static_cast<WORD>(IDC_ALERT_TIME_BASE + i), 140, ry + 1, 90, 22, Tr(lang, StrId::ChkNotify));
-        alertPreCombo_[i] = makeCombo(2, static_cast<WORD>(IDC_ALERT_PRE_BASE + i), 245, ry - 1, 200, 200);
-        alertSoundChk_[i] = makeChk(2, static_cast<WORD>(IDC_ALERT_SOUND_BASE + i), 466, ry + 1, 130, 22, Tr(lang, StrId::ChkPlaySound));
+        int ry = 166 + i * 30;
+        makeLabel(2, 26, ry + 3, 118, 20, GetEffectivePrayerName(static_cast<PrayerKind>(i), settings_).c_str(), true);
+        alertAtTimeChk_[i] = makeChk(2, static_cast<WORD>(IDC_ALERT_TIME_BASE + i), 150, ry + 1, 104, 22, Tr(lang, StrId::ChkNotify));
+        alertPreCombo_[i] = makeCombo(2, static_cast<WORD>(IDC_ALERT_PRE_BASE + i), 262, ry - 1, 200, 200);
+        alertSoundChk_[i] = makeChk(2, static_cast<WORD>(IDC_ALERT_SOUND_BASE + i), 478, ry + 1, 124, 22, Tr(lang, StrId::ChkPlaySound));
     }
 
-    makeLabel(2, 26, 342, 175, 22, Tr(lang, StrId::LblEntrySound), true);
-    entrySoundCombo_ = makeCombo(2, IDC_ENTRY_SOUND_COMBO, 206, 339, 396, 180);
+    // Card 2: sounds
+    makeLabel(2, 26, 368, 400, 22, Tr(lang, StrId::SectionSounds), true);
+    makeLabel(2, 26, 397, 175, 22, Tr(lang, StrId::LblEntrySound));
+    entrySoundCombo_ = makeCombo(2, IDC_ENTRY_SOUND_COMBO, 206, 394, 396, 180);
+    makeLabel(2, 26, 429, 175, 22, Tr(lang, StrId::LblFajrSound));
+    fajrSoundCombo_ = makeCombo(2, IDC_FAJR_SOUND_COMBO, 206, 426, 396, 200);
+    makeLabel(2, 26, 461, 175, 22, Tr(lang, StrId::LblPreSound));
+    preSoundCombo_ = makeCombo(2, IDC_PRE_SOUND_COMBO, 206, 458, 396, 180);
 
-    makeLabel(2, 26, 376, 175, 22, Tr(lang, StrId::LblPreSound));
-    preSoundCombo_ = makeCombo(2, IDC_PRE_SOUND_COMBO, 206, 373, 396, 180);
+    makeLabel(2, 26, 493, 175, 22, Tr(lang, StrId::LblCustomSound));
+    customSoundEdit_ = makeEdit(2, IDC_CUSTOM_SOUND_EDIT, 206, 490, 302, 24, true);
+    browseSoundBtn_ = makeBtn(2, IDC_BROWSE_SOUND_BTN, 514, 489, 88, 26, Tr(lang, StrId::BtnBrowse));
 
-    makeLabel(2, 26, 410, 175, 22, Tr(lang, StrId::LblCustomSound));
-    customSoundEdit_ = makeEdit(2, IDC_CUSTOM_SOUND_EDIT, 206, 407, 302, 24, true);
-    browseSoundBtn_ = makeBtn(2, IDC_BROWSE_SOUND_BTN, 514, 406, 88, 26, Tr(lang, StrId::BtnBrowse));
-
-    makeLabel(2, 26, 443, 175, 22, Tr(lang, StrId::LblVolume));
+    makeLabel(2, 26, 524, 175, 22, Tr(lang, StrId::LblVolume));
     volumeSlider_ = CreateWindowExW(0, TRACKBAR_CLASSW, L"", WS_CHILD | WS_TABSTOP | TBS_HORZ,
-                                    S(206), S(441), S(338), S(26), hwnd_,
+                                    S(206), S(522), S(338), S(26), hwnd_,
                                     reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_VOLUME_SLIDER)), hInst, nullptr);
     SendMessageW(volumeSlider_, TBM_SETRANGEMIN, FALSE, 0);
     SendMessageW(volumeSlider_, TBM_SETRANGEMAX, FALSE, 100);
     track(2, volumeSlider_);
-    volumeLabel_ = makeLabel(2, 550, 444, 52, 20, L"%80");
+    volumeLabel_ = makeLabel(2, 550, 525, 52, 20, L"%80");
 
-    makeBtn(2, IDC_TEST_ENTRY_BTN, 26, 476, 138, 28, Tr(lang, StrId::BtnTestEntry));
-    makeBtn(2, IDC_TEST_PRE_BTN, 170, 476, 138, 28, Tr(lang, StrId::BtnTestPre));
-    makeBtn(2, IDC_STOP_SOUND_BTN, 314, 476, 118, 28, Tr(lang, StrId::BtnStopSound));
-    makeBtn(2, IDC_TEST_NOTIF_BTN, 438, 476, 164, 28, Tr(lang, StrId::BtnTestNotif));
+    makeBtn(2, IDC_TEST_ENTRY_BTN, 26, 556, 138, 28, Tr(lang, StrId::BtnTestEntry));
+    makeBtn(2, IDC_TEST_PRE_BTN, 170, 556, 138, 28, Tr(lang, StrId::BtnTestPre));
+    makeBtn(2, IDC_STOP_SOUND_BTN, 314, 556, 118, 28, Tr(lang, StrId::BtnStopSound));
+    makeBtn(2, IDC_TEST_NOTIF_BTN, 438, 556, 164, 28, Tr(lang, StrId::BtnTestNotif));
 
-    quietFullscreenChk_ = makeChk(2, IDC_QUIET_FULLSCREEN_CHK, 26, 520, 576, 22, Tr(lang, StrId::ChkQuietFullscreen));
-    kerahatChk_ = makeChk(2, IDC_KERAHAT_CHK, 26, 548, 576, 22, Tr(lang, StrId::ChkKerahatIndicator));
-    ramadanChk_ = makeChk(2, IDC_RAMADAN_CHK, 26, 576, 576, 22, Tr(lang, StrId::ChkRamadanMode));
+    // ==================== TAB 3: ÖZELLİKLER ====================
+    // Every optional feature in one place: a toggle plus a one-line explanation.
+    auto feature = [&](WORD id, int y, StrId title, StrId desc, bool hasDesc) -> HWND {
+        HWND c = makeChk(3, id, 26, y, 576, 22, Tr(lang, title));
+        if (hasDesc) makeLabel(3, 54, y + 22, 548, 18, Tr(lang, desc), false, true);
+        return c;
+    };
+    makeLabel(3, 26, 118, 400, 22, Tr(lang, StrId::SectionReminders), true);
+    fridayChk_ = feature(IDC_FRIDAY_CHK, 144, StrId::ChkFridayReminder, StrId::ChkFridayReminder, false);
+    holidayChk_ = feature(IDC_HOLIDAY_CHK, 174, StrId::ChkHolidays, StrId::DescHolidays, true);
+    travelChk_ = feature(IDC_TRAVEL_CHK, 218, StrId::ChkTravelMode, StrId::DescTravelMode, true);
+    toastChk_ = feature(IDC_TOAST_CHK, 262, StrId::ChkModernToast, StrId::DescModernToast, true);
+    quietFullscreenChk_ = feature(IDC_QUIET_FULLSCREEN_CHK, 306, StrId::ChkQuietFullscreen, StrId::ChkQuietFullscreen, false);
 
-    // ==================== TAB 3: DİL & SİSTEM ====================
-    makeLabel(3, 26, 128, 175, 22, Tr(lang, StrId::LblAppLanguage), true);
-    langCombo_ = makeCombo(3, IDC_LANG_COMBO, 206, 125, 396, 200);
+    makeLabel(3, 26, 358, 400, 22, Tr(lang, StrId::SectionDisplayTracking), true);
+    kerahatChk_ = feature(IDC_KERAHAT_CHK, 384, StrId::ChkKerahatIndicator, StrId::ChkKerahatIndicator, false);
+    ramadanChk_ = feature(IDC_RAMADAN_CHK, 414, StrId::ChkRamadanMode, StrId::ChkRamadanMode, false);
+    extraTimesChk_ = feature(IDC_EXTRA_TIMES_CHK, 444, StrId::ChkExtraTimes, StrId::DescExtraTimes, true);
+    trackingChk_ = feature(IDC_TRACKING_CHK, 488, StrId::ChkTracking, StrId::DescTracking, true);
+    hotkeyChk_ = feature(IDC_HOTKEY_CHK, 532, StrId::ChkHotkey, StrId::DescHotkey, true);
 
-    makeLabel(3, 26, 182, 576, 20, Tr(lang, StrId::SectionCustomNames), true);
-    makeLabel(3, 26, 207, 130, 18, Tr(lang, StrId::ColDefaultName), false, true);
-    makeLabel(3, 176, 207, 220, 18, Tr(lang, StrId::ColCustomName), false, true);
-    makeLabel(3, 416, 207, 120, 18, Tr(lang, StrId::ColShortCode), false, true);
+    // ==================== TAB 4: DİL & SİSTEM ====================
+    makeLabel(4, 26, 128, 175, 22, Tr(lang, StrId::LblAppLanguage), true);
+    langCombo_ = makeCombo(4, IDC_LANG_COMBO, 206, 125, 396, 200);
+
+    makeLabel(4, 26, 182, 576, 20, Tr(lang, StrId::SectionCustomNames), true);
+    makeLabel(4, 26, 207, 130, 18, Tr(lang, StrId::ColDefaultName), false, true);
+    makeLabel(4, 176, 207, 220, 18, Tr(lang, StrId::ColCustomName), false, true);
+    makeLabel(4, 416, 207, 120, 18, Tr(lang, StrId::ColShortCode), false, true);
 
     for (int i = 0; i < 6; ++i) {
         int ry = 228 + i * 30;
-        makeLabel(3, 26, ry + 3, 140, 20, GetDefaultPrayerName(static_cast<PrayerKind>(i), lang), true);
-        customNameEdits_[i] = makeEdit(3, static_cast<WORD>(IDC_CUSTOM_NAME_BASE + i), 176, ry, 226, 24);
-        customShortEdits_[i] = makeEdit(3, static_cast<WORD>(IDC_CUSTOM_SHORT_BASE + i), 416, ry, 92, 24);
+        makeLabel(4, 26, ry + 3, 140, 20, GetDefaultPrayerName(static_cast<PrayerKind>(i), lang), true);
+        customNameEdits_[i] = makeEdit(4, static_cast<WORD>(IDC_CUSTOM_NAME_BASE + i), 176, ry, 226, 24);
+        customShortEdits_[i] = makeEdit(4, static_cast<WORD>(IDC_CUSTOM_SHORT_BASE + i), 416, ry, 92, 24);
     }
 
-    makeBtn(3, IDC_APPLY_NAMES_BTN, 26, 410, 170, 27, Tr(lang, StrId::BtnApplyNames));
-    makeBtn(3, IDC_RESET_NAMES_BTN, 204, 410, 170, 27, Tr(lang, StrId::BtnResetNames));
+    makeBtn(4, IDC_APPLY_NAMES_BTN, 26, 410, 170, 27, Tr(lang, StrId::BtnApplyNames));
+    makeBtn(4, IDC_RESET_NAMES_BTN, 204, 410, 170, 27, Tr(lang, StrId::BtnResetNames));
 
-    makeLabel(3, 26, 458, 576, 20, Tr(lang, StrId::SectionSystem), true);
-    startupChk_ = makeChk(3, IDC_STARTUP_CHK, 26, 480, 576, 21, Tr(lang, StrId::ChkStartup));
-    autoMemChk_ = makeChk(3, IDC_AUTO_MEM_CHK, 26, 504, 576, 21, Tr(lang, StrId::ChkAutoMem));
-    telemetryLabel_ = makeLabel(3, 26, 528, 576, 18, L"...", false, true);
+    makeLabel(4, 26, 458, 576, 20, Tr(lang, StrId::SectionSystem), true);
+    startupChk_ = makeChk(4, IDC_STARTUP_CHK, 26, 480, 576, 21, Tr(lang, StrId::ChkStartup));
+    autoMemChk_ = makeChk(4, IDC_AUTO_MEM_CHK, 26, 504, 576, 21, Tr(lang, StrId::ChkAutoMem));
+    telemetryLabel_ = makeLabel(4, 26, 528, 576, 18, L"...", false, true);
 
-    makeBtn(3, IDC_EXPORT_BTN, 26, 550, 175, 26, Tr(lang, StrId::BtnExportSettings));
-    makeBtn(3, IDC_IMPORT_BTN, 209, 550, 175, 26, Tr(lang, StrId::BtnImportSettings));
-    sysStatusLabel_ = makeLabel(3, 394, 554, 208, 20, L"", false, true);
+    makeBtn(4, IDC_EXPORT_BTN, 26, 550, 175, 26, Tr(lang, StrId::BtnExportSettings));
+    makeBtn(4, IDC_IMPORT_BTN, 209, 550, 175, 26, Tr(lang, StrId::BtnImportSettings));
+    sysStatusLabel_ = makeLabel(4, 394, 554, 208, 20, L"", false, true);
 
-    licenseLabel_ = makeLabel(3, 26, 586, 416, 20, L"", true, true);
-    makeBtn(3, IDC_OPEN_PRO_BTN, 448, 583, 154, 27, Tr(lang, StrId::BtnOpenProWindow));
+    licenseLabel_ = makeLabel(4, 26, 586, 416, 20, L"", true, true);
+    makeBtn(4, IDC_OPEN_PRO_BTN, 448, 583, 154, 27, Tr(lang, StrId::BtnOpenProWindow));
 }
 
 void SettingsWindow::PopulateAllValues() {
@@ -812,6 +871,10 @@ void SettingsWindow::PopulateAllValues() {
     SetComboSelectionByData(entrySoundCombo_, static_cast<int>(settings_.entrySound));
     fillCombo(preSoundCombo_, soundItems);
     SetComboSelectionByData(preSoundCombo_, static_cast<int>(settings_.preNotifySound));
+    std::vector<std::pair<int, std::wstring>> fajrItems = {{-1, Tr(lang, StrId::SoundSameAsEntry)}};
+    fajrItems.insert(fajrItems.end(), soundItems.begin(), soundItems.end());
+    fillCombo(fajrSoundCombo_, fajrItems);
+    SetComboSelectionByData(fajrSoundCombo_, settings_.fajrSound);
 
     SetWindowTextW(customSoundEdit_, settings_.customSoundPath.c_str());
     SendMessageW(volumeSlider_, TBM_SETPOS, TRUE, settings_.soundVolumePercent);
@@ -822,10 +885,17 @@ void SettingsWindow::PopulateAllValues() {
     SetFluentCheck(IDC_QUIET_FULLSCREEN_CHK, quietFullscreenChk_, settings_.quietDuringFullscreen);
     SetFluentCheck(IDC_KERAHAT_CHK, kerahatChk_, settings_.showKerahatIndicator);
     SetFluentCheck(IDC_RAMADAN_CHK, ramadanChk_, settings_.ramadanIftarSahurMode);
+    SetFluentCheck(IDC_FRIDAY_CHK, fridayChk_, settings_.fridayReminder);
+    SetFluentCheck(IDC_HOLIDAY_CHK, holidayChk_, settings_.holidayReminders);
+    SetFluentCheck(IDC_EXTRA_TIMES_CHK, extraTimesChk_, settings_.showExtraTimes);
+    SetFluentCheck(IDC_TRAVEL_CHK, travelChk_, settings_.travelMode);
+    SetFluentCheck(IDC_TRACKING_CHK, trackingChk_, settings_.prayerTracking);
+    SetFluentCheck(IDC_TOAST_CHK, toastChk_, settings_.modernToasts);
+    SetFluentCheck(IDC_HOTKEY_CHK, hotkeyChk_, settings_.globalHotkey);
 
     // Tab 3
     std::vector<std::pair<int, std::wstring>> langItems;
-    for (int i = 0; i <= 6; ++i) {
+    for (int i = 0; i <= 12; ++i) {
         langItems.emplace_back(i, GetLanguageDisplayName(static_cast<AppLanguage>(i)));
     }
     fillCombo(langCombo_, langItems);
@@ -861,16 +931,18 @@ void SettingsWindow::RefreshCityList(const std::wstring& query) {
 }
 
 void SettingsWindow::SwitchTab(int tabIdx) {
-    activeTab_ = std::clamp(tabIdx, 0, 3);
-    for (int t = 0; t < 4; ++t) {
+    activeTab_ = std::clamp(tabIdx, 0, 4);
+    for (int t = 0; t < 5; ++t) {
         int showCmd = (t == activeTab_) ? SW_SHOW : SW_HIDE;
         for (HWND h : tabControls_[t]) {
             ShowWindow(h, showCmd);
         }
         InvalidateRect(tabBtns_[t], nullptr, FALSE);
+        AnnotateAccessible(tabBtns_[t], ROLE_SYSTEM_PAGETAB,
+                           STATE_SYSTEM_FOCUSABLE | (t == activeTab_ ? STATE_SYSTEM_SELECTED : 0));
     }
     InvalidateRect(hwnd_, nullptr, FALSE);
-    if (activeTab_ == 3) {
+    if (activeTab_ == 4) {
         RefreshPreviewAndMemory();
     }
 }
@@ -1120,8 +1192,8 @@ void SettingsWindow::PaintTabHeader(HDC hdc, int tabIdx, const RECT& rc) {
             gdip::FillRoundedRect(g, 14.0f * s, static_cast<float>(h) - 3.5f * s, static_cast<float>(w) - 28.0f * s, 2.5f * s, 1.5f * s, accent);
         }
 
-        const StrId titleIds[4] = {StrId::TabAppearance, StrId::TabLocation, StrId::TabNotifications, StrId::TabLanguageSystem};
-        const wchar_t* title = Tr(settings_.language, titleIds[std::clamp(tabIdx, 0, 3)]);
+        const StrId titleIds[5] = {StrId::TabAppearance, StrId::TabLocation, StrId::TabNotifications, StrId::TabFeatures, StrId::TabLanguageSystem};
+        const wchar_t* title = Tr(settings_.language, titleIds[std::clamp(tabIdx, 0, 4)]);
         void* family = gdip::CreateBestUiFontFamily(false);
         gdip::DrawTextBox(g, title, family, 12.2f * s, active, fg, 0.0f, 0.0f,
                           static_cast<float>(w), static_cast<float>(h) - 2.0f * s,
@@ -1264,7 +1336,7 @@ void SettingsWindow::StartManualSync() {
 void SettingsWindow::HandleCommand(WORD id, WORD code, HWND ctrl) {
     if (isLoading_) return;
 
-    if (id >= IDC_TAB_0 && id <= IDC_TAB_3) {
+    if (id >= IDC_TAB_0 && id <= IDC_TAB_4) {
         if (code == BN_CLICKED) SwitchTab(id - IDC_TAB_0);
         return;
     }
@@ -1509,11 +1581,31 @@ void SettingsWindow::HandleCommand(WORD id, WORD code, HWND ctrl) {
         SaveAndNotify();
         return;
     }
-    if ((id == IDC_ENTRY_SOUND_COMBO || id == IDC_PRE_SOUND_COMBO) && code == CBN_SELCHANGE) {
+    if ((id == IDC_ENTRY_SOUND_COMBO || id == IDC_PRE_SOUND_COMBO || id == IDC_FAJR_SOUND_COMBO) && code == CBN_SELCHANGE) {
         settings_.entrySound = static_cast<NotificationSoundKind>(GetComboSelectedData(entrySoundCombo_, 3));
         settings_.preNotifySound = static_cast<NotificationSoundKind>(GetComboSelectedData(preSoundCombo_, 1));
+        settings_.fajrSound = GetComboSelectedData(fajrSoundCombo_, -1);
         SaveAndNotify();
         return;
+    }
+    // Features tab: simple on/off toggles
+    struct FeatureToggle { WORD id; bool AppSettings::*field; };
+    static constexpr FeatureToggle kFeatureToggles[] = {
+        {IDC_HOLIDAY_CHK, &AppSettings::holidayReminders},
+        {IDC_EXTRA_TIMES_CHK, &AppSettings::showExtraTimes},
+        {IDC_TRAVEL_CHK, &AppSettings::travelMode},
+        {IDC_TRACKING_CHK, &AppSettings::prayerTracking},
+        {IDC_TOAST_CHK, &AppSettings::modernToasts},
+        {IDC_HOTKEY_CHK, &AppSettings::globalHotkey},
+    };
+    for (const auto& t : kFeatureToggles) {
+        if (id == t.id && code == BN_CLICKED) {
+            bool nextVal = !GetFluentCheck(id);
+            SetFluentCheck(id, ctrl, nextVal);
+            settings_.*(t.field) = nextVal;
+            SaveAndNotify();
+            return;
+        }
     }
     if (id == IDC_BROWSE_SOUND_BTN && code == BN_CLICKED) {
         if (!licenseManager_.IsProActive()) {
@@ -1578,6 +1670,13 @@ void SettingsWindow::HandleCommand(WORD id, WORD code, HWND ctrl) {
         bool nextVal = !GetFluentCheck(IDC_RAMADAN_CHK);
         SetFluentCheck(IDC_RAMADAN_CHK, ctrl, nextVal);
         settings_.ramadanIftarSahurMode = nextVal;
+        SaveAndNotify();
+        return;
+    }
+    if (id == IDC_FRIDAY_CHK && code == BN_CLICKED) {
+        bool nextVal = !GetFluentCheck(IDC_FRIDAY_CHK);
+        SetFluentCheck(IDC_FRIDAY_CHK, ctrl, nextVal);
+        settings_.fridayReminder = nextVal;
         SaveAndNotify();
         return;
     }
@@ -1742,7 +1841,7 @@ LRESULT SettingsWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
                 PaintTaskbarPreview(dis->hDC, dis->rcItem.right - dis->rcItem.left, dis->rcItem.bottom - dis->rcItem.top);
                 return TRUE;
             }
-            if (dis->CtlID >= IDC_TAB_0 && dis->CtlID <= IDC_TAB_3) {
+            if (dis->CtlID >= IDC_TAB_0 && dis->CtlID <= IDC_TAB_4) {
                 PaintTabHeader(dis->hDC, dis->CtlID - IDC_TAB_0, dis->rcItem);
                 return TRUE;
             }

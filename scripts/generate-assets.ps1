@@ -60,39 +60,50 @@ function Draw-VakitIconGlyph {
         $bgPath.Dispose()
     }
 
-    # Subtle radial glow behind crescent
     $cx = $X + $Size * 0.50
     $cy = $Y + $Size * 0.50
-    $glowR = $Size * 0.34
-    $glowPath = New-Object System.Drawing.Drawing2D.GraphicsPath
-    $glowPath.AddEllipse($cx - $glowR, $cy - $glowR, $glowR * 2, $glowR * 2)
-    $pgb = New-Object System.Drawing.Drawing2D.PathGradientBrush($glowPath)
-    $pgb.CenterColor = [System.Drawing.Color]::FromArgb(60, 255, 215, 110)
-    $pgb.SurroundColors = @([System.Drawing.Color]::FromArgb(0, 255, 215, 110))
-    $G.FillEllipse($pgb, $cx - $glowR, $cy - $glowR, $glowR * 2, $glowR * 2)
-    $pgb.Dispose()
-    $glowPath.Dispose()
+    $gold = [System.Drawing.Color]::FromArgb(255, 255, 206, 92)
 
-    # Crescent moon via Region difference
-    $outerR = $Size * 0.28
-    $outerX = $cx - $outerR - ($Size * 0.02)
+    # Countdown dial: faint track + gold arc (~3/4 elapsed) with a bright tip, read as "time until next prayer"
+    if ($Size -ge 32) {
+        $ringR = $Size * 0.33
+        $ringW = [Math]::Max(2.0, $Size * 0.06)
+        $trackPen = New-Object System.Drawing.Pen([System.Drawing.Color]::FromArgb(60, 255, 255, 255), $ringW)
+        $G.DrawEllipse($trackPen, $cx - $ringR, $cy - $ringR, $ringR * 2, $ringR * 2)
+        $trackPen.Dispose()
+
+        $arcPen = New-Object System.Drawing.Pen($gold, $ringW)
+        $arcPen.StartCap = [System.Drawing.Drawing2D.LineCap]::Round
+        $arcPen.EndCap = [System.Drawing.Drawing2D.LineCap]::Round
+        $G.DrawArc($arcPen, $cx - $ringR, $cy - $ringR, $ringR * 2, $ringR * 2, -90, 270)
+        $arcPen.Dispose()
+
+        $tipR = $ringW * 0.95
+        $tipBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 255, 248, 214))
+        $G.FillEllipse($tipBrush, $cx - $ringR - $tipR, $cy - $tipR, $tipR * 2, $tipR * 2)
+        $tipBrush.Dispose()
+    }
+
+    # Crescent in the dial centre (bigger and alone at tiny sizes so it stays legible at 16 px)
+    $scale = if ($Size -ge 32) { 0.20 } else { 0.34 }
+    $outerR = $Size * $scale
+    $outerX = $cx - $outerR
     $outerY = $cy - $outerR
-    $innerR = $Size * 0.23
-    $innerX = $outerX + ($Size * 0.13)
-    $innerY = $outerY - ($Size * 0.05)
+    $innerR = $outerR * 0.80
+    $innerX = $outerX + $outerR * 0.48
+    $innerY = $outerY - $outerR * 0.16
 
     $outerPath = New-Object System.Drawing.Drawing2D.GraphicsPath
     $outerPath.AddEllipse($outerX, $outerY, $outerR * 2, $outerR * 2)
     $innerPath = New-Object System.Drawing.Drawing2D.GraphicsPath
     $innerPath.AddEllipse($innerX, $innerY, $innerR * 2, $innerR * 2)
-
     $region = New-Object System.Drawing.Region($outerPath)
     $region.Exclude($innerPath)
 
     $moonRect = [System.Drawing.RectangleF]::new($outerX, $outerY, $outerR * 2, $outerR * 2)
     $moonBrush = New-Object System.Drawing.Drawing2D.LinearGradientBrush(
         $moonRect,
-        [System.Drawing.Color]::FromArgb(255, 255, 232, 148),
+        [System.Drawing.Color]::FromArgb(255, 255, 236, 160),
         [System.Drawing.Color]::FromArgb(255, 244, 174, 52),
         [System.Drawing.Drawing2D.LinearGradientMode]::Vertical
     )
@@ -101,44 +112,6 @@ function Draw-VakitIconGlyph {
     $region.Dispose()
     $outerPath.Dispose()
     $innerPath.Dispose()
-
-    # Crisp 4-point star next to crescent
-    $sx = $cx + $Size * 0.14
-    $sy = $cy - $Size * 0.10
-    $sr = [Math]::Max(1.5, $Size * 0.075)
-    $ir = $sr * 0.34
-    $starPts = [System.Drawing.PointF[]]@(
-        [System.Drawing.PointF]::new($sx, $sy - $sr),
-        [System.Drawing.PointF]::new($sx + $ir, $sy - $ir),
-        [System.Drawing.PointF]::new($sx + $sr, $sy),
-        [System.Drawing.PointF]::new($sx + $ir, $sy + $ir),
-        [System.Drawing.PointF]::new($sx, $sy + $sr),
-        [System.Drawing.PointF]::new($sx - $ir, $sy + $ir),
-        [System.Drawing.PointF]::new($sx - $sr, $sy),
-        [System.Drawing.PointF]::new($sx - $ir, $sy - $ir)
-    )
-    $starBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 255, 245, 200))
-    $G.FillPolygon($starBrush, $starPts)
-    $starBrush.Dispose()
-
-    # Minimal progress pill bar at bottom of icon
-    if ($Size -ge 24) {
-        $barW = $Size * 0.44
-        $barH = [Math]::Max(2.0, $Size * 0.055)
-        $barX = $cx - ($barW * 0.5)
-        $barY = $cy + ($Size * 0.30)
-        $trackPath = New-RoundedRectPath -X $barX -Y $barY -W $barW -H $barH -R ($barH / 2)
-        $trackBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(70, 255, 255, 255))
-        $G.FillPath($trackBrush, $trackPath)
-        $trackBrush.Dispose()
-        $trackPath.Dispose()
-
-        $fillPath = New-RoundedRectPath -X $barX -Y $barY -W ($barW * 0.68) -H $barH -R ($barH / 2)
-        $fillBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 255, 212, 102))
-        $G.FillPath($fillBrush, $fillPath)
-        $fillBrush.Dispose()
-        $fillPath.Dispose()
-    }
 }
 
 function Save-SquareIcon {
@@ -182,8 +155,8 @@ function Save-WideBanner {
         $subBrush = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(215, 212, 245, 238))
 
         $tx = $iconX + $iconSize + ($Width * 0.045)
-        $g.DrawString("VakitÇubuğu", $titleFont, $whiteBrush, $tx, $Height * 0.30)
-        $g.DrawString("Görev Çubuğu Namaz Vakitleri", $subFont, $subBrush, $tx, $Height * 0.55)
+        $g.DrawString("PrayerBar", $titleFont, $whiteBrush, $tx, $Height * 0.30)
+        $g.DrawString("Prayer Times & Adhan", $subFont, $subBrush, $tx, $Height * 0.55)
 
         $titleFont.Dispose(); $subFont.Dispose(); $whiteBrush.Dispose(); $subBrush.Dispose()
     }
@@ -261,8 +234,9 @@ Save-SquareIcon "Square44x44Logo.scale-100.png" 44
 Save-SquareIcon "Square44x44Logo.scale-200.png" 88
 foreach ($ts in @(16, 24, 32, 48, 256)) {
     Save-SquareIcon "Square44x44Logo.targetsize-$ts.png" $ts
-    Save-SquareIcon "Square44x44Logo.targetsize-${ts}_altform-unplated.png" $ts
-    Save-SquareIcon "Square44x44Logo.targetsize-${ts}_altform-lightunplated.png" $ts
+    # Unplated = no tile background, per Windows taskbar icon guidelines
+    Save-SquareIcon "Square44x44Logo.targetsize-${ts}_altform-unplated.png" $ts $false
+    Save-SquareIcon "Square44x44Logo.targetsize-${ts}_altform-lightunplated.png" $ts $false
 }
 
 # Tiles & Splash

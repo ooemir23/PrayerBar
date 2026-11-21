@@ -39,6 +39,12 @@ public:
         std::function<void()> onOpenPro = nullptr,
         std::function<bool()> isPaidProFn = nullptr);
 
+    // Generic hooks for the redesigned menu: change settings in place, open a settings tab, test a notification.
+    void SetMenuActionCallbacks(
+        std::function<void(const std::function<void(AppSettings&)>&)> onMutateSettings,
+        std::function<void(int)> onOpenSettingsTab,
+        std::function<void()> onTestNotification);
+
     void SetFlyoutOpenState(bool isOpen, const PrayerCountdownState* latestState, const AppSettings& settings);
     void Update(const PrayerCountdownState& state, const AppSettings& settings, bool forceRedraw = false);
     void ShowContextMenu(int screenX, int screenY);
@@ -60,6 +66,8 @@ private:
     std::wstring lastRenderSignature_;
     RECT currentRect_{};
     AppSettings currentSettings_{};
+    PrayerCountdownState lastState_{};
+    bool hasState_ = false;
 
     std::function<void(RECT)> onLeftClick_;
     std::function<void()> onRefresh_;
@@ -74,6 +82,9 @@ private:
     std::function<void(bool)> onToggleTaskbarPill_;
     std::function<void()> onOpenPro_;
     std::function<bool()> isPaidProFn_;
+    std::function<void(const std::function<void(AppSettings&)>&)> onMutateSettings_;
+    std::function<void(int)> onOpenSettingsTab_;
+    std::function<void()> onTestNotification_;
 };
 
 } // namespace vakit

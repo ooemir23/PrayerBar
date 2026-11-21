@@ -29,6 +29,7 @@ bool IsQuietOrFullscreenModeActive();
 void ApplyWin11AppDarkMode(AppThemeMode mode);
 void AllowDarkModeForWindowCompat(HWND hwnd, bool enable);
 uint32_t GetWindowsAccentColorArgb(bool isDark, bool useSystemAccent);
+void InvalidateAccentColorCache();
 COLORREF GetWindowsAccentColorRef(bool isDark, bool useSystemAccent);
 const wchar_t* GetWin11UiFontFaceName(bool display = false);
 HFONT CreateWin11Font(int pixelHeight, int weight, bool display = false);

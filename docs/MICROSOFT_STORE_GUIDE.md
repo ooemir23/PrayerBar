@@ -1,4 +1,4 @@
-# Microsoft Store Yayınlama ve Uygulama İçi Satın Alma Rehberi (VakitÇubuğu v2.0)
+# Microsoft Store Yayınlama ve Uygulama İçi Satın Alma Rehberi (PrayerBar v2.0)
 
 Bu proje, harici web sitesi veya ödeme sağlayıcısı olmadan **%100 Microsoft Store üzerinden** satış, abonelik yönetimi, iade ve doğrudan **TR IBAN'a ödeme** alacak şekilde hazırlanmıştır. Tek yönetim (admin) paneliniz **Microsoft Partner Center** (`partner.microsoft.com`) hesabıdır.
 
@@ -7,7 +7,7 @@ Bu proje, harici web sitesi veya ödeme sağlayıcısı olmadan **%100 Microsoft
 ## 1. Partner Center Hesabı, IBAN ve Uygulama Kaydı
 1. [Microsoft Partner Center](https://partner.microsoft.com/dashboard) üzerinden bireysel geliştirici hesabı açın.
 2. **Account settings → Payout and tax profile** bölümünden Türkiye banka hesabınızın **IBAN + SWIFT/BIC** bilgisini ve vergi profilinizi tanımlayın. Global KDV/VAT kesintilerini Microsoft otomatik yapar ve biriken net geliriniz doğrudan IBAN'ınıza yatar.
-3. **Apps and games → New product → MSIX or PWA app** üzerinden uygulamanız için benzersiz bir isim rezerve edin (ör. `VakitÇubuğu - Prayer Times`).
+3. **Apps and games → New product → MSIX or PWA app** üzerinden uygulamanız için benzersiz bir isim rezerve edin (ör. `PrayerBar - Prayer Times`).
 4. **Product management → Product Identity** sayfasından şu değerleri kopyalayın:
    - `Package/Identity/Name` → [packaging/store.config.json](file:///c:/Users/ooemi/Desktop/Projeler/EzanNamazVak/packaging/store.config.json) (`IdentityName`)
    - `Package/Identity/Publisher` → (`Publisher`, örn. `CN=XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX`)
@@ -21,12 +21,12 @@ Uygulamanın içindeki **"Yıllık Al"** ve **"Ömür Boyu Al"** butonlarının 
 
 1. **Yıllık Abonelik (`Subscription`):**
    - **Product ID (kendi vereceğiniz takma ad):** `pro_annual` *(kod otomatik tanır; `InAppOfferToken`)*
-   - **Title:** `VakitÇubuğu Pro — Annual`
+   - **Title:** `PrayerBar Pro — Annual`
    - **Billing period:** `1 year` (`$4.99` baz fiyat önerilir — Türkiye vb. pazarlara otomatik yerel fiyat)
    - Oluştuktan sonra Partner Center'ın verdiği `9N...` **Store ID** kodunu kopyalayın.
 2. **Ömür Boyu Lisans (`Durable — Product lifetime`):**
    - **Product ID (kendi vereceğiniz takma ad):** `pro_lifetime`
-   - **Title:** `VakitÇubuğu Pro — Lifetime`
+   - **Title:** `PrayerBar Pro — Lifetime`
    - **Product lifetime:** `Forever` (`$9.99` baz fiyat önerilir)
    - Oluştuktan sonra Partner Center'ın verdiği `9N...` **Store ID** kodunu kopyalayın.
 
@@ -55,7 +55,7 @@ PowerShell'de repo kök klasöründen çalıştırın:
 
 ```powershell
 # Native C++20 ikilisini derler, 11 birim test paketini + smoke testini çalıştırır,
-# 6 dil (en-US, tr-TR, ar-SA, de-DE, fr-FR, id-ID) bildirimli Store .msix üretir
+# 12 dil (en-US, tr-TR, ar-SA, de-DE, fr-FR, id-ID, ur-PK, bn-BD, ms-MY, fa-IR, ru-RU, es-ES) bildirimli Store .msix üretir
 powershell -ExecutionPolicy Bypass -File scripts\build-release.ps1
 ```
 

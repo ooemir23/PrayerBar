@@ -37,10 +37,11 @@ public:
     ~SettingsWindow();
 
     bool IsOpen() const { return hwnd_ != nullptr && IsWindowVisible(hwnd_); }
-    void OpenOrFocus();
+    void OpenOrFocus(int tab = -1);
     void CloseNow();
     void RefreshPreviewAndMemory();
     void RefreshLicenseStatus();
+    void RepaintAll() { if (hwnd_) RedrawWindow(hwnd_, nullptr, nullptr, RDW_INVALIDATE | RDW_ALLCHILDREN); }
 
 private:
     static LRESULT CALLBACK WndProcStatic(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -94,12 +95,12 @@ private:
     HBRUSH editBrush_ = nullptr;
 
     std::vector<HWND> allCreatedControls_;
-    std::vector<HWND> tabControls_[4];
+    std::vector<HWND> tabControls_[5];
     std::set<HWND> cardStaticLabels_;
     std::map<WORD, bool> checkStates_;
     std::map<WORD, bool> checkInCard_;
 
-    HWND tabBtns_[4]{};
+    HWND tabBtns_[5]{};
     HWND previewBox_ = nullptr;
     HWND footerInfo_ = nullptr;
     HWND okBtn_ = nullptr;
@@ -146,6 +147,7 @@ private:
     HWND alertSoundChk_[6]{};
     HWND entrySoundCombo_ = nullptr;
     HWND preSoundCombo_ = nullptr;
+    HWND fajrSoundCombo_ = nullptr;
     HWND customSoundEdit_ = nullptr;
     HWND browseSoundBtn_ = nullptr;
     HWND volumeSlider_ = nullptr;
@@ -153,6 +155,15 @@ private:
     HWND quietFullscreenChk_ = nullptr;
     HWND kerahatChk_ = nullptr;
     HWND ramadanChk_ = nullptr;
+    HWND fridayChk_ = nullptr;
+
+    // Tab 3 (Özellikler)
+    HWND holidayChk_ = nullptr;
+    HWND extraTimesChk_ = nullptr;
+    HWND travelChk_ = nullptr;
+    HWND trackingChk_ = nullptr;
+    HWND toastChk_ = nullptr;
+    HWND hotkeyChk_ = nullptr;
 
     // Tab 3 (Dil & Sistem)
     HWND langCombo_ = nullptr;

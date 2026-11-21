@@ -31,6 +31,7 @@ public:
     static constexpr UINT kMsgShowFlyout = WM_APP + 101;
     static constexpr UINT kMsgScheduleRefreshed = WM_APP + 103;
     static constexpr UINT kMsgStoreLicenseSynced = WM_APP + 104;
+    static constexpr UINT kMsgShowSettings = WM_APP + 105;  // wParam = tab index
 
     AppHost(SettingsStore& settingsStore, ScheduleService& scheduleService);
     ~AppHost();
@@ -46,6 +47,11 @@ private:
     void EvaluateNotifications(const LocalDateTime& now, const PrayerCountdownState& state);
     void ToggleFlyout(RECT anchorRect);
     void TriggerBackgroundRefresh();
+    void ShowUserNotification(const std::wstring& title, const std::wstring& body, bool silent);
+    void ShowActionBalloon(const std::wstring& title, const std::wstring& body, int action);
+    void CheckTimeZoneChange();
+    void ApplyHotkey();
+    void OnSettingsChanged();
 
     SettingsStore& settingsStore_;
     ScheduleService& scheduleService_;
@@ -61,6 +67,7 @@ private:
     std::unique_ptr<ProWindow> proWindow_;
     std::unique_ptr<SettingsWindow> settingsWindow_;
     std::set<std::wstring> sentNotifications_;
+    int pendingBalloonAction_ = 0;  // what a click on the current tray balloon does (see kBalloon*)
 };
 
 } // namespace vakit

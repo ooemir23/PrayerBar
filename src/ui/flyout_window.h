@@ -13,7 +13,9 @@
 #endif
 #include <windows.h>
 
+#include <cstdint>
 #include <functional>
+#include <vector>
 
 namespace vakit {
 
@@ -63,6 +65,8 @@ private:
     FlyoutDesignStyle openedDesign_ = FlyoutDesignStyle::CompactFluent;
     HoverTarget hovered_ = HoverTarget::None;
 
+    AppSettings settings_{};  // loaded on open/refresh only; painting reads no files
+    RECT prayerRc_[6]{};
     RECT btnStopRc_{};
     RECT btnImsakiyeRc_{};
     RECT btnRefreshRc_{};
@@ -73,6 +77,9 @@ PillRenderResult SmokeTestFlyoutRender(
     FlyoutDesignStyle design,
     const PrayerCountdownState& state,
     const AppSettings& settings,
-    double scale);
+    double scale,
+    std::vector<uint32_t>* outPixels = nullptr,  // optional copy of the rendered BGRA pixels
+    int* outWidth = nullptr,
+    int* outHeight = nullptr);
 
 } // namespace vakit

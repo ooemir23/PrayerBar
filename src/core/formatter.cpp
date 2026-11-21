@@ -80,13 +80,24 @@ TimeUnits UnitsForLang(AppLanguage lang) {
         case AppLanguage::German:     return {L"Std", L"Std", L"Min", L"m", L"s", L"<1 Min", L"<1m", L"h"};
         case AppLanguage::French:     return {L"h", L"h", L"min", L"m", L"s", L"<1 min", L"<1m", L"h"};
         case AppLanguage::Indonesian: return {L"j", L"jam", L"mnt", L"m", L"d", L"<1 mnt", L"<1m", L"j"};
+        case AppLanguage::Urdu:       return {L"گ", L"گھنٹے", L"منٹ", L"م", L"س", L"<1 منٹ", L"<1م", L"گ"};
+        case AppLanguage::Bengali:    return {L"ঘ", L"ঘণ্টা", L"মিনিট", L"মি", L"সে", L"<1 মিনিট", L"<1মি", L"ঘ"};
+        case AppLanguage::Malay:      return {L"j", L"jam", L"min", L"m", L"s", L"<1 min", L"<1m", L"j"};
+        case AppLanguage::Persian:    return {L"س", L"ساعت", L"دقیقه", L"د", L"ث", L"<1 دقیقه", L"<1د", L"س"};
+        case AppLanguage::Russian:    return {L"ч", L"ч", L"мин", L"м", L"с", L"<1 мин", L"<1м", L"ч"};
+        case AppLanguage::Spanish:    return {L"h", L"h", L"min", L"m", L"s", L"<1 min", L"<1m", L"h"};
         default:                      return {L"s", L"sa", L"dk", L"d", L"sn", L"<1 dk", L"<1Dk", L"s"};
     }
 }
 
-} // namespace
+// Digits are bidi-neutral: in an LTR-drawn surface "23 منٹ 00 س" gets reordered. An RTL embedding
+// (RLE ... PDF) makes Arabic/Urdu/Persian countdowns read right-to-left as one phrase.
+std::wstring WrapRtl(std::wstring s, AppLanguage eff) {
+    if (!IsRtlLanguage(eff)) return s;
+    return L"\u202B" + s + L"\u202C";
+}
 
-std::wstring FormatRemainingLong(int64_t remainingSeconds, bool showSeconds, AppLanguage lang) {
+std::wstring FormatRemainingLongImpl(int64_t remainingSeconds, bool showSeconds, AppLanguage lang) {
     int64_t clamped = std::max<int64_t>(0, remainingSeconds);
     AppLanguage eff = ResolveEffectiveLanguage(lang);
     TimeUnits u = UnitsForLang(eff);
@@ -124,11 +135,25 @@ std::wstring FormatRemainingLong(int64_t remainingSeconds, bool showSeconds, App
     return std::wstring(buf);
 }
 
+std::wstring FormatRemainingCompactImpl(int64_t remainingSeconds, bool showSeconds, AppLanguage lang);
+
+} // namespace
+
+std::wstring FormatRemainingLong(int64_t remainingSeconds, bool showSeconds, AppLanguage lang) {
+    return WrapRtl(FormatRemainingLongImpl(remainingSeconds, showSeconds, lang), ResolveEffectiveLanguage(lang));
+}
+
+std::wstring FormatRemainingCompact(int64_t remainingSeconds, bool showSeconds, AppLanguage lang) {
+    return WrapRtl(FormatRemainingCompactImpl(remainingSeconds, showSeconds, lang), ResolveEffectiveLanguage(lang));
+}
+
 std::wstring FormatRemainingLong(int64_t remainingSeconds, bool showSeconds) {
     return FormatRemainingLong(remainingSeconds, showSeconds, AppLanguage::Turkish);
 }
 
-std::wstring FormatRemainingCompact(int64_t remainingSeconds, bool showSeconds, AppLanguage lang) {
+namespace {
+
+std::wstring FormatRemainingCompactImpl(int64_t remainingSeconds, bool showSeconds, AppLanguage lang) {
     int64_t clamped = std::max<int64_t>(0, remainingSeconds);
     AppLanguage eff = ResolveEffectiveLanguage(lang);
     TimeUnits u = UnitsForLang(eff);
@@ -167,6 +192,8 @@ std::wstring FormatRemainingCompact(int64_t remainingSeconds, bool showSeconds, 
     }
     return std::wstring(buf);
 }
+
+} // namespace
 
 std::wstring FormatRemainingCompact(int64_t remainingSeconds, bool showSeconds) {
     return FormatRemainingCompact(remainingSeconds, showSeconds, AppLanguage::Turkish);

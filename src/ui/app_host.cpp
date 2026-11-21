@@ -1,10 +1,15 @@
 #include "app_host.h"
 #include "gdiplus_flat.h"
+#include "../core/commercial_config.h"
 #include "../core/formatter.h"
 #include "../core/i18n.h"
 #include "../core/utf_util.h"
 #include "../platform/audio_player.h"
 #include "../platform/theme_utils.h"
+#include "../platform/toast.h"
+#include "../core/prayer_calc.h"
+
+#include <shellapi.h>
 
 #include <algorithm>
 #include <cstdio>
@@ -14,6 +19,10 @@ namespace vakit {
 
 namespace {
 
+constexpr int kBalloonNone = 0;
+constexpr int kBalloonReview = 1;
+constexpr int kBalloonLocation = 2;
+constexpr int kHotkeyId = 1;
 constexpr UINT_PTR kTimerTickId = 1;
 constexpr UINT_PTR kTimerWatchdogId = 2;
 constexpr UINT_PTR kTimerAutoMemId = 3;
@@ -33,11 +42,6 @@ AppHost::AppHost(SettingsStore& settingsStore, ScheduleService& scheduleService)
       settings_(settingsStore.Load()) {
 
     taskbarCreatedMsg_ = RegisterWindowMessageW(L"TaskbarCreated");
-    scheduleService_.SetRefreshedCallback([this]() {
-        if (hostHwnd_) {
-            PostMessageW(hostHwnd_, kMsgScheduleRefreshed, 0, 0);
-        }
-    });
 }
 
 AppHost::~AppHost() {
@@ -75,6 +79,8 @@ int AppHost::Run() {
         0, kHostWindowClassName, L"VakitCubuguHost", 0,
         0, 0, 0, 0, nullptr, nullptr, hInst, this);
     if (!hostHwnd_) return 1;
+    // Capture the HWND by value: background fetch threads may fire after AppHost is gone.
+    scheduleService_.SetRefreshedCallback([h = hostHwnd_]() { PostMessageW(h, kMsgScheduleRefreshed, 0, 0); });
 
     bandWindow_ = std::make_unique<TaskbarBandWindow>();
     trayHost_ = std::make_unique<TrayIconHost>(hostHwnd_);
@@ -116,21 +122,9 @@ int AppHost::Run() {
         licenseManager_,
         [this]() {
             settings_ = settingsStore_.Load();
-            ApplyWin11AppDarkMode(settings_.themeMode);
-            RefreshTick(false);
-            ScheduleNextTickTimer();
-            if (flyoutWindow_) flyoutWindow_->RefreshView();
-            if (imsakiyeWindow_) imsakiyeWindow_->RefreshIfOpen();
-            if (proWindow_) proWindow_->RefreshThemeOrLanguage();
+            OnSettingsChanged();
         },
-        [this](const std::wstring& title, const std::wstring& body, bool silent) {
-            if (trayHost_) {
-                trayHost_->ShowNotification(title, body, silent);
-                if (!settings_.showTrayIcon && hostHwnd_) {
-                    SetTimer(hostHwnd_, kTimerTrayNotifCleanupId, 15000, nullptr);
-                }
-            }
-        },
+        [this](const std::wstring& title, const std::wstring& body, bool silent) { ShowUserNotification(title, body, silent); },
         [this]() { imsakiyeWindow_->OpenOrFocus(); },
         [this](bool lockedHint) { if (proWindow_) proWindow_->OpenOrFocus(lockedHint); });
 
@@ -182,6 +176,19 @@ int AppHost::Run() {
             return t == LicenseTier::ProAnnual || t == LicenseTier::ProLifetime;
         });
 
+    bandWindow_->SetMenuActionCallbacks(
+        [this](const std::function<void(AppSettings&)>& change) {
+            change(settings_);
+            settingsStore_.Save(settings_);
+            OnSettingsChanged();
+        },
+        [this](int tab) { if (settingsWindow_) settingsWindow_->OpenOrFocus(tab); },
+        [this]() {
+            ShowUserNotification(Tr(settings_.language, StrId::TestNotifTitle), Tr(settings_.language, StrId::TestNotifBody), true);
+        });
+
+    ApplyHotkey();
+    CheckTimeZoneChange();
     RefreshTick(false);
     ScheduleNextTickTimer();
     SetTimer(hostHwnd_, kTimerWatchdogId, 5000, nullptr);
@@ -209,6 +216,58 @@ int AppHost::Run() {
     }
 
     return static_cast<int>(msg.wParam);
+}
+
+void AppHost::OnSettingsChanged() {
+    ApplyWin11AppDarkMode(settings_.themeMode);
+    ApplyHotkey();
+    RefreshTick(false);
+    ScheduleNextTickTimer();
+    if (flyoutWindow_) flyoutWindow_->RefreshView();
+    if (imsakiyeWindow_) imsakiyeWindow_->RefreshIfOpen();
+    if (proWindow_) proWindow_->RefreshThemeOrLanguage();
+}
+
+void AppHost::ShowUserNotification(const std::wstring& title, const std::wstring& body, bool silent) {
+    // Toast first (Snooze/Dismiss, Notification Center); classic tray balloon if toasts are off or unavailable.
+    if (settings_.modernToasts && ShowModernToast(title, body, silent)) return;
+    if (!trayHost_) return;
+    trayHost_->ShowNotification(title, body, silent);
+    pendingBalloonAction_ = kBalloonNone;
+    if (!settings_.showTrayIcon && hostHwnd_) SetTimer(hostHwnd_, kTimerTrayNotifCleanupId, 15000, nullptr);
+}
+
+void AppHost::ShowActionBalloon(const std::wstring& title, const std::wstring& body, int action) {
+    // Balloons report clicks back to this window, so actionable prompts always use them.
+    if (!trayHost_) return;
+    trayHost_->ShowNotification(title, body, true);
+    pendingBalloonAction_ = action;
+    if (!settings_.showTrayIcon && hostHwnd_) SetTimer(hostHwnd_, kTimerTrayNotifCleanupId, 15000, nullptr);
+}
+
+void AppHost::ApplyHotkey() {
+    if (!hostHwnd_) return;
+    UnregisterHotKey(hostHwnd_, kHotkeyId);
+    if (settings_.globalHotkey) {
+        // MOD_NOREPEAT (0x4000): one toggle per key press. Fails silently if another app owns Win+Alt+P.
+        RegisterHotKey(hostHwnd_, kHotkeyId, MOD_WIN | MOD_ALT | 0x4000, 'P');
+    }
+}
+
+void AppHost::CheckTimeZoneChange() {
+    DYNAMIC_TIME_ZONE_INFORMATION tz{};
+    if (GetDynamicTimeZoneInformation(&tz) == TIME_ZONE_ID_INVALID) return;
+    uint32_t h = 2166136261u;  // FNV-1a of the zone key; DST switches keep the same key
+    for (const wchar_t* p = tz.TimeZoneKeyName; *p; ++p) h = (h ^ static_cast<uint32_t>(*p)) * 16777619u;
+    int hash = static_cast<int>(h & 0x7FFFFFFF) | 1;
+    if (settings_.lastTzHash == hash) return;
+    bool firstRecord = (settings_.lastTzHash == 0);
+    settings_.lastTzHash = hash;
+    settingsStore_.Save(settings_);
+    if (!firstRecord && settings_.travelMode) {
+        AppLanguage lang = settings_.language;
+        ShowActionBalloon(Tr(lang, StrId::TravelTitle), Tr(lang, StrId::TravelBody), kBalloonLocation);
+    }
 }
 
 void AppHost::ToggleFlyout(RECT anchorRect) {
@@ -260,6 +319,9 @@ void AppHost::EvaluateNotifications(const LocalDateTime& now, const PrayerCountd
         sentNotifications_.clear();
     }
 
+    // User muted notifications from the menu: skip everything (alerts, Jumu'ah, rating ask) until the window ends.
+    if (settings_.notifyMuteUntilMin > static_cast<int>(now.ToEpochSeconds() / 60)) return;
+
     bool quietActive = settings_.quietDuringFullscreen && IsQuietOrFullscreenModeActive();
 
     DateYMD today = now.date;
@@ -281,12 +343,7 @@ void AppHost::EvaluateNotifications(const LocalDateTime& now, const PrayerCountd
 
     auto dispatchNotif = [&](const std::wstring& title, const std::wstring& body, NotificationSoundKind sound, bool playSoundRule) {
         bool playAudio = !quietActive && playSoundRule && (sound != NotificationSoundKind::None);
-        if (trayHost_) {
-            trayHost_->ShowNotification(title, body, quietActive || playAudio || !playSoundRule);
-            if (!settings_.showTrayIcon && hostHwnd_) {
-                SetTimer(hostHwnd_, kTimerTrayNotifCleanupId, 15000, nullptr);
-            }
-        }
+        ShowUserNotification(title, body, quietActive || playAudio || !playSoundRule);
         if (playAudio) {
             AudioPlayer::Play(sound, settings_.customSoundPath, settings_.soundVolumePercent);
         }
@@ -306,7 +363,9 @@ void AppHost::EvaluateNotifications(const LocalDateTime& now, const PrayerCountd
                 dispatchNotif(
                     FormatNotificationAtTimeTitle(c.kind, settings_),
                     FormatNotificationAtTimeBody(settings_.cityName, c.kind, hhmm, settings_),
-                    settings_.entrySound,
+                    (c.kind == PrayerKind::Imsak && settings_.fajrSound >= 0)
+                        ? static_cast<NotificationSoundKind>(settings_.fajrSound)
+                        : settings_.entrySound,
                     rule.playSound);
             }
         }
@@ -329,6 +388,52 @@ void AppHost::EvaluateNotifications(const LocalDateTime& now, const PrayerCountd
                 }
             }
         }
+    }
+
+    // Jumu'ah: one reminder 45 min before Dhuhr on Fridays.
+    if (settings_.fridayReminder && today.DayOfWeek() == 5) {
+        int64_t dhuhrSec = LocalDateTime::FromDateTime(today, state.today.ogle).ToEpochSeconds();
+        int64_t remSec = dhuhrSec - nowSec;
+        if (remSec <= 45 * 60 && remSec > 44 * 60 - 3) {
+            wchar_t keyBuf[32];
+            swprintf_s(keyBuf, L"%04d%02d%02d_jumuah", today.year, today.month, today.day);
+            if (sentNotifications_.insert(keyBuf).second) {
+                AppLanguage lang = ResolveEffectiveLanguage(settings_.language);
+                dispatchNotif(Tr(lang, StrId::NotifFridayTitle), Tr(lang, StrId::NotifFridayBody),
+                              settings_.preNotifySound, settings_.alerts.GetRule(PrayerKind::Ogle).playSound);
+            }
+        }
+    }
+
+    // Islamic holidays: one reminder at 20:00 on the evening before (kandil nights are that same evening).
+    int nowMinOfDay = now.hour * 60 + now.minute;
+    if (settings_.holidayReminders && nowMinOfDay >= 20 * 60 && nowMinOfDay < 20 * 60 + 2) {
+        HolidayEve eve = FindHolidayStartingTomorrow(today);
+        if (eve.id != HolidayId::None) {
+            wchar_t keyBuf[32];
+            swprintf_s(keyBuf, L"%04d%02d%02d_holiday", today.year, today.month, today.day);
+            if (sentNotifications_.insert(keyBuf).second) {
+                static constexpr StrId kNames[] = {
+                    StrId::HolHijriNewYear, StrId::HolHijriNewYear, StrId::HolAshura, StrId::HolMawlid, StrId::HolRaghaib,
+                    StrId::HolMiraj, StrId::HolBarat, StrId::HolRamadanStart, StrId::HolQadr, StrId::HolEidFitr,
+                    StrId::HolArafah, StrId::HolEidAdha};
+                AppLanguage lang = settings_.language;
+                wchar_t body[256];
+                swprintf_s(body, Tr(lang, eve.isNight ? StrId::HolidayTonight : StrId::HolidayTomorrow),
+                           Tr(lang, kNames[static_cast<int>(eve.id)]));
+                dispatchNotif(Tr(lang, StrId::HolidayTitle), body, settings_.preNotifySound, true);
+            }
+        }
+    }
+
+    // One-time Store rating ask after a week of use, daytime only, never while gaming/presenting.
+    if (!settings_.reviewPrompted && !quietActive && IsPackagedApp() && trayHost_ &&
+        now.hour >= 10 && now.hour < 21 &&
+        today.ToEpochDays() - licenseManager_.FirstLaunchEpochDays() >= 7) {
+        settings_.reviewPrompted = true;
+        settingsStore_.Save(settings_);
+        AppLanguage lang = ResolveEffectiveLanguage(settings_.language);
+        ShowActionBalloon(Tr(lang, StrId::NotifReviewTitle), Tr(lang, StrId::NotifReviewBody), kBalloonReview);
     }
 }
 
@@ -377,6 +482,15 @@ LRESULT AppHost::HostWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 
         case TrayIconHost::kCallbackMessageId: {
             UINT mouseMsg = static_cast<UINT>(lParam & 0xFFFF);
+            if (mouseMsg == NIN_BALLOONUSERCLICK || mouseMsg == NIN_BALLOONTIMEOUT) {
+                if (mouseMsg == NIN_BALLOONUSERCLICK && pendingBalloonAction_ == kBalloonReview) {
+                    ShellExecuteW(hWnd, L"open", commercial::kMicrosoftStoreReviewUri, nullptr, nullptr, SW_SHOWNORMAL);
+                } else if (mouseMsg == NIN_BALLOONUSERCLICK && pendingBalloonAction_ == kBalloonLocation) {
+                    if (settingsWindow_) settingsWindow_->OpenOrFocus(1);
+                }
+                pendingBalloonAction_ = kBalloonNone;
+                return 0;
+            }
             if (mouseMsg == WM_LBUTTONUP) {
                 RECT anchor = bandWindow_ ? bandWindow_->CurrentRect() : FallbackAnchorNearCursor();
                 ToggleFlyout(anchor);
@@ -387,6 +501,10 @@ LRESULT AppHost::HostWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
             }
             return 0;
         }
+
+        case kMsgShowSettings:
+            if (settingsWindow_) settingsWindow_->OpenOrFocus(static_cast<int>(wParam));
+            return 0;
 
         case kMsgShowFlyout:
             ToggleFlyout(bandWindow_ ? bandWindow_->CurrentRect() : FallbackAnchorNearCursor());
@@ -422,7 +540,20 @@ LRESULT AppHost::HostWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
             }
             return TRUE;
 
+        case WM_HOTKEY:
+            if (wParam == kHotkeyId) ToggleFlyout(bandWindow_ ? bandWindow_->CurrentRect() : FallbackAnchorNearCursor());
+            return 0;
+
+        case WM_TIMECHANGE:
+            CheckTimeZoneChange();
+            RefreshTick(false);
+            ScheduleNextTickTimer();
+            return 0;
+
+        case WM_DWMCOLORIZATIONCOLORCHANGED:
         case WM_SETTINGCHANGE:
+            InvalidateAccentColorCache();
+            if (settingsWindow_) settingsWindow_->RepaintAll();
             ApplyWin11AppDarkMode(settings_.themeMode);
             RefreshTick(false);
             if (flyoutWindow_) flyoutWindow_->RefreshView();
