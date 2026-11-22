@@ -67,7 +67,7 @@ powershell -ExecutionPolicy Bypass -File scripts\build-msix.ps1 -CreateTestCert
 ```
 
 Oluşan `dist\release\PrayerBar_2.1.0.0_x64_Store.msix` paketini Partner Center → **Packages** alanına yükleyin.
-- **6 Dilli Mağaza Açıklamaları (TR/EN/AR/DE/FR/ID):** [docs/STORE_LISTINGS_GLOBAL.md](file:///c:/Users/ooemi/Desktop/Projeler/EzanNamazVak/docs/STORE_LISTINGS_GLOBAL.md)
+- **12 Dilli Mağaza Açıklamaları:** [docs/STORE_LISTINGS_GLOBAL.md](file:///c:/Users/ooemi/Desktop/Projeler/EzanNamazVak/docs/STORE_LISTINGS_GLOBAL.md)
 - **Notes for certification** alanına eklenecek açıklama *(manifest `runFullTrust` kullandığı için)*:
 
 > This native C++20 desktop utility displays live daily prayer countdowns on the Windows 11 taskbar and system tray using minimal memory (~3 MB private RAM, 0% idle CPU). The `runFullTrust` capability is required solely to anchor the lightweight layered indicator adjacent to the taskbar tray (`Shell_TrayWnd` / `Shell_NotifyIconW`) and show the user-triggered Fluent flyout/settings UI.
