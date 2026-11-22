@@ -385,11 +385,11 @@ constexpr LangRow kUiStrings[] = {
     // ProPlanAnnualTitle
     {L"Yıllık Pro", L"Annual Pro", L"اشتراك سنوي", L"Jährliches Pro", L"Pro Annuel", L"Pro Tahunan", L"سالانہ Pro", L"বার্ষিক Pro", L"Pro Tahunan", L"Pro سالانه", L"Pro на год", L"Pro anual"},
     // ProPlanAnnualPrice
-    {L"₺99,99 / yıl", L"$4.99 / year", L"$4.99 / سنة", L"4,99 € / Jahr", L"4,99 € / an", L"$4.99 / tahun", L"$4.99 / سال", L"$4.99 / বছর", L"$4.99 / tahun", L"$4.99 / سال", L"$4.99 / год", L"$4.99 / año"},
+    {L"₺100 / yıl", L"$4.99 / year", L"$4.99 / سنة", L"4,99 € / Jahr", L"4,99 € / an", L"$4.99 / tahun", L"$4.99 / سال", L"$4.99 / বছর", L"$4.99 / tahun", L"$4.99 / سال", L"$4.99 / год", L"$4.99 / año"},
     // ProPlanLifetimeTitle
     {L"Ömür Boyu Pro", L"Lifetime Pro", L"مدى الحياة", L"Lebenslanges Pro", L"Pro à Vie", L"Pro Selamanya", L"تاحیات Pro", L"আজীবন Pro", L"Pro Seumur Hidup", L"Pro مادام‌العمر", L"Pro навсегда", L"Pro de por vida"},
     // ProPlanLifetimePrice
-    {L"₺249,99 Tek Seferlik", L"$9.99 One-Time", L"$9.99 دفعة واحدة", L"9,99 € Einmalig", L"9,99 € Paiement unique", L"$9.99 Sekali Bayar", L"$9.99 ایک بار", L"$9.99 এককালীন", L"$9.99 Sekali Bayar", L"$9.99 یک‌باره", L"$9.99 единоразово", L"$9.99 pago único"},
+    {L"₺250 Tek Seferlik", L"$9.99 One-Time", L"$9.99 دفعة واحدة", L"9,99 € Einmalig", L"9,99 € Paiement unique", L"$9.99 Sekali Bayar", L"$9.99 ایک بار", L"$9.99 এককালীন", L"$9.99 Sekali Bayar", L"$9.99 یک‌باره", L"$9.99 единоразово", L"$9.99 pago único"},
     // ProBadgePopular
     {L"EN ÇOK TERCİH EDİLEN", L"MOST POPULAR", L"الأكثر طلباً", L"AM BELIEBTESTEN", L"LE PLUS POPULAIRE", L"PALING POPULER", L"سب سے مقبول", L"সবচেয়ে জনপ্রিয়", L"PALING POPULAR", L"محبوب‌ترین", L"ПОПУЛЯРНОЕ", L"MÁS POPULAR"},
     // ProFeat1
@@ -403,9 +403,9 @@ constexpr LangRow kUiStrings[] = {
     // ProFeat5
     {L"• Ayar Yedekleme/Geri Yükleme & 3 Bilgisayara Kadar Tek Lisans", L"• Settings JSON Backup/Restore & Future Updates Included", L"• نسخ احتياطي للإعدادات مع التحديثات المستقبلية", L"• Einstellungs-Backup & alle Updates inklusive", L"• Sauvegarde JSON & mises à jour incluses", L"• Cadangan Pengaturan & Pembaruan Gratis", L"• ترتیبات کا JSON بیک اپ/بحالی اور آئندہ اپ ڈیٹس شامل", L"• সেটিংসের JSON ব্যাকআপ/পুনরুদ্ধার ও ভবিষ্যৎ আপডেট", L"• Sandaran/Pulih Tetapan JSON & Kemas Kini Akan Datang", L"• پشتیبان‌گیری/بازیابی JSON تنظیمات و به‌روزرسانی‌های آینده", L"• Резервная копия настроек JSON и будущие обновления", L"• Copia de seguridad JSON y futuras actualizaciones incluidas"},
     // BtnBuyAnnual
-    {L"Yıllık Al (₺99,99)", L"Get Annual ($4.99)", L"شراء سنوي ($4.99)", L"Jährlich (4,99 €)", L"Annuel (4,99 €)", L"Beli Tahunan", L"سالانہ لیں ($4.99)", L"বার্ষিক নিন ($4.99)", L"Dapatkan Tahunan ($4.99)", L"خرید سالانه ($4.99)", L"Купить на год ($4.99)", L"Obtener anual ($4.99)"},
+    {L"Yıllık Al (₺100)", L"Get Annual ($4.99)", L"شراء سنوي ($4.99)", L"Jährlich (4,99 €)", L"Annuel (4,99 €)", L"Beli Tahunan", L"سالانہ لیں ($4.99)", L"বার্ষিক নিন ($4.99)", L"Dapatkan Tahunan ($4.99)", L"خرید سالانه ($4.99)", L"Купить на год ($4.99)", L"Obtener anual ($4.99)"},
     // BtnBuyLifetime
-    {L"Ömür Boyu Al (₺249,99)", L"Get Lifetime ($9.99)", L"مدى الحياة ($9.99)", L"Lebenslang (9,99 €)", L"À vie (9,99 €)", L"Beli Selamanya", L"تاحیات لیں ($9.99)", L"আজীবন নিন ($9.99)", L"Dapatkan Seumur Hidup ($9.99)", L"خرید مادام‌العمر ($9.99)", L"Купить навсегда ($9.99)", L"Obtener de por vida ($9.99)"},
+    {L"Ömür Boyu Al (₺250)", L"Get Lifetime ($9.99)", L"مدى الحياة ($9.99)", L"Lebenslang (9,99 €)", L"À vie (9,99 €)", L"Beli Selamanya", L"تاحیات لیں ($9.99)", L"আজীবন নিন ($9.99)", L"Dapatkan Seumur Hidup ($9.99)", L"خرید مادام‌العمر ($9.99)", L"Купить навсегда ($9.99)", L"Obtener de por vida ($9.99)"},
     // BtnOpenStore
     {L"Microsoft Store", L"Microsoft Store", L"مايكروسوفت ستور", L"Microsoft Store", L"Microsoft Store", L"Microsoft Store", L"Microsoft Store", L"Microsoft Store", L"Microsoft Store", L"Microsoft Store", L"Microsoft Store", L"Microsoft Store"},
     // ProLockedHint
