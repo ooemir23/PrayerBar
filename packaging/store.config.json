@@ -2,7 +2,7 @@
   "IdentityName": "BomeraGdaLimitedirketi.PrayerBar",
   "Publisher": "CN=8C3658B6-BFA1-4074-AF50-3C28C1865B0C",
   "PublisherDisplayName": "Bomera Gıda Limited Şirketi",
-  "DisplayName": "PrayerBar: Prayer Times & Adhan",
+  "DisplayName": "PrayerBar",
   "Description": "Ultra-lightweight (~3 MB RAM, 0% idle CPU) Windows 11 taskbar countdown, dynamic tray badge, Monthly/Ramadan Imsakiye & customizable prayer notifications in 12 languages.",
   "Version": "2.1.0.0",
   "Commercial": {
