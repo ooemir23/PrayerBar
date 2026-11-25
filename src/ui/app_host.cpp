@@ -191,6 +191,9 @@ int AppHost::Run() {
     ApplyHotkey();
     CheckTimeZoneChange();
     RefreshTick(false);
+    if (settings_.autoDetectLocation) {
+        StartAutomaticLocationDetection();
+    }
     ScheduleNextTickTimer();
     SetTimer(hostHwnd_, kTimerWatchdogId, 5000, nullptr);
     SetTimer(hostHwnd_, kTimerAutoMemId, 600000, nullptr);
@@ -290,6 +293,17 @@ void AppHost::TriggerBackgroundRefresh() {
     ScheduleService* svc = &scheduleService_;
     std::thread([svc, copy]() {
         svc->ForceRefreshMonth(ScheduleService::GetCurrentLocalDateTime().date, copy);
+    }).detach();
+}
+
+void AppHost::StartAutomaticLocationDetection() {
+    HWND target = hostHwnd_;
+    std::thread([target]() {
+        auto detected = ScheduleService::DetectCurrentLocation();
+        auto* heapPtr = detected ? new DetectedLocationResult(*detected) : nullptr;
+        if (!PostMessageW(target, kMsgAutoLocationDetected, 0, reinterpret_cast<LPARAM>(heapPtr))) {
+            delete heapPtr;
+        }
     }).detach();
 }
 
@@ -512,6 +526,28 @@ LRESULT AppHost::HostWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
         case kMsgShowFlyout:
             ToggleFlyout(bandWindow_ ? bandWindow_->CurrentRect() : FallbackAnchorNearCursor());
             return 0;
+
+        case kMsgAutoLocationDetected: {
+            auto* detected = reinterpret_cast<DetectedLocationResult*>(lParam);
+            if (!detected) return 0;
+            if (settings_.autoDetectLocation) {
+                settings_.cityId = detected->cityId;
+                settings_.cityName = detected->cityName;
+                settings_.countryName = detected->countryName;
+                settings_.latitude = detected->latitude;
+                settings_.longitude = detected->longitude;
+                settings_.timeZoneId = detected->timeZoneId;
+                settings_.useCustomCoordinates = detected->cityId == L"custom";
+                if (settings_.autoSelectMethodByCountry) {
+                    settings_.calculationMethod = detected->recommendedMethod;
+                }
+                settingsStore_.Save(settings_);
+                if (settingsWindow_) settingsWindow_->ApplyDetectedLocation(*detected);
+                OnSettingsChanged();
+            }
+            delete detected;
+            return 0;
+        }
 
         case kMsgScheduleRefreshed:
             RefreshTick(false);

@@ -66,8 +66,8 @@
       <h1>Privacy Policy (English)</h1>
       <p class="muted">Last updated: November 2026</p>
 
-      <h2>1. Zero Telemetry &amp; No Personal Tracking</h2>
-      <p><strong>PrayerBar</strong> does not collect, track, sell, or transmit your personal data, behavioral analytics, usage telemetry, or continuous location history.</p>
+      <h2>1. No Ads, Analytics, or Location History</h2>
+      <p><strong>PrayerBar</strong> does not use advertising, behavioral analytics, or usage telemetry and does not retain location history. External providers used for location detection and city search process your IP address; see details below.</p>
 
       <h2>2. Local Storage Only</h2>
       <p>Your chosen city coordinates, notification preferences, display styles, cached monthly schedules, and license status are stored strictly on your Windows device inside <code>%LocalAppData%\PrayerBar</code> (with an anonymous first-launch day stamp in <code>HKCU\Software\PrayerBar</code> for the 14-day local Pro trial).</p>
@@ -75,7 +75,8 @@
       <h2>3. Optional Network Connections</h2>
       <ul>
         <li><strong>Monthly Prayer Schedule Sync:</strong> If enabled in Settings, the app sends an anonymous HTTPS GET request once per month to <code>api.aladhan.com</code> with your configured city coordinates and calculation method. You can disable this anytime for 100% offline astronomical prayer calculation.</li>
-        <li><strong>One-Time Location Auto-Detection:</strong> Only when you explicitly press the "Auto-Detect Location" button, a single IP geolocation lookup (<code>ipwho.is</code> / <code>get.geojs.io</code>) is performed to prefill your nearest city and regional calculation method.</li>
+        <li><strong>Location Auto-Detection:</strong> "Automatically detect location at startup" is enabled by default. When enabled, the app first uses Windows Location (if permission is available) at startup and falls back to approximate IP geolocation (<code>ipwho.is</code> / <code>get.geojs.io</code>) when needed; those providers receive your IP address. Turn it off to stop this or choose a city manually. The "Auto-Detect Location" button performs a one-time lookup.</li>
+        <li><strong>Worldwide City Search:</strong> When you search for a city, the search text and your IP address are sent to the Open-Meteo Geocoding API (<code>geocoding-api.open-meteo.com</code>) to find its coordinates. No location history is retained.</li>
       </ul>
 
       <h2>4. Payments &amp; Data Processors</h2>
@@ -86,14 +87,14 @@
       <h1>Gizlilik Politikası (Türkçe)</h1>
       <p class="muted">Son güncelleme: Kasım 2026</p>
 
-      <h2>1. Kişisel Veri ve Telemetri Toplanmaz</h2>
-      <p><strong>PrayerBar</strong>; ad, kullanım telemetrisi, reklam kimliği veya arka plan konum geçmişi toplamaz, üçüncü taraflarla paylaşmaz.</p>
+      <h2>1. Reklam, Analitik ve Konum Geçmişi Yok</h2>
+      <p><strong>PrayerBar</strong> reklam, davranış analitiği veya kullanım telemetrisi kullanmaz ve konum geçmişi tutmaz. Konum tespiti ve şehir aramasında kullanılan dış servisler IP adresinizi işler; ayrıntılar aşağıdadır.</p>
 
       <h2>2. Yalnızca Yerel Depolama</h2>
       <p>Seçtiğiniz şehir, bildirim kuralları, görünüm tercihleri, aylık önbellek ve lisans durumu yalnızca kendi bilgisayarınızdaki <code>%LocalAppData%\PrayerBar</code> klasöründe saklanır.</p>
 
       <h2>3. İsteğe Bağlı Ağ İstekleri</h2>
-      <p>Aylık vakit eşitlemesi açıkken yalnızca <code>api.aladhan.com</code> üzerinden anonim vakit takvimi indirilir; kapatıldığında %100 çevrimdışı güneş hesabı çalışır. Otomatik konum yalnızca siz butona bastığınızda çalışır.</p>
+      <p>Aylık vakit eşitlemesi açıkken <code>api.aladhan.com</code> üzerinden anonim vakit takvimi indirilir; kapatıldığında çevrimdışı güneş hesabı çalışır. "Uygulama açıldığında konumu otomatik bul" seçeneği varsayılan olarak açıktır; uygulama önce izin varsa Windows Konum Hizmeti'ni kullanır, gerekirse yaklaşık IP konumuna başvurur. Kapatabilir veya şehri elle seçebilirsiniz. Dünya genelinde şehir araması, arama metnini ve IP adresinizi koordinatları bulmak için Open-Meteo Geocoding API'ye (<code>geocoding-api.open-meteo.com</code>) gönderir. Konum geçmişi tutulmaz.</p>
 
       <h2>4. Ödemeler</h2>
       <p>Tüm ödemeler Microsoft Store tarafından işlenir; ödeme bilgileriniz uygulamaya asla iletilmez.</p>

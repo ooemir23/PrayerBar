@@ -7,6 +7,7 @@
 #include <optional>
 #include <set>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace vakit {
@@ -25,7 +26,8 @@ public:
     void SaveMonthToCache(const std::wstring& monthKey, const std::vector<DailyPrayerTimes>& days);
 
     static std::wstring BuildMonthKey(int year, int month, const AppSettings& settings);
-    static std::optional<DetectedLocationResult> DetectLocationByIp();
+    static std::optional<DetectedLocationResult> DetectCurrentLocation();
+    static std::vector<CityLocation> SearchWorldwideCities(std::wstring_view query);
     static LocalDateTime GetCurrentLocalDateTime();
 
 private:

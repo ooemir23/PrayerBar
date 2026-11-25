@@ -6,9 +6,20 @@
 #include "utf_util.h"
 #include "../platform/win_http.h"
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
 #include <thread>
+#include <utility>
+#include <locationapi.h>
 
 namespace vakit {
 
@@ -78,8 +89,82 @@ std::wstring MapIanaToWindowsTimeZone(std::string_view iana) {
     if (iana == "America/New_York" || iana == "America/Toronto") return L"Eastern Standard Time";
     if (iana == "America/Chicago") return L"Central Standard Time";
     if (iana == "Asia/Tokyo") return L"Tokyo Standard Time";
-    if (iana == "Australia/Sydney") return L"AUS Eastern Standard Time";
+    if (iana == "Australia/Sydney" || iana == "Australia/Melbourne" ||
+        iana == "Australia/Canberra" || iana == "Australia/Hobart") return L"AUS Eastern Standard Time";
+    if (iana == "Australia/Adelaide") return L"Cen. Australia Standard Time";
+    if (iana == "Australia/Darwin") return L"AUS Central Standard Time";
+    if (iana == "Australia/Brisbane") return L"E. Australia Standard Time";
+    if (iana == "Australia/Perth") return L"W. Australia Standard Time";
+    if (iana == "Pacific/Auckland") return L"New Zealand Standard Time";
+    if (iana == "America/Los_Angeles" || iana == "America/Vancouver") return L"Pacific Standard Time";
+    if (iana == "America/Denver") return L"Mountain Standard Time";
+    if (iana == "America/Phoenix") return L"US Mountain Standard Time";
+    if (iana == "America/Winnipeg") return L"Central Standard Time";
+    if (iana == "America/Anchorage") return L"Alaskan Standard Time";
+    if (iana == "Pacific/Honolulu") return L"Hawaiian Standard Time";
+    if (iana == "America/Sao_Paulo") return L"E. South America Standard Time";
+    if (iana == "America/Argentina/Buenos_Aires") return L"Argentina Standard Time";
+    if (iana == "Asia/Kolkata") return L"India Standard Time";
+    if (iana == "Asia/Dhaka") return L"Bangladesh Standard Time";
+    if (iana == "Asia/Kathmandu") return L"Nepal Standard Time";
+    if (iana == "Asia/Shanghai" || iana == "Asia/Hong_Kong") return L"China Standard Time";
+    if (iana == "Asia/Seoul") return L"Korea Standard Time";
+    if (iana == "Asia/Taipei") return L"Taipei Standard Time";
+    if (iana == "Asia/Manila") return L"Singapore Standard Time";
+    if (iana == "Africa/Nairobi") return L"E. Africa Standard Time";
+    if (iana == "Africa/Johannesburg") return L"South Africa Standard Time";
+    if (iana == "Europe/Athens" || iana == "Europe/Helsinki" || iana == "Europe/Bucharest") return L"FLE Standard Time";
+    if (iana == "Europe/Istanbul") return L"Turkey Standard Time";
     return L"";
+}
+
+std::wstring GetSystemTimeZoneId() {
+    DYNAMIC_TIME_ZONE_INFORMATION tz{};
+    if (GetDynamicTimeZoneInformation(&tz) == TIME_ZONE_ID_INVALID) return L"";
+    return tz.TimeZoneKeyName;
+}
+
+std::optional<std::pair<double, double>> GetWindowsLocationCoordinates() {
+    HRESULT initResult = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    if (FAILED(initResult)) return std::nullopt;
+
+    std::optional<std::pair<double, double>> coordinates;
+    ILocation* location = nullptr;
+    if (SUCCEEDED(CoCreateInstance(CLSID_Location, nullptr, CLSCTX_INPROC_SERVER,
+                                   IID_ILocation, reinterpret_cast<void**>(&location))) && location) {
+        ILocationReport* baseReport = nullptr;
+        if (SUCCEEDED(location->GetReport(IID_ILatLongReport, &baseReport)) && baseReport) {
+            auto* report = static_cast<ILatLongReport*>(baseReport);
+            DOUBLE latitude = 0.0;
+            DOUBLE longitude = 0.0;
+            if (SUCCEEDED(report->GetLatitude(&latitude)) && SUCCEEDED(report->GetLongitude(&longitude)) &&
+                latitude >= -90.0 && latitude <= 90.0 && longitude >= -180.0 && longitude <= 180.0) {
+                coordinates = std::make_pair(latitude, longitude);
+            }
+            baseReport->Release();
+        }
+        location->Release();
+    }
+
+    CoUninitialize();
+    return coordinates;
+}
+
+std::string EncodeQueryParameter(std::string_view value) {
+    static constexpr char kHex[] = "0123456789ABCDEF";
+    std::string result;
+    result.reserve(value.size() * 3);
+    for (unsigned char c : value) {
+        if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
+            (c >= '0' && c <= '9') || c == '-' || c == '_' || c == '.' || c == '~') {
+            result.push_back(static_cast<char>(c));
+        } else {
+            result.push_back('%');
+            result.push_back(kHex[c >> 4]);
+            result.push_back(kHex[c & 0x0F]);
+        }
+    }
+    return result;
 }
 
 PrayerCountdownState BuildState(
@@ -451,12 +536,32 @@ std::optional<std::vector<DailyPrayerTimes>> ScheduleService::FetchAladhanMonth(
     return result;
 }
 
-std::optional<DetectedLocationResult> ScheduleService::DetectLocationByIp() {
-    auto parseAndBuild = [](double lat, double lon, std::string_view city, std::string_view country,
-                            std::string_view cc, std::string_view ianaTz, const wchar_t* source) -> DetectedLocationResult {
+std::optional<DetectedLocationResult> ScheduleService::DetectCurrentLocation() {
+    auto windowsCoordinates = GetWindowsLocationCoordinates();
+    if (windowsCoordinates) {
+        if (auto nearest = FindNearestCity(windowsCoordinates->first, windowsCoordinates->second, 30.0)) {
+            DetectedLocationResult result;
+            result.cityId = nearest->id;
+            result.cityName = nearest->name;
+            result.countryName = nearest->country;
+            result.countryCode = nearest->countryCode;
+            result.latitude = windowsCoordinates->first;
+            result.longitude = windowsCoordinates->second;
+            result.timeZoneId = nearest->timeZoneId;
+            result.recommendedMethod = GetRecommendedMethodForCountry(result.countryCode);
+            result.sourceLabel = L"Windows Konum";
+            return result;
+        }
+    }
+
+    auto parseAndBuild = [&](double ipLatitude, double ipLongitude, std::string_view city, std::string_view country,
+                             std::string_view cc, std::string_view ianaTz, const wchar_t* source) -> DetectedLocationResult {
+        double lat = windowsCoordinates ? windowsCoordinates->first : ipLatitude;
+        double lon = windowsCoordinates ? windowsCoordinates->second : ipLongitude;
         auto nearest = FindNearestCity(lat, lon, 30.0);
-        std::wstring winTz = MapIanaToWindowsTimeZone(ianaTz);
+        std::wstring winTz = windowsCoordinates ? std::wstring() : MapIanaToWindowsTimeZone(ianaTz);
         if (winTz.empty() && nearest) winTz = nearest->timeZoneId;
+        if (winTz.empty()) winTz = GetSystemTimeZoneId();
 
         DetectedLocationResult r;
         r.cityId = nearest ? nearest->id : L"custom";
@@ -467,7 +572,7 @@ std::optional<DetectedLocationResult> ScheduleService::DetectLocationByIp() {
         r.longitude = lon;
         r.timeZoneId = winTz;
         r.recommendedMethod = GetRecommendedMethodForCountry(r.countryCode);
-        r.sourceLabel = source;
+        r.sourceLabel = windowsCoordinates ? L"Windows Konum + IP" : source;
         return r;
     };
 
@@ -499,7 +604,71 @@ std::optional<DetectedLocationResult> ScheduleService::DetectLocationByIp() {
         }
     }
 
+    if (windowsCoordinates) {
+        DetectedLocationResult result;
+        result.cityId = L"custom";
+        result.cityName = L"Konum";
+        result.countryName = L"Konum";
+        result.latitude = windowsCoordinates->first;
+        result.longitude = windowsCoordinates->second;
+        result.timeZoneId = GetSystemTimeZoneId();
+        result.recommendedMethod = CalculationMethod::MWL;
+        result.sourceLabel = L"Windows Konum";
+        return result;
+    }
     return std::nullopt;
+}
+
+std::vector<CityLocation> ScheduleService::SearchWorldwideCities(std::wstring_view query) {
+    std::wstring trimmed = TrimWide(query);
+    if (trimmed.size() < 3) return {};
+
+    std::string path = "/v1/search?name=" + EncodeQueryParameter(WideToUtf8(trimmed)) +
+                       "&count=20&language=en&format=json";
+    auto body = WinHttpGetUtf8(L"geocoding-api.open-meteo.com", Utf8ToWide(path), true, 6000);
+    if (!body) return {};
+
+    auto doc = JsonParse(*body);
+    if (!doc || doc->type != JsonValue::Type::Object) return {};
+    const JsonValue* results = doc->Find("results");
+    if (!results || results->type != JsonValue::Type::Array) return {};
+
+    std::vector<CityLocation> cities;
+    cities.reserve(results->arrVal.size());
+    for (const auto& item : results->arrVal) {
+        if (item.type != JsonValue::Type::Object) continue;
+        std::string name = item.GetString("name");
+        std::string country = item.GetString("country");
+        std::string countryCode = item.GetString("country_code");
+        double latitude = item.GetDouble("latitude", 999.0);
+        double longitude = item.GetDouble("longitude", 999.0);
+        if (name.empty() || country.empty() || countryCode.empty() ||
+            latitude < -90.0 || latitude > 90.0 || longitude < -180.0 || longitude > 180.0) {
+            continue;
+        }
+
+        char idBuf[96];
+        snprintf(idBuf, sizeof(idBuf), "world_%s_%d_%d", countryCode.c_str(),
+                 static_cast<int>(std::llround(latitude * 10000.0)),
+                 static_cast<int>(std::llround(longitude * 10000.0)));
+        std::string tz = item.GetString("timezone");
+        std::wstring timeZoneId = MapIanaToWindowsTimeZone(tz);
+        if (timeZoneId.empty()) timeZoneId = GetSystemTimeZoneId();
+
+        CityLocation city;
+        city.id = Utf8ToWide(idBuf);
+        city.name = Utf8ToWide(name);
+        city.country = Utf8ToWide(country);
+        city.countryCode = Utf8ToWide(countryCode);
+        city.latitude = latitude;
+        city.longitude = longitude;
+        city.timeZoneId = std::move(timeZoneId);
+        if (const JsonValue* admin = item.Find("admin1"); admin && admin->type == JsonValue::Type::String) {
+            city.searchAliases = Utf8ToWide(admin->strVal);
+        }
+        cities.push_back(std::move(city));
+    }
+    return cities;
 }
 
 } // namespace vakit

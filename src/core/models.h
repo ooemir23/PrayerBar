@@ -275,6 +275,7 @@ struct AppSettings {
     double longitude = 28.9784;
     std::wstring timeZoneId = L"Turkey Standard Time";
     bool useCustomCoordinates = false;
+    bool autoDetectLocation = true;
 
     CalculationMethod calculationMethod = CalculationMethod::Diyanet;
     AsrJuristicMethod asrMethod = AsrJuristicMethod::Standard;

@@ -82,7 +82,7 @@ $linkFlags = @(
     "-Wl,--dynamicbase,--nxcompat,--high-entropy-va,--tsaware",
     "-luser32", "-lgdi32", "-lgdiplus", "-lshell32", "-ldwmapi",
     "-lwinmm", "-lwinhttp", "-lole32", "-lcomctl32", "-lcomdlg32",
-    "-luxtheme", "-ladvapi32", "-lpsapi", "-lruntimeobject", "-loleacc", "-loleaut32", "-luuid"
+    "-luxtheme", "-ladvapi32", "-lpsapi", "-lruntimeobject", "-loleacc", "-loleaut32", "-llocationapi", "-luuid"
 )
 
 & $clangxx @commonFlags @appSources $resFile -o $appExe @linkFlags
@@ -136,7 +136,7 @@ if (-not $SkipTests) {
     ) | ForEach-Object { Join-Path $repoRoot $_ }
 
     $testExe = Join-Path $buildDir "vakit_tests.exe"
-    & $clangxx @commonFlags @testSources -o $testExe -lwinhttp -lole32 -lshell32 -ladvapi32 -luser32
+    & $clangxx @commonFlags @testSources -o $testExe -lwinhttp -lole32 -llocationapi -luuid -lshell32 -ladvapi32 -luser32
     if ($LASTEXITCODE -ne 0) { throw "clang++ failed compiling vakit_tests.exe" }
 
     & $testExe

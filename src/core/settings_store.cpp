@@ -129,10 +129,11 @@ bool ParseSettingsUtf8(const std::string& raw, AppSettings& s) {
     readWStr("cityId", s.cityId);
     readWStr("cityName", s.cityName);
     readWStr("countryName", s.countryName);
-    s.latitude = std::clamp(root.GetDouble("latitude", s.latitude), -70.0, 70.0);
+    s.latitude = std::clamp(root.GetDouble("latitude", s.latitude), -90.0, 90.0);
     s.longitude = std::clamp(root.GetDouble("longitude", s.longitude), -180.0, 180.0);
     readWStr("timeZoneId", s.timeZoneId);
     s.useCustomCoordinates = root.GetBool("useCustomCoordinates", s.useCustomCoordinates);
+    s.autoDetectLocation = root.GetBool("autoDetectLocation", !s.useCustomCoordinates);
 
     s.calculationMethod = static_cast<CalculationMethod>(root.GetInt("calculationMethod", static_cast<int>(s.calculationMethod)));
     s.asrMethod = static_cast<AsrJuristicMethod>(std::clamp(root.GetInt("asrMethod", static_cast<int>(s.asrMethod)), 0, 1));
@@ -239,6 +240,7 @@ std::string SerializeSettingsUtf8(const AppSettings& s) {
     root.Set("longitude", JsonValue::MakeNumber(s.longitude));
     root.Set("timeZoneId", JsonValue::MakeString(WideToUtf8(s.timeZoneId)));
     root.Set("useCustomCoordinates", JsonValue::MakeBool(s.useCustomCoordinates));
+    root.Set("autoDetectLocation", JsonValue::MakeBool(s.autoDetectLocation));
 
     root.Set("calculationMethod", JsonValue::MakeInt(static_cast<int>(s.calculationMethod)));
     root.Set("asrMethod", JsonValue::MakeInt(static_cast<int>(s.asrMethod)));
