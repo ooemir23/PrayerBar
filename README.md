@@ -1,8 +1,50 @@
-# PrayerBar (Saf Native C++20 + Win32)
+# PrayerBar
+
+[![Windows 10/11](https://img.shields.io/badge/Platform-Windows%2010%2F11%20(x64)-0078D4?logo=windows)](https://apps.microsoft.com/detail/9MSQBZTPGWX6)
+[![C++20](https://img.shields.io/badge/Language-Pure%20C%2B%2B20%20%2B%20Win32-00599C?logo=cplusplus)](https://github.com/ooemir23/PrayerBar)
+[![RAM](https://img.shields.io/badge/RAM-~3--5%20MB-2EA44F)](#key-features)
+[![Idle CPU](https://img.shields.io/badge/Idle%20CPU-0.000%25-2EA44F)](#key-features)
+
+**Ultra-lightweight (~3–5 MB RAM, 0% idle CPU) native Windows 10/11 taskbar prayer times countdown, dynamic tray badge, Monthly/Ramadan Imsakiye & customizable Adhan notifications in 12 languages.**
+
+- **Microsoft Store:** https://apps.microsoft.com/detail/9MSQBZTPGWX6
+- **Website:** https://ooemir23.github.io/PrayerBar/
+- **Privacy Policy:** https://ooemir23.github.io/PrayerBar/privacy.html
+
+![PrayerBar Hero Banner](website/images/hero.png)
+
+---
+
+## Screenshots
+
+| Taskbar Countdown & ~3 MB RAM | 4 Fluent Flyouts & Live Qibla Compass |
+| :---: | :---: |
+| ![Taskbar Countdown & ~3 MB RAM](website/images/01_taskbar_countdown.png) | ![4 Fluent Flyouts & Live Qibla Compass](website/images/02_fluent_flyout_qibla.png) |
+| **Monthly Schedule & 30-Day Ramadan Imsakiye** | **12 Languages & Modular Features** |
+| ![Monthly Schedule & 30-Day Ramadan Imsakiye](website/images/03_ramadan_imsakiye.png) | ![12 Languages & Modular Features](website/images/04_settings_features.png) |
+
+---
+
+## English Overview
+
+### Why PrayerBar?
+Most desktop prayer applications rely on Electron, .NET, or web runtimes that consume 150–400 MB of memory in the background. **PrayerBar** is written from scratch in **pure native C++20 + Win32 + GDI+ + WinHTTP + WinMM** to behave like a built-in Windows 11 system widget.
+
+### Key Features
+- **Zero-Bloat Performance:** ~3–5 MB RAM, 0% idle CPU, aligned to a single minute-boundary Win32 `SetTimer` with `SetWinEventHook` and `WM_POWERBROADCAST` sleep/wake support.
+- **Flexible Taskbar Integration:** 4 dock positions (near tray, far right, center, left) with `-500..+500 px` fine offset, 9 taskbar styles, 4 flyout themes, and automatic Windows Light/Dark + Accent color sync.
+- **12 Languages (`Auto` OS Detection):** English, Türkçe, العربية, Deutsch, Français, Bahasa Indonesia, اردو, বাংলা, Bahasa Melayu, فارسی, Русский, Español (with full RTL layout support).
+- **23 Global Calculation Methods:** Diyanet, MWL, ISNA, Umm al-Qura, Egyptian, Karachi, Singapore, France UOIF, Malaysia JAKIM, Indonesia KEMENAG, Russia, and more — plus Standard/Hanafi Asr and offline astronomical calculation.
+- **Ramadan & Daily Tools:** Automatic Ramadan Iftar/Suhoor countdown, Monthly Imsakiye (CSV/HTML export), Qibla bearing, Hijri date, optional Duha/Midnight/Tahajjud times, Friday & holiday reminders, Travel mode (timezone change alert), prayer tracking, fullscreen quiet mode, and `Win+Alt+P` global hotkey.
+- **Ethical Freemium:** Core prayer times, daily notifications, built-in Adhan/chime sounds, and Monthly Imsakiye are **free forever**. Pro (`$4.99/yr` or `$9.99` lifetime via Microsoft Store IAP, with a **14-day free trial**) unlocks extra taskbar styles, flyout themes, custom audio files, and backup/restore.
+
+---
+
+## Türkçe Genel Bakış (Saf Native C++20 + Win32)
 
 Windows 10/11 görev çubuğunun istediğiniz bölümünde (sistem tepsisi yanı, en sağ / saatin sağ köşesi, orta veya sol) ve sistem tepsisinde çalışan, **ultra düşük RAM (~3–5 MB) ve sıfır boşta CPU (%0.000)** tüketimli modern namaz vakitleri uygulaması.
 
-## Mimari Avantajlar
+### Mimari Avantajlar
 - **Saf Native C++20 + Win32 + GDI+ + WinHTTP + WinMM:** .NET / WPF / Direct3D yükü yoktur; açılışta birkaç milisaniyede açılır ve eski laptoplarda dahi takılmadan, pil ömrünü koruyarak çalışır.
 - **Sıfır Boşta CPU & Uyku/Uyanma Uyumu:** Dakika değişimine hizalı tek Win32 `SetTimer` ve olay güdümlü `SetWinEventHook` + `WM_POWERBROADCAST` desteği.
 - **Sağ Kenara Yaslı Kompakt Açılır Panel:** Kapatıldığında pencere tutamacı yok edilir ve bellek `SetProcessWorkingSetSize` ile sisteme iade edilir.
@@ -11,36 +53,41 @@ Windows 10/11 görev çubuğunun istediğiniz bölümünde (sistem tepsisi yanı
 - **23 Dünya Hesaplama Metodu + Otomatik Konum:** Diyanet, MWL, ISNA, Ümmü'l-Kura, Mısır, Karaçi, UOIF Fransa vb. tüm Aladhan metotları, Standart/Hanefi İkindi mezhebi ve IP/ülke bazlı otomatik konum ve metot seçimi.
 - **Microsoft Store Hazır:** ASLR / DEP / High-Entropy VA uyumlu statik tek `.exe` ve ~3–4 MB kompakt Store `.msix` paketi.
 
-## v2.0 Global & Ticari Özellikler
+### v2.0+ Global & Ticari Özellikler
 - **12 Dilli Global Arayüz (`Auto` OS Dili Algılama):** English, Türkçe, العربية, Deutsch, Français, Bahasa Indonesia, اردو, বাংলা, Bahasa Melayu, فارسی, Русский, Español.
-- **23 Dünya Hesaplama Yöntemi:** Diyanet, ISNA, MWL, Umm al-Qura, Egyptian, Karachi, Singapore, France UOIF, Russia, vb.
-- **Ramazan İftar & Sahur Geri Sayımı + Aylık İmsakiye:** İmsakiye penceresi, CSV/HTML dışa aktarım ve otomatik Ramazan Iftar/Sahur modu.
-- **Etik Hibrit Freemium & 14 Gün Ücretsiz Pro Deneme:** Çekirdek vakitler, günlük bildirimler, dahili ezan sesleri ve İmsakiye görüntüleme daima ücretsizdir. Pro (`$4.99/yıl` veya `$9.99 ömür boyu`) 14 gün tam deneme sunar; satın alma yalnızca Microsoft Store eklentileriyle yapılır ve lisans her açılışta Store'dan doğrulanır. Pro tüm görev çubuğu stillerini, açılır kart temalarını, özel sesleri ve yedeklemeyi açar.
-
-- **Aç/Kapa Özellikler Sekmesi:** Cuma ve dini gün hatırlatmaları, seyahat modu (saat dilimi değişince uyarı), Ertele düğmeli Windows bildirimleri, Kuşluk / Gece yarısı / Teheccüd vakitleri, haftalık özetli namaz takibi ve Win+Alt+P kısayolu. Hepsi tek tek açılıp kapatılabilir; hiçbiri ek zamanlayıcı veya arka plan işi eklemez.
+- **Ramazan İftar & Sahur Geri Sayımı + Aylık İmsakiye:** İmsakiye penceresi, CSV/HTML dışa aktarım ve otomatik Ramazan İftar/Sahur modu.
+- **Etik Hibrit Freemium & 14 Gün Ücretsiz Pro Deneme:** Çekirdek vakitler, günlük bildirimler, dahili ezan sesleri ve İmsakiye görüntüleme daima ücretsizdir. Pro (`$4.99/yıl` veya `$9.99 ömür boyu`) 14 gün tam deneme sunar; satın alma yalnızca Microsoft Store eklentileriyle yapılır ve lisans her açılışta Store'dan doğrulanır.
+- **Aç/Kapa Özellikler Sekmesi:** Cuma ve dini gün hatırlatmaları, seyahat modu (saat dilimi değişince uyarı), Ertele düğmeli Windows bildirimleri, Kuşluk / Gece yarısı / Teheccüd vakitleri, haftalık özetli namaz takibi ve `Win+Alt+P` kısayolu.
 - **Sabah Ezanı Seçimi:** İmsak vakti için ayrı ses seçilebilir.
 
-## Derleme, Test & Paketleme Komutları
+---
+
+## Build, Test & Packaging
+
+Requires `LLVM-MinGW UCRT` (`winget install MartinStorsjo.LLVM-MinGW.UCRT`).
 
 ```powershell
-# Derle + C++20 birim testlerini çalıştır + PE güvenlik kontrolü yap
+# Compile + run C++20 unit tests + verify PE security headers (ASLR/DEP/HighEntropyVA)
 powershell -ExecutionPolicy Bypass -File scripts\build.ps1
 
-# Çalışma zamanı, bellek ve lisans doğrulama testi
+# Runtime, memory & license smoke test
 .\build\PrayerBar.exe --diag-smoke
 
-# Açılır pencereyi istenen dilde BMP olarak kaydet (mağaza görselleri için; --lang 1-12)
+# Render flyout preview BMPs in any language (--lang 1-12)
 .\build\PrayerBar.exe --diag-smoke --lang 2 --flyout-preview C:\Temp\en
 
-# Çalışan uygulamada ayarları belirli sekmede aç (0-4)
+# Open Settings on a specific tab (0-4) in the running instance
 .\build\PrayerBar.exe --settings 3
 
-# Global Store (.msix) + Portable (.zip) + SHA256SUMS.txt yayın paketlerini dist\release\ altına üret
+# Build Store (.msix) + Portable (.zip) + SHA256SUMS.txt under dist\release\
 powershell -ExecutionPolicy Bypass -File scripts\build-release.ps1
 ```
 
-## Dokümantasyon ve Web Varlıkları
-- **Mağaza Yayınlama Rehberi:** [docs/MICROSOFT_STORE_GUIDE.md](docs/MICROSOFT_STORE_GUIDE.md)
-- **6 Dilli Global Mağaza Metinleri (ASO):** [docs/STORE_LISTINGS_GLOBAL.md](docs/STORE_LISTINGS_GLOBAL.md)
-- **Global Lansman Adımları:** [docs/GLOBAL_LAUNCH_CHECKLIST.md](docs/GLOBAL_LAUNCH_CHECKLIST.md)
-- **Global Ürün Web Sitesi & Gizlilik Politikası:** [website/index.html](website/index.html), [website/privacy.html](website/privacy.html), [website/terms.html](website/terms.html)
+---
+
+## Documentation & Web Assets
+- **Multi-Channel Marketing Kit (Reddit, Forums, Product Hunt):** [docs/MARKETING_KIT.md](docs/MARKETING_KIT.md)
+- **Microsoft Store Publishing Guide:** [docs/MICROSOFT_STORE_GUIDE.md](docs/MICROSOFT_STORE_GUIDE.md)
+- **Global Store Listings (ASO):** [docs/STORE_LISTINGS_GLOBAL.md](docs/STORE_LISTINGS_GLOBAL.md)
+- **Global Launch Checklist:** [docs/GLOBAL_LAUNCH_CHECKLIST.md](docs/GLOBAL_LAUNCH_CHECKLIST.md)
+- **Website & Privacy Policy:** [website/index.html](website/index.html), [website/privacy.html](website/privacy.html), [website/terms.html](website/terms.html)

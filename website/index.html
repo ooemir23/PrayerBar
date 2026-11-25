@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PrayerBar — Ultra-Light Windows 11 Prayer Times &amp; Imsakiye</title>
   <meta name="description" content="Live prayer countdown directly on your Windows 11 taskbar. Pure C++20 native (~3 MB RAM, 0% idle CPU), 23 global methods, 12 languages, Ramadan Iftar mode." />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://ooemir23.github.io/PrayerBar/" />
+  <meta property="og:title" content="PrayerBar — Ultra-Light Windows 11 Prayer Times &amp; Imsakiye" />
+  <meta property="og:description" content="Live prayer countdown directly on your Windows 11 taskbar. Pure C++20 native (~3 MB RAM, 0% idle CPU), 23 global methods, 12 languages, Ramadan Iftar mode." />
+  <meta property="og:image" content="https://ooemir23.github.io/PrayerBar/images/hero.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://ooemir23.github.io/PrayerBar/images/hero.png" />
   <style>
     :root {
       --bg: #0c1014;
@@ -92,6 +99,10 @@
     .feat-list li { padding: 5px 0; font-size: 14px; color: #dbe2ea; }
     footer { border-top: 1px solid var(--border); padding: 28px 0 42px; text-align: center; color: var(--muted); font-size: 13px; }
     footer a { color: var(--accent); text-decoration: none; margin: 0 10px; }
+    .gallery-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    @media (max-width: 720px) { .gallery-grid { grid-template-columns: 1fr; } }
+    .shot-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px; }
+    .shot-card img { width: 100%; height: auto; display: block; border-radius: 10px; }
     [dir="rtl"] .feat-list li { text-align: right; }
   </style>
 </head>
@@ -118,7 +129,7 @@
       <p data-i18n="heroDesc">Never miss a prayer while working, coding, or gaming. Built in native C++20 with ~3 MB RAM, 0% idle CPU, 23 worldwide calculation methods, and Monthly/Ramadan Imsakiye.</p>
       <div class="cta-row">
         <a href="#download" class="btn btn-primary" data-i18n="ctaFree">Download Free (14-Day Pro Trial)</a>
-        <a href="https://apps.microsoft.com/detail/9MSQBZTPGWX6" class="btn btn-ghost" data-i18n="ctaStore">Get from Microsoft Store</a>
+        <a href="https://apps.microsoft.com/detail/9MSQBZTPGWX6" target="_blank" rel="noopener" class="btn btn-ghost" data-i18n="ctaStore">Get from Microsoft Store</a>
       </div>
 
       <div class="taskbar-mockup">
@@ -152,6 +163,16 @@
       </div>
     </section>
 
+    <section id="screenshots">
+      <h2 data-i18n="shotsHeading">Screenshots</h2>
+      <div class="gallery-grid">
+        <div class="shot-card"><img src="images/01_taskbar_countdown.png" alt="Taskbar Countdown &amp; ~3 MB RAM" loading="lazy" /></div>
+        <div class="shot-card"><img src="images/02_fluent_flyout_qibla.png" alt="4 Fluent Flyouts &amp; Live Qibla Compass" loading="lazy" /></div>
+        <div class="shot-card"><img src="images/03_ramadan_imsakiye.png" alt="Monthly Schedule &amp; 30-Day Ramadan Imsakiye" loading="lazy" /></div>
+        <div class="shot-card"><img src="images/04_settings_features.png" alt="12 Languages &amp; Modular Features" loading="lazy" /></div>
+      </div>
+    </section>
+
     <section id="pricing">
       <h2 data-i18n="priceHeading">Simple, Ethical Pricing — Core Prayer Times Are Forever Free</h2>
       <div class="pricing-grid">
@@ -165,7 +186,7 @@
             <li>✓ <span data-i18n="pf3">Per-prayer reminders &amp; built-in Adhan sounds</span></li>
             <li>✓ <span data-i18n="pf4">View Monthly &amp; 30-day Ramadan Imsakiye</span></li>
           </ul>
-          <a href="../dist/release/PrayerBar_2.0.0.0_x64_Portable.zip" class="btn btn-ghost" data-i18n="btnDownloadFree">Download Free Windows x64</a>
+          <a href="https://apps.microsoft.com/detail/9MSQBZTPGWX6" target="_blank" rel="noopener" class="btn btn-ghost" data-i18n="btnDownloadFree">Download Free Windows x64</a>
         </div>
 
         <div class="price-card">
@@ -178,8 +199,7 @@
             <li>✓ <span data-i18n="pa3">Custom MP3/WAV Adhan &amp; editable prayer names</span></li>
             <li>✓ <span data-i18n="pa4">Export/Print CSV &amp; HTML Imsakiye + JSON backup</span></li>
           </ul>
-          <!-- Replace href with your live Lemon Squeezy / Paddle Annual checkout URL -->
-          <a href="#pricing" class="btn btn-ghost" data-i18n="btnBuyAnnual">Get Annual License</a>
+          <a href="https://apps.microsoft.com/detail/9MSQBZTPGWX6" target="_blank" rel="noopener" class="btn btn-ghost" data-i18n="btnBuyAnnual">Get Annual License</a>
         </div>
 
         <div class="price-card featured">
@@ -189,12 +209,11 @@
           <div class="price-sub" data-i18n="planLifeSub">One-time payment · Up to 3 Windows PCs</div>
           <ul class="feat-list">
             <li>✓ <span data-i18n="pl1">Everything in Pro unlocked permanently</span></li>
-            <li>✓ <span data-i18n="pl2">Instant offline-capable license key via email</span></li>
-            <li>✓ <span data-i18n="pl3">Works via Microsoft Store or direct download</span></li>
+            <li>✓ <span data-i18n="pl2">Synced automatically with your Microsoft Store account</span></li>
+            <li>✓ <span data-i18n="pl3">Installed &amp; verified securely via Microsoft Store</span></li>
             <li>✓ <span data-i18n="pl4">14-day money-back guarantee</span></li>
           </ul>
-          <!-- Replace href with your live Lemon Squeezy / Paddle Lifetime checkout URL -->
-          <a href="#pricing" class="btn btn-primary" data-i18n="btnBuyLife">Get Lifetime Pro ($9.99)</a>
+          <a href="https://apps.microsoft.com/detail/9MSQBZTPGWX6" target="_blank" rel="noopener" class="btn btn-primary" data-i18n="btnBuyLife">Get Lifetime Pro ($9.99)</a>
         </div>
       </div>
     </section>
@@ -231,6 +250,7 @@
         f4Title: "Per-Prayer Alerts & Free Adhan", f4Desc: "Set independent pre-prayer reminders (5–60 min), built-in Public Domain Adhans, or load your own MP3/WAV.",
         f5Title: "Fullscreen Quiet Mode & Kerahat", f5Desc: "Automatically mutes audio during games, presentations, or Focus Assist and displays subtle Makruh/Jumu'ah indicators.",
         f6Title: "Custom Prayer Names & Privacy First", f6Desc: "Rename prayers in your preferred script or transliteration. Zero analytics, zero ads, works offline anytime.",
+        shotsHeading: "Screenshots",
         priceHeading: "Simple, Ethical Pricing — Core Prayer Times Are Forever Free",
         planFree: "Free Edition", planFreeSub: "Forever free · Zero ads",
         btnDownloadFree: "Download Free Windows x64",
@@ -247,7 +267,7 @@
         mockLine1: "İkindiye kalan", mockLine2: "23 dk",
         statRam: "Belleği otomatik optimize eder", statCpu: "Laptop pili ve eski PC dostu",
         statMethodsVal: "23 Metod", statMethods: "Diyanet, MWL, ISNA, Ümmü'l-Kura…",
-        statLangsVal: "6 Dil Desteği", statLangs: "TR, EN, AR, DE, FR, ID + Özel İsimler",
+        statLangsVal: "12 Dil Desteği", statLangs: "EN, TR, AR, DE, FR, ID, UR, BN, MS, FA, RU, ES + Özel İsimler",
         featHeading: "Windows 11'in Gerçek Bir Parçası Gibi Tasarlandı",
         f1Title: "4 Konum & 9 Görev Çubuğu Stili", f1Desc: "Tepsi yanı, saatin sağ köşesi, orta veya sol konuma piksel hassasiyetinde yerleşim ve Windows 11 tipografisi.",
         f2Title: "4 Fluent Açılır Ekran Tasarımı", f2Desc: "Kompakt Fluent, Minimal Cam, 2×3 Bento Kartları veya canlı Kıble Pusulalı Zaman Çizelgesi arasından seçin.",
@@ -255,6 +275,7 @@
         f4Title: "Her Vakit İçin Ayrı Bildirim & Ezan", f4Desc: "Her vakte ayrı ön hatırlatma (5–60 dk), ücretsiz dahili ezanlar veya kendi özel MP3/WAV dosyanız.",
         f5Title: "Tam Ekran Sessiz Modu & Kerahat", f5Desc: "Oyun, video veya sunumda sesi otomatik susturur; açılır ekranda Kerahat ve Cuma vurgusu gösterir.",
         f6Title: "Özel Vakit İsimleri & Tam Gizlilik", f6Desc: "Vakit isimlerini manuel değiştirin. Reklam yok, telemetri yok, internetsiz dahi eksiksiz çalışır.",
+        shotsHeading: "Ekran Görüntüleri",
         priceHeading: "Etik Fiyatlandırma — Temel Namaz Vakitleri Daima Ücretsiz",
         planFree: "Ücretsiz Sürüm", planFreeSub: "Daima ücretsiz · Sıfır reklam",
         btnDownloadFree: "Ücretsiz İndir (Windows x64)",
