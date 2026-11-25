@@ -3,329 +3,2220 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PrayerBar — Ultra-Light Windows 11 Prayer Times &amp; Imsakiye</title>
-  <meta name="description" content="Live prayer countdown directly on your Windows 11 taskbar. Ultra-lightweight and never slows down your PC (~3 MB RAM, 0% idle CPU), 23 global methods, 12 languages, Ramadan Iftar mode." />
+  <title>PrayerBar — Windows 10 &amp; 11 Taskbar Prayer Times</title>
+  <meta name="description" content="A quiet native Windows 10 & 11 taskbar countdown for daily prayer times. ~3 MB RAM, 0% idle CPU, 23 global methods, 12 languages, and Ramadan Imsakiye." />
+  <link rel="canonical" href="https://prayerbar.ooemir.com/" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
   <meta property="og:type" content="website" />
-  <meta property="og:url" content="https://ooemir23.github.io/PrayerBar/" />
-  <meta property="og:title" content="PrayerBar — Ultra-Light Windows 11 Prayer Times &amp; Imsakiye" />
-  <meta property="og:description" content="Live prayer countdown directly on your Windows 11 taskbar. Ultra-lightweight and never slows down your PC (~3 MB RAM, 0% idle CPU), 23 global methods, 12 languages, Ramadan Iftar mode." />
-  <meta property="og:image" content="https://ooemir23.github.io/PrayerBar/images/hero.png" />
+  <meta property="og:url" content="https://prayerbar.ooemir.com/" />
+  <meta property="og:title" content="PrayerBar — Windows 10 &amp; 11 Taskbar Prayer Times" />
+  <meta property="og:description" content="A quiet native Windows 10 & 11 taskbar countdown for daily prayer times. ~3 MB RAM, 0% idle CPU, 23 methods, 12 languages." />
+  <meta property="og:image" content="https://prayerbar.ooemir.com/images/og-card.png" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:image" content="https://ooemir23.github.io/PrayerBar/images/hero.png" />
+  <meta name="twitter:image" content="https://prayerbar.ooemir.com/images/og-card.png" />
   <style>
     :root {
-      --bg: #0c1014;
-      --surface: #151b23;
-      --card: #1b222c;
-      --border: rgba(255,255,255,0.09);
-      --text: #f3f6fa;
-      --muted: #98a2b3;
-      --accent: #2dd4bf;
-      --accent-dark: #0f766e;
-      --gold: #fbbf24;
+      --bg: #f3f3f3;
+      --surface: #ffffff;
+      --surface-soft: #f7f8fa;
+      --surface-recessed: #eaecf0;
+      --border: rgba(0, 0, 0, 0.08);
+      --border-strong: rgba(0, 0, 0, 0.14);
+      --ink: #18181b;
+      --ink-secondary: #52525b;
+      --ink-muted: #71717a;
+      --accent: #0f766e;
+      --accent-hover: #115e59;
+      --accent-tint: #f0fdfa;
+      --accent-border: rgba(15, 118, 110, 0.28);
+      --amber: #b45309;
+      --amber-tint: #fffbeb;
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+      --shadow-lg: 0 20px 50px rgba(15, 23, 42, 0.12), 0 2px 8px rgba(15, 23, 42, 0.06);
+      --radius: 10px;
     }
+
     * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
       margin: 0;
       font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
-      background: radial-gradient(circle at 20% 0%, rgba(45,212,191,0.12), transparent 45%), var(--bg);
-      color: var(--text);
-      line-height: 1.6;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
     }
-    .container { max-width: 1080px; margin: 0 auto; padding: 0 22px; }
-    nav {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 18px 0; border-bottom: 1px solid var(--border);
+    .num { font-variant-numeric: tabular-nums; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    /* Navigation */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: rgba(243, 243, 243, 0.88);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
     }
-    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; }
-    .brand-dot { width: 12px; height: 12px; border-radius: 3px; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
-    .nav-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-    select.lang-picker {
-      background: var(--card); color: var(--text); border: 1px solid var(--border);
-      padding: 7px 12px; border-radius: 8px; font-size: 14px; cursor: pointer;
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      height: 60px;
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--ink);
+      font-weight: 600;
+      font-size: 16px;
+      letter-spacing: -0.01em;
+    }
+    .brand img { width: 26px; height: 26px; border-radius: 6px; display: block; }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+    }
+    .nav-links a {
+      color: var(--ink-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .nav-links a:hover { color: var(--ink); }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    select.lang-select {
+      appearance: none;
+      background: var(--surface);
+      color: var(--ink);
+      border: 1px solid var(--border-strong);
+      border-radius: 7px;
+      padding: 6px 26px 6px 10px;
+      font-size: 13px;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2352525b' d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
     }
     .btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 14px;
-      text-decoration: none; cursor: pointer; border: 1px solid var(--border); transition: transform .12s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 16px;
+      border-radius: 7px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      text-decoration: none;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background-color 0.14s ease, border-color 0.14s ease, color 0.14s ease;
     }
-    .btn:hover { transform: translateY(-1px); }
-    .btn-primary { background: var(--accent); color: #091314; border-color: var(--accent); }
-    .btn-ghost { background: var(--card); color: var(--text); }
-    .hero { text-align: center; padding: 62px 0 42px; }
-    .pill-tag {
-      display: inline-block; padding: 5px 14px; border-radius: 99px; font-size: 13px; font-weight: 600;
-      background: rgba(45,212,191,0.14); color: var(--accent); border: 1px solid rgba(45,212,191,0.3); margin-bottom: 16px;
+    .btn-sm { padding: 7px 13px; font-size: 13px; }
+    .btn-primary {
+      background: var(--accent);
+      color: #ffffff;
+      border-color: var(--accent);
     }
-    h1 {
+    .btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--ink);
+      border-color: var(--border-strong);
+    }
+    .btn-secondary:hover { background: var(--surface-soft); }
+
+    /* Hero */
+    .hero {
+      padding: 56px 0 36px;
+      max-width: 760px;
+    }
+    .hero h1 {
       font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif;
-      font-size: clamp(30px, 5vw, 48px); line-height: 1.15; margin: 0 0 16px;
+      font-size: clamp(32px, 4.6vw, 48px);
+      font-weight: 700;
+      line-height: 1.12;
+      letter-spacing: -0.025em;
+      margin: 0 0 14px;
+      color: var(--ink);
     }
-    .hero p { max-width: 680px; margin: 0 auto 28px; color: var(--muted); font-size: 17px; }
-    .cta-row { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin-bottom: 40px; }
-    .taskbar-mockup {
-      max-width: 780px; margin: 0 auto; background: #1a1d24; border: 1px solid var(--border);
-      border-radius: 12px; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between;
-      box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+    .hero-lead {
+      font-size: 17px;
+      color: var(--ink-secondary);
+      margin: 0 0 24px;
+      max-width: 640px;
     }
-    .tb-icons { display: flex; gap: 14px; color: var(--muted); font-size: 13px; }
-    .tb-right { display: flex; align-items: center; gap: 14px; }
-    .tb-widget {
-      background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);
-      border-radius: 6px; padding: 4px 12px; text-align: center; border-bottom: 2px solid var(--accent);
+    .hero-cta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
     }
-    .tb-widget .l1 { font-size: 11px; color: var(--muted); display: block; }
-    .tb-widget .l2 { font-size: 13px; font-weight: 700; color: #fff; }
-    .stats-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin: 44px 0; }
-    .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
-    .stat strong { display: block; font-size: 22px; color: var(--accent); }
-    .stat span { font-size: 13px; color: var(--muted); }
-    section { padding: 44px 0; }
-    section h2 { text-align: center; font-size: 28px; margin-bottom: 28px; }
-    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 18px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 22px; }
-    .card h3 { margin: 0 0 8px; font-size: 17px; }
-    .card p { margin: 0; color: var(--muted); font-size: 14px; }
-    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 18px; align-items: stretch; }
-    .price-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 26px; display: flex; flex-direction: column; }
-    .price-card.featured { border: 2px solid var(--accent); position: relative; }
-    .pop-badge {
-      position: absolute; top: -12px; left: 24px; background: var(--accent); color: #091314;
-      font-size: 11px; font-weight: 800; padding: 3px 10px; border-radius: 99px;
+    .hero-meta {
+      font-size: 13px;
+      color: var(--ink-muted);
+      margin: 0;
     }
-    .price-val { font-size: 32px; font-weight: 800; margin: 10px 0 4px; }
-    .price-sub { font-size: 13px; color: var(--muted); margin-bottom: 18px; }
-    .feat-list { list-style: none; padding: 0; margin: 0 0 22px; flex: 1; }
-    .feat-list li { padding: 5px 0; font-size: 14px; color: #dbe2ea; }
-    footer { border-top: 1px solid var(--border); padding: 28px 0 42px; text-align: center; color: var(--muted); font-size: 13px; }
-    footer a { color: var(--accent); text-decoration: none; margin: 0 10px; }
-    .gallery-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
-    @media (max-width: 720px) { .gallery-grid { grid-template-columns: 1fr; } }
-    .shot-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 10px; }
-    .shot-card img { width: 100%; height: auto; display: block; border-radius: 10px; }
-    [dir="rtl"] .feat-list li { text-align: right; }
+
+    /* Interactive Windows 11 Playground */
+    .playground-section { padding: 12px 0 64px; }
+    .playground-shell {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+    .mode-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface-soft);
+      flex-wrap: wrap;
+    }
+    .mode-tabs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .mode-tab {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--ink-secondary);
+      padding: 7px 13px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background-color 0.12s, color 0.12s, border-color 0.12s;
+    }
+    .mode-tab:hover { background: rgba(0, 0, 0, 0.04); color: var(--ink); }
+    .mode-tab.active {
+      background: var(--surface);
+      color: var(--accent);
+      border-color: var(--border-strong);
+      box-shadow: var(--shadow-sm);
+    }
+    .mode-hint {
+      font-size: 12.5px;
+      color: var(--ink-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .playground-body {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      min-height: 520px;
+    }
+    .controls-panel {
+      border-right: 1px solid var(--border);
+      padding: 18px;
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    [dir="rtl"] .controls-panel { border-right: 0; border-left: 1px solid var(--border); }
+    .ctrl-group h3 {
+      margin: 0 0 8px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--ink-muted);
+    }
+    .ctrl-desc {
+      margin: 0 0 12px;
+      font-size: 13px;
+      color: var(--ink-secondary);
+      line-height: 1.45;
+    }
+    .seg-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .seg-btn {
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      color: var(--ink-secondary);
+      border-radius: 6px;
+      padding: 7px 9px;
+      font-size: 12.5px;
+      font-weight: 500;
+      font-family: inherit;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.12s;
+    }
+    [dir="rtl"] .seg-btn { text-align: right; }
+    .seg-btn:hover { border-color: var(--border-strong); color: var(--ink); }
+    .seg-btn.active {
+      background: var(--accent-tint);
+      border-color: var(--accent-border);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .toggle-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 7px 10px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+      font-size: 13px;
+      color: var(--ink);
+      cursor: pointer;
+      user-select: none;
+    }
+    .toggle-row input {
+      accent-color: var(--accent);
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      cursor: pointer;
+    }
+    .city-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .city-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--ink);
+      cursor: pointer;
+    }
+    .city-btn:hover { border-color: var(--border-strong); }
+    .city-btn.active {
+      background: var(--accent-tint);
+      border-color: var(--accent-border);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .city-btn small { color: var(--ink-muted); font-weight: 400; font-size: 12px; }
+    .city-btn.active small { color: var(--accent); }
+
+    .controls-footer-note {
+      margin-top: auto;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--ink-muted);
+    }
+
+    /* Windows 11 Desktop Canvas */
+    .win-stage {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      min-height: 520px;
+      background: linear-gradient(145deg, #dce8f5 0%, #eaf0f6 48%, #d7e5e4 100%);
+      overflow: hidden;
+      user-select: none;
+    }
+    .win-stage.tb-dark {
+      background: linear-gradient(145deg, #1b2736 0%, #16222c 52%, #112424 100%);
+    }
+    /* Subtle Windows 11 Bloom curve (pure CSS, quiet) */
+    .win-stage::before {
+      content: "";
+      position: absolute;
+      width: 520px;
+      height: 520px;
+      right: -120px;
+      top: -140px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(15, 118, 110, 0.10) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .win-stage.tb-dark::before {
+      background: radial-gradient(circle, rgba(45, 212, 191, 0.08) 0%, transparent 70%);
+    }
+
+    .desktop-area {
+      position: relative;
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+    }
+
+    /* Desktop Fullscreen / Game Quiet Banner */
+    .game-overlay {
+      position: absolute;
+      top: 18px;
+      left: 18px;
+      right: 18px;
+      background: rgba(24, 24, 27, 0.86);
+      color: #f4f4f5;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 9px;
+      padding: 12px 16px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 13px;
+      backdrop-filter: blur(12px);
+      z-index: 4;
+    }
+    .game-overlay.visible { display: flex; }
+    .quiet-pill {
+      background: rgba(245, 158, 11, 0.18);
+      color: #fcd34d;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      padding: 3px 9px;
+      border-radius: 99px;
+      font-size: 11.5px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* Imsakiye Window Mockup */
+    .win-imsakiye {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: min(560px, calc(100% - 40px));
+      background: rgba(255, 255, 255, 0.96);
+      color: #18181b;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      border-radius: 10px;
+      box-shadow: var(--shadow-lg);
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 6;
+    }
+    .win-stage.tb-dark .win-imsakiye {
+      background: rgba(28, 34, 42, 0.96);
+      color: #f4f4f5;
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+    .win-imsakiye.visible { display: flex; }
+    .win-titlebar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+    .win-stage.tb-dark .win-titlebar { border-color: rgba(255, 255, 255, 0.08); }
+    .win-titlebar-left { display: flex; align-items: center; gap: 8px; }
+    .win-titlebar-left img { width: 16px; height: 16px; border-radius: 4px; }
+    .win-close {
+      background: transparent;
+      border: 0;
+      color: inherit;
+      opacity: 0.65;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .win-close:hover { opacity: 1; background: rgba(0, 0, 0, 0.06); }
+    .ims-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 10px 12px;
+      flex-wrap: wrap;
+    }
+    .ims-ramadan-chip {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--amber);
+      background: var(--amber-tint);
+      border: 1px solid rgba(180, 83, 9, 0.25);
+      padding: 4px 10px;
+      border-radius: 6px;
+    }
+    .win-stage.tb-dark .ims-ramadan-chip {
+      background: rgba(180, 83, 9, 0.2);
+      color: #fbbf24;
+      border-color: rgba(251, 191, 36, 0.3);
+    }
+    .ims-actions { display: flex; gap: 6px; }
+    .ims-btn {
+      background: transparent;
+      border: 1px solid var(--border-strong);
+      color: inherit;
+      border-radius: 6px;
+      padding: 4px 9px;
+      font-size: 11.5px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .ims-btn:hover { background: rgba(15, 118, 110, 0.08); border-color: var(--accent); }
+    .ims-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+    .ims-table th, .ims-table td {
+      padding: 7px 10px;
+      text-align: left;
+      border-top: 1px solid var(--border);
+    }
+    .win-stage.tb-dark .ims-table th,
+    .win-stage.tb-dark .ims-table td { border-top-color: rgba(255, 255, 255, 0.08); }
+    .ims-table th { font-weight: 600; opacity: 0.72; font-size: 11.5px; }
+    .ims-table tr.today-row {
+      background: rgba(15, 118, 110, 0.10);
+      font-weight: 600;
+    }
+    .win-stage.tb-dark .ims-table tr.today-row { background: rgba(45, 212, 191, 0.14); }
+    .ims-iftar { color: var(--accent); font-weight: 700; }
+    .win-stage.tb-dark .ims-iftar { color: #5eead4; }
+    .ims-status {
+      padding: 7px 12px;
+      font-size: 11.5px;
+      color: var(--accent);
+      border-top: 1px solid var(--border);
+      min-height: 29px;
+    }
+
+    /* Windows 11 Native Toast Notification */
+    .win-toast {
+      position: absolute;
+      bottom: 62px;
+      right: 16px;
+      width: 316px;
+      background: rgba(255, 255, 255, 0.96);
+      color: #18181b;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      border-radius: 10px;
+      padding: 12px 14px;
+      box-shadow: var(--shadow-lg);
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 8;
+      backdrop-filter: blur(16px);
+    }
+    .win-stage.tb-dark .win-toast {
+      background: rgba(32, 37, 45, 0.96);
+      color: #f4f4f5;
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+    .win-toast.visible { display: flex; }
+    .toast-head { display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; opacity: 0.75; }
+    .toast-app { display: flex; align-items: center; gap: 6px; font-weight: 600; }
+    .toast-app img { width: 14px; height: 14px; border-radius: 3px; }
+    .toast-title { font-size: 13.5px; font-weight: 600; margin: 0; }
+    .toast-body { font-size: 12.5px; opacity: 0.8; margin: 0; }
+    .toast-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 2px; }
+    .toast-btn {
+      background: rgba(0, 0, 0, 0.05);
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      color: inherit;
+      border-radius: 5px;
+      padding: 6px 8px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+    }
+    .win-stage.tb-dark .toast-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+    .toast-btn:hover { background: rgba(15, 118, 110, 0.12); }
+
+    /* Simplified Right-Click Context Menu Preview */
+    .win-ctx-menu {
+      position: absolute;
+      bottom: 58px;
+      right: 110px;
+      width: 244px;
+      background: rgba(255, 255, 255, 0.97);
+      color: #18181b;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      border-radius: 8px;
+      padding: 5px;
+      box-shadow: var(--shadow-lg);
+      display: none;
+      flex-direction: column;
+      font-size: 12.5px;
+      z-index: 12;
+      backdrop-filter: blur(18px);
+    }
+    .win-stage.tb-dark .win-ctx-menu {
+      background: rgba(36, 42, 50, 0.97);
+      color: #f4f4f5;
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+    .win-ctx-menu.visible { display: flex; }
+    .ctx-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      border: 0;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      width: 100%;
+    }
+    .ctx-item:hover { background: rgba(15, 118, 110, 0.10); }
+    .ctx-item.ctx-bold { font-weight: 600; }
+    .ctx-sep { height: 1px; background: var(--border); margin: 4px 6px; }
+    .win-stage.tb-dark .ctx-sep { background: rgba(255, 255, 255, 0.1); }
+
+    /* Live Simulated Flyout Window */
+    .win-flyout {
+      position: relative;
+      width: 312px;
+      background: rgba(255, 255, 255, 0.94);
+      color: #18181b;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      border-radius: 10px;
+      padding: 14px;
+      box-shadow: var(--shadow-lg);
+      backdrop-filter: blur(20px);
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 7;
+    }
+    .win-stage.tb-dark .win-flyout {
+      background: rgba(22, 31, 40, 0.95);
+      color: #f4f8fb;
+      border-color: rgba(45, 212, 191, 0.25);
+    }
+    .win-flyout.visible { display: flex; }
+    .win-flyout.design-minimal { width: 276px; }
+    .win-flyout.design-bento { width: 330px; }
+    .win-flyout.design-timeline { width: 344px; }
+
+    .fly-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .fly-loc { display: flex; align-items: center; gap: 9px; min-width: 0; }
+    .fly-loc img { width: 26px; height: 26px; border-radius: 6px; flex-shrink: 0; }
+    .fly-city { font-size: 13.5px; font-weight: 700; line-height: 1.2; }
+    .fly-date { font-size: 11px; color: var(--accent); margin-top: 2px; }
+    .win-stage.tb-dark .fly-date { color: #5eead4; }
+    .fly-actions { display: flex; gap: 5px; }
+    .fly-icon-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.03);
+      color: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+    }
+    .win-stage.tb-dark .fly-icon-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .fly-hero {
+      background: rgba(15, 118, 110, 0.08);
+      border: 1px solid rgba(15, 118, 110, 0.28);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .win-stage.tb-dark .fly-hero {
+      background: #13403d;
+      border-color: #2dd4bf;
+    }
+    .fly-hero-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      color: var(--accent);
+    }
+    .win-stage.tb-dark .fly-hero-top { color: #5eead4; }
+    .fly-hero-main {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-top: 4px;
+      gap: 10px;
+    }
+    .fly-countdown {
+      font-size: 21px;
+      font-weight: 700;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+    .win-stage.tb-dark .fly-countdown { color: #ffce5c; }
+    .fly-next-time {
+      font-size: 15px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    .fly-prog-track {
+      margin-top: 8px;
+      height: 4px;
+      border-radius: 99px;
+      background: rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+    .win-stage.tb-dark .fly-prog-track { background: rgba(255, 255, 255, 0.14); }
+    .fly-prog-fill {
+      height: 100%;
+      width: 72%;
+      background: var(--accent);
+      border-radius: 99px;
+    }
+    .win-stage.tb-dark .fly-prog-fill { background: #2dd4bf; }
+
+    /* Timeline & Qibla row (Design 3) */
+    .fly-qibla-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .qibla-svg {
+      width: 52px;
+      height: 52px;
+      flex-shrink: 0;
+    }
+    .qibla-needle { transition: transform 0.35s ease; transform-origin: 26px 26px; }
+
+    .fly-timeline-strip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 8px;
+      border-radius: 7px;
+      background: rgba(0, 0, 0, 0.035);
+      font-size: 10.5px;
+      font-weight: 600;
+    }
+    .win-stage.tb-dark .fly-timeline-strip { background: rgba(255, 255, 255, 0.05); }
+    .tl-node { display: flex; flex-direction: column; align-items: center; gap: 3px; opacity: 0.65; }
+    .tl-node.active { opacity: 1; color: var(--accent); }
+    .win-stage.tb-dark .tl-node.active { color: #2dd4bf; }
+    .tl-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+    /* Prayer Rows (Compact & Timeline) */
+    .fly-rows { display: flex; flex-direction: column; gap: 4px; }
+    .fly-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      background: rgba(0, 0, 0, 0.025);
+      border: 1px solid transparent;
+    }
+    .win-stage.tb-dark .fly-row { background: rgba(255, 255, 255, 0.04); }
+    .fly-row.is-next {
+      background: rgba(15, 118, 110, 0.10);
+      border-color: rgba(15, 118, 110, 0.35);
+      font-weight: 700;
+    }
+    .win-stage.tb-dark .fly-row.is-next {
+      background: #13403d;
+      border-color: #2dd4bf;
+    }
+    .fly-row-left { display: flex; align-items: center; gap: 8px; }
+    .fly-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(0, 0, 0, 0.22); }
+    .win-stage.tb-dark .fly-dot { background: rgba(255, 255, 255, 0.25); }
+    .fly-row.is-next .fly-dot { background: var(--accent); }
+    .win-stage.tb-dark .fly-row.is-next .fly-dot { background: #ffce5c; }
+    .fly-badge {
+      font-size: 10.5px;
+      padding: 1px 6px;
+      border-radius: 4px;
+      background: rgba(15, 118, 110, 0.12);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .win-stage.tb-dark .fly-badge { background: rgba(45, 212, 191, 0.16); color: #5eead4; }
+
+    /* Bento Grid (Design 2) */
+    .fly-bento {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .bento-cell {
+      padding: 8px 10px;
+      border-radius: 7px;
+      background: rgba(0, 0, 0, 0.03);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+    }
+    .win-stage.tb-dark .bento-cell {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 255, 255, 0.08);
+    }
+    .bento-cell.is-next {
+      background: rgba(15, 118, 110, 0.10);
+      border-color: rgba(15, 118, 110, 0.35);
+    }
+    .win-stage.tb-dark .bento-cell.is-next {
+      background: #13403d;
+      border-color: #2dd4bf;
+    }
+    .bento-name { font-size: 11.5px; opacity: 0.78; }
+    .bento-time { font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }
+
+    .fly-foot {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      opacity: 0.72;
+      padding-top: 2px;
+    }
+
+    /* Windows 11 Taskbar */
+    .win-taskbar {
+      position: relative;
+      height: 48px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(243, 246, 250, 0.88);
+      border-top: 1px solid rgba(0, 0, 0, 0.09);
+      backdrop-filter: blur(22px);
+      color: #18181b;
+      z-index: 10;
+    }
+    .win-stage.tb-dark .win-taskbar {
+      background: rgba(20, 24, 31, 0.92);
+      border-top-color: rgba(255, 255, 255, 0.09);
+      color: #f4f4f5;
+    }
+    .tb-left, .tb-center, .tb-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tb-app-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 5px;
+      display: grid;
+      place-items: center;
+      opacity: 0.86;
+    }
+    .tb-app-icon:hover { background: rgba(0, 0, 0, 0.05); }
+    .win-stage.tb-dark .tb-app-icon:hover { background: rgba(255, 255, 255, 0.08); }
+    .tb-tray {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11.5px;
+      padding: 2px 6px;
+    }
+    .tb-clock {
+      text-align: right;
+      line-height: 1.15;
+      font-size: 11px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* PrayerBar Taskbar Pill */
+    .pb-pill {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      height: 36px;
+      padding: 0 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      border: 1px solid rgba(15, 118, 110, 0.55);
+      background: rgba(255, 255, 255, 0.92);
+      color: #0f1b22;
+      transition: background-color 0.12s, border-color 0.12s;
+    }
+    .win-stage.tb-dark .pb-pill {
+      background: #0e2e2d;
+      border-color: rgba(45, 212, 191, 0.72);
+      color: #f4f8fb;
+    }
+    .pb-pill.no-frame {
+      border-color: transparent !important;
+      background: transparent !important;
+    }
+    .pb-pill:hover {
+      border-color: var(--accent);
+    }
+    .pb-pill img.pb-logo { width: 18px; height: 18px; border-radius: 4px; display: block; }
+    .pb-pill.no-logo img.pb-logo { display: none; }
+    .pb-text { display: flex; flex-direction: column; line-height: 1.12; }
+    .pb-l1 { font-size: 10px; opacity: 0.78; font-weight: 600; }
+    .pb-l2 { font-size: 12px; font-weight: 700; color: #0b5f58; font-variant-numeric: tabular-nums; }
+    .win-stage.tb-dark .pb-l2 { color: #ffce5c; }
+    .pb-pill.single-line .pb-l1 { font-size: 12px; opacity: 1; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .pb-pill.single-line .pb-l2 { display: none; }
+    .pb-prog {
+      position: absolute;
+      left: 6px;
+      right: 6px;
+      bottom: 2px;
+      height: 2.5px;
+      border-radius: 99px;
+      background: rgba(0, 0, 0, 0.14);
+      overflow: hidden;
+    }
+    .win-stage.tb-dark .pb-prog { background: rgba(255, 255, 255, 0.2); }
+    .pb-prog > span { display: block; height: 100%; width: 72%; background: var(--accent); border-radius: 99px; }
+    .win-stage.tb-dark .pb-prog > span { background: #2dd4bf; }
+    .pb-pill.no-bar .pb-prog { display: none; }
+
+    /* Sections */
+    .section { padding: 56px 0; border-top: 1px solid var(--border); }
+    .section-head { max-width: 620px; margin-bottom: 28px; }
+    .section-head h2 {
+      font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 8px;
+    }
+    .section-head p { margin: 0; color: var(--ink-secondary); font-size: 15px; }
+
+    /* Specs Table */
+    .spec-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .spec-item {
+      background: var(--surface);
+      padding: 18px 22px;
+    }
+    .spec-item dt {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .spec-item dd {
+      margin: 0;
+      font-size: 13.5px;
+      color: var(--ink-secondary);
+      line-height: 1.5;
+    }
+
+    /* Native App Renders Gallery */
+    .renders-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px;
+    }
+    .render-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+    .render-card img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+    }
+    .render-caption {
+      margin-top: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .render-sub {
+      margin-top: 2px;
+      font-size: 12.5px;
+      color: var(--ink-muted);
+    }
+
+    /* Pricing */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      align-items: stretch;
+    }
+    .price-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-sm);
+    }
+    .price-card.recommended {
+      border-color: var(--accent-border);
+      box-shadow: var(--shadow-md);
+    }
+    .price-name { font-size: 15px; font-weight: 600; color: var(--ink); margin: 0 0 6px; }
+    .price-val {
+      font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif;
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+      margin: 0 0 4px;
+    }
+    .price-sub { font-size: 13px; color: var(--ink-muted); margin-bottom: 18px; }
+    .price-list {
+      list-style: none;
+      padding: 0;
+      margin: 0 0 22px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .price-list li {
+      font-size: 13.5px;
+      color: var(--ink-secondary);
+      padding-left: 18px;
+      position: relative;
+    }
+    [dir="rtl"] .price-list li { padding-left: 0; padding-right: 18px; }
+    .price-list li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    [dir="rtl"] .price-list li::before { left: auto; right: 0; }
+
+    /* FAQ */
+    .faq-list {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      overflow: hidden;
+    }
+    .faq-list details {
+      border-bottom: 1px solid var(--border);
+      padding: 15px 20px;
+    }
+    .faq-list details:last-child { border-bottom: 0; }
+    .faq-list summary {
+      cursor: pointer;
+      font-size: 14.5px;
+      font-weight: 600;
+      color: var(--ink);
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .faq-list summary::-webkit-details-marker { display: none; }
+    .faq-list summary::after { content: "+"; color: var(--ink-muted); font-size: 18px; font-weight: 400; }
+    .faq-list details[open] summary::after { content: "−"; }
+    .faq-list p { margin: 10px 0 2px; font-size: 14px; color: var(--ink-secondary); }
+
+    /* Footer */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 28px 0 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: var(--ink-muted);
+    }
+    .footer-links { display: flex; gap: 18px; flex-wrap: wrap; }
+    .footer-links a { color: var(--ink-secondary); text-decoration: none; }
+    .footer-links a:hover { color: var(--ink); text-decoration: underline; }
+
+    @media (max-width: 920px) {
+      .playground-body { grid-template-columns: 1fr; }
+      .controls-panel { border-right: 0; border-bottom: 1px solid var(--border); }
+      [dir="rtl"] .controls-panel { border-left: 0; }
+      .renders-grid, .pricing-grid { grid-template-columns: 1fr; }
+      .spec-grid { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+    }
   </style>
 </head>
 <body>
-  <div class="container">
-    <nav>
-      <div class="brand"><span class="brand-dot"></span><span>PrayerBar</span></div>
+  <header class="topbar">
+    <div class="container nav-inner">
+      <a class="brand" href="#">
+        <img src="/images/app-icon.png" alt="PrayerBar icon" />
+        <span>PrayerBar</span>
+      </a>
+      <nav class="nav-links" aria-label="Main">
+        <a href="#playground" data-i18n="navDemo">Canlı Önizleme</a>
+        <a href="#specs" data-i18n="navSpecs">Özellikler</a>
+        <a href="#pricing" data-i18n="navPricing">Fiyatlandırma</a>
+      </nav>
       <div class="nav-actions">
-        <select id="langPicker" class="lang-picker" aria-label="Language">
-          <option value="en">English</option>
+        <select id="langPicker" class="lang-select" aria-label="Language">
           <option value="tr">Türkçe</option>
+          <option value="en">English</option>
           <option value="ar">العربية</option>
           <option value="de">Deutsch</option>
           <option value="fr">Français</option>
-          <option value="id">Bahasa Indonesia</option>
+          <option value="id">Indonesia</option>
         </select>
-        <a href="#pricing" class="btn btn-primary" data-i18n="navGetPro">Get Pro</a>
+        <a href="https://apps.microsoft.com/detail/9MSQBZTPGWX6" target="_blank" rel="noopener" class="btn btn-primary btn-sm" data-i18n="navStore">Microsoft Store</a>
       </div>
-    </nav>
+    </div>
+  </header>
 
-    <header class="hero">
-      <div class="pill-tag" data-i18n="heroBadge">Ultra-Light &amp; Battery Friendly · Windows 10 &amp; 11</div>
-      <h1 data-i18n="heroTitle">Live Prayer Countdown Right on Your Windows 11 Taskbar</h1>
-      <p data-i18n="heroDesc">Never miss a prayer while working, studying, or gaming. Runs quietly without slowing down your PC (~3 MB RAM, 0% idle CPU), with 23 worldwide methods and Monthly/Ramadan Imsakiye.</p>
-      <div class="cta-row">
-        <a href="#download" class="btn btn-primary" data-i18n="ctaFree">Download Free (14-Day Pro Trial)</a>
-        <a href="https://apps.microsoft.com/detail/9MSQBZTPGWX6" target="_blank" rel="noopener" class="btn btn-ghost" data-i18n="ctaStore">Get from Microsoft Store</a>
+  <main class="container">
+    <section class="hero">
+      <h1 data-i18n="heroTitle">Namaz vakitleri, Windows görev çubuğunda.</h1>
+      <p class="hero-lead" data-i18n="heroLead">Arka planda ~3 MB bellek kullanan, reklamsız ve internetsiz çalışabilen sade Windows 10 &amp; 11 aracı. Görev çubuğuna yerleşir, vaktinde haber verir.</p>
+      <div class="hero-cta">
+        <a href="https://apps.microsoft.com/detail/9MSQBZTPGWX6" target="_blank" rel="noopener" class="btn btn-primary" data-i18n="ctaStore">Microsoft Store'dan İndir</a>
+        <a href="#playground" class="btn btn-secondary" id="jumpDemoBtn" data-i18n="ctaDemo">Özellikleri Canlı Göster</a>
       </div>
+      <p class="hero-meta" data-i18n="heroMeta">Windows 10 / 11 (x64) · Çekirdek sürüm ücretsiz · 14 gün Pro deneme · Hesap gerekmez</p>
+    </section>
 
-      <div class="taskbar-mockup">
-        <div class="tb-icons">⊞ &nbsp; ⌕ &nbsp; Chrome &nbsp; VS Code</div>
-        <div class="tb-right">
-          <div class="tb-widget">
-            <span class="l1" data-i18n="mockLine1">Until Asr</span>
-            <span class="l2" data-i18n="mockLine2">23 min</span>
+    <!-- INTERACTIVE PLAYGROUND ("Özellikleri Göster") -->
+    <section class="playground-section" id="playground" aria-label="Interactive Windows 11 Demo">
+      <div class="playground-shell">
+        <div class="mode-bar">
+          <div class="mode-tabs" role="tablist">
+            <button type="button" class="mode-tab active" data-mode="taskbar" data-i18n="tabTaskbar">Görev Çubuğu</button>
+            <button type="button" class="mode-tab" data-mode="flyout" data-i18n="tabFlyout">4 Açılır Pencere &amp; Kıble</button>
+            <button type="button" class="mode-tab" data-mode="ramadan" data-i18n="tabRamadan">Ramazan &amp; İmsakiye</button>
+            <button type="button" class="mode-tab" data-mode="alerts" data-i18n="tabAlerts">Bildirim &amp; Sessiz Mod</button>
+            <button type="button" class="mode-tab" data-mode="cities" data-i18n="tabCities">Şehir &amp; 23 Metod</button>
           </div>
-          <div class="tb-icons">^ &nbsp; 📶 &nbsp; 🔋 78% &nbsp; 15:02</div>
+          <div class="mode-hint">
+            <span data-i18n="demoHint">Sayaca tıkla: açılır pencere · Sağ tıkla: sade menü</span>
+          </div>
+        </div>
+
+        <div class="playground-body">
+          <aside class="controls-panel" id="controlsPanel">
+            <!-- Mode: Taskbar -->
+            <div class="ctrl-mode" data-pane="taskbar">
+              <div class="ctrl-group">
+                <h3 data-i18n="lblStyle">Görev Çubuğu Stili</h3>
+                <div class="seg-grid">
+                  <button type="button" class="seg-btn active" data-tbstyle="classic" data-i18n="stClassic">İki Satır</button>
+                  <button type="button" class="seg-btn" data-tbstyle="arrow" data-i18n="stArrow">İ → 23 dk</button>
+                  <button type="button" class="seg-btn" data-tbstyle="time" data-i18n="stTime">Vakit · Saat</button>
+                  <button type="button" class="seg-btn" data-tbstyle="dot" data-i18n="stDot">● 00:23</button>
+                </div>
+              </div>
+              <div class="ctrl-group" style="margin-top:16px">
+                <h3 data-i18n="lblDock">Konum</h3>
+                <div class="seg-grid">
+                  <button type="button" class="seg-btn active" data-dock="tray" data-i18n="dkTray">Tepsi Yanı</button>
+                  <button type="button" class="seg-btn" data-dock="farright" data-i18n="dkFarRight">En Sağ</button>
+                  <button type="button" class="seg-btn" data-dock="center" data-i18n="dkCenter">Orta</button>
+                  <button type="button" class="seg-btn" data-dock="left" data-i18n="dkLeft">Sol</button>
+                </div>
+              </div>
+              <div class="ctrl-group" style="margin-top:16px">
+                <h3 data-i18n="lblOptions">Görünüm Seçenekleri</h3>
+                <div class="toggle-list">
+                  <label class="toggle-row"><span data-i18n="optFrame">Çerçeve</span><input type="checkbox" id="chkFrame" checked /></label>
+                  <label class="toggle-row"><span data-i18n="optLogo">Logo</span><input type="checkbox" id="chkLogo" checked /></label>
+                  <label class="toggle-row"><span data-i18n="optBar">İlerleme çubuğu</span><input type="checkbox" id="chkBar" checked /></label>
+                  <label class="toggle-row"><span data-i18n="optSec">Saniyeyi göster</span><input type="checkbox" id="chkSec" /></label>
+                  <label class="toggle-row"><span data-i18n="optDark">Koyu Windows teması</span><input type="checkbox" id="chkDark" /></label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mode: Flyout -->
+            <div class="ctrl-mode" data-pane="flyout" hidden>
+              <div class="ctrl-group">
+                <h3 data-i18n="lblFlyDesign">Açılır Pencere Tasarımı</h3>
+                <p class="ctrl-desc" data-i18n="flyDesc">Görev çubuğundaki sayaca tıkladığınızda veya Win+Alt+P bastığınızda açılır.</p>
+                <div class="seg-grid" style="grid-template-columns:1fr">
+                  <button type="button" class="seg-btn active" data-fly="compact" data-i18n="flCompact">1. Kompakt Fluent</button>
+                  <button type="button" class="seg-btn" data-fly="minimal" data-i18n="flMinimal">2. Minimal Cam</button>
+                  <button type="button" class="seg-btn" data-fly="bento" data-i18n="flBento">3. 2×3 Kart Izgara</button>
+                  <button type="button" class="seg-btn" data-fly="timeline" data-i18n="flTimeline">4. Zaman Çizelgesi + Kıble</button>
+                </div>
+              </div>
+              <div class="ctrl-group" style="margin-top:16px">
+                <button type="button" class="btn btn-secondary btn-sm" id="toggleCtxBtn" style="width:100%" data-i18n="btnShowMenu">Sadeleştirilmiş Sağ-Tık Menüsünü Göster</button>
+              </div>
+            </div>
+
+            <!-- Mode: Ramadan & Imsakiye -->
+            <div class="ctrl-mode" data-pane="ramadan" hidden>
+              <div class="ctrl-group">
+                <h3 data-i18n="lblRamadan">Ramazan &amp; Aylık Takvim</h3>
+                <p class="ctrl-desc" data-i18n="ramDesc">Ramazan ayında geri sayım otomatik olarak İftar / Sahur moduna geçer. Tek tıkla CSV veya yazdırılabilir HTML çıkarabilirsiniz.</p>
+                <div class="toggle-list">
+                  <label class="toggle-row"><span data-i18n="optRamMode">Ramazan İftar/Sahur modu</span><input type="checkbox" id="chkRamadan" checked /></label>
+                  <label class="toggle-row"><span data-i18n="optShowIms">İmsakiye penceresi</span><input type="checkbox" id="chkImsWin" checked /></label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mode: Alerts & Quiet -->
+            <div class="ctrl-mode" data-pane="alerts" hidden>
+              <div class="ctrl-group">
+                <h3 data-i18n="lblAlerts">Bildirimler &amp; Oyun Modu</h3>
+                <p class="ctrl-desc" data-i18n="alDesc">Her vakit için ayrı ön hatırlatma (5–60 dk) ve ezan seçimi. Tam ekran oyun, video veya sunumda sesi otomatik susturur.</p>
+                <div class="toggle-list">
+                  <label class="toggle-row"><span data-i18n="optToast">Windows bildirim kartı</span><input type="checkbox" id="chkToast" checked /></label>
+                  <label class="toggle-row"><span data-i18n="optQuiet">Oyun / Tam ekran sessiz modu</span><input type="checkbox" id="chkQuiet" /></label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mode: Cities & Methods -->
+            <div class="ctrl-mode" data-pane="cities" hidden>
+              <div class="ctrl-group">
+                <h3 data-i18n="lblCities">Şehir &amp; Hesaplama Metodu</h3>
+                <p class="ctrl-desc" data-i18n="citDesc">23 dünya hesaplama metodu, Hanefi/Standart ikindi seçimi ve internetsiz çalışma desteği.</p>
+                <div class="city-list" id="cityList"></div>
+              </div>
+            </div>
+
+            <div class="controls-footer-note" data-i18n="controlsNote">
+              Gerçek Windows uygulaması C++20 &amp; GDI+ ile derlenir (~3 MB RAM). Bu alan uygulama davranışını birebir gösterir.
+            </div>
+          </aside>
+
+          <!-- Simulated Windows 11 Desktop -->
+          <div class="win-stage" id="winStage">
+            <div class="desktop-area" id="desktopArea">
+              <div class="game-overlay" id="gameOverlay">
+                <span data-i18n="gameTitle">Tam ekran uygulama / oyun algılandı (1920×1080)</span>
+                <span class="quiet-pill" data-i18n="gameMuted">Ses otomatik susturuldu</span>
+              </div>
+
+              <!-- Imsakiye Window -->
+              <div class="win-imsakiye" id="winImsakiye">
+                <div class="win-titlebar">
+                  <div class="win-titlebar-left">
+                    <img src="/images/app-icon.png" alt="" />
+                    <span id="imsTitle">PrayerBar — İmsakiye</span>
+                  </div>
+                  <button type="button" class="win-close" id="closeImsBtn" aria-label="Close">✕</button>
+                </div>
+                <div class="ims-toolbar">
+                  <span class="ims-ramadan-chip" id="imsBanner">Ramazan Modu · İftara 02s 14d</span>
+                  <div class="ims-actions">
+                    <button type="button" class="ims-btn" id="btnExportCsv" data-i18n="btnCsv">CSV Dışa Aktar</button>
+                    <button type="button" class="ims-btn" id="btnExportHtml" data-i18n="btnHtml">HTML Yazdır</button>
+                  </div>
+                </div>
+                <table class="ims-table">
+                  <thead>
+                    <tr>
+                      <th data-i18n="colDay">Gün</th>
+                      <th data-i18n="colFajr">İmsak</th>
+                      <th data-i18n="colSun">Güneş</th>
+                      <th data-i18n="colDhuhr">Öğle</th>
+                      <th data-i18n="colAsr">İkindi</th>
+                      <th data-i18n="colMaghrib">Akşam</th>
+                      <th data-i18n="colIsha">Yatsı</th>
+                    </tr>
+                  </thead>
+                  <tbody id="imsTbody"></tbody>
+                </table>
+                <div class="ims-status" id="imsStatus"></div>
+              </div>
+
+              <!-- Windows Toast Notification -->
+              <div class="win-toast" id="winToast">
+                <div class="toast-head">
+                  <span class="toast-app"><img src="/images/app-icon.png" alt="" /> PrayerBar</span>
+                  <span class="num">15:25</span>
+                </div>
+                <p class="toast-title" id="toastTitle">İkindi vakti girdi</p>
+                <p class="toast-body" id="toastBody">İstanbul · 15:25 · Diyanet İşleri</p>
+                <div class="toast-btns">
+                  <button type="button" class="toast-btn" id="btnMuteToast" data-i18n="btnMuteAdhan">Ezanı Sustur</button>
+                  <button type="button" class="toast-btn" id="btnDismissToast" data-i18n="btnDismiss">Kapat</button>
+                </div>
+              </div>
+
+              <!-- Simplified Right-Click Menu -->
+              <div class="win-ctx-menu" id="winCtxMenu" role="menu">
+                <button type="button" class="ctx-item ctx-bold" data-ctx="flyout" id="ctxHeader">Sıradaki: İkindi 15:25</button>
+                <div class="ctx-sep"></div>
+                <button type="button" class="ctx-item" data-ctx="imsakiye" data-i18n="ctxIms">Aylık İmsakiye...</button>
+                <button type="button" class="ctx-item" data-ctx="cities" id="ctxCity">Konum: İstanbul...</button>
+                <button type="button" class="ctx-item" data-ctx="refresh" data-i18n="ctxRefresh">Vakitleri Şimdi Güncelle</button>
+                <div class="ctx-sep"></div>
+                <button type="button" class="ctx-item" data-ctx="mute" data-i18n="ctxNotif">Bildirimler ▸</button>
+                <button type="button" class="ctx-item" data-ctx="taskbar" data-i18n="ctxSettings">Ayarlar...</button>
+                <div class="ctx-sep"></div>
+                <button type="button" class="ctx-item" data-ctx="close" data-i18n="ctxExit">Çıkış</button>
+              </div>
+
+              <!-- Live Flyout Window -->
+              <div class="win-flyout" id="winFlyout">
+                <div class="fly-head">
+                  <div class="fly-loc">
+                    <img src="/images/app-icon.png" alt="" />
+                    <div>
+                      <div class="fly-city" id="flyCity">İstanbul, Türkiye</div>
+                      <div class="fly-date" id="flyDate">25 Kas 2026 · 15 Cemaziyelahir 1448</div>
+                    </div>
+                  </div>
+                  <div class="fly-actions">
+                    <button type="button" class="fly-icon-btn" id="flyOpenIms" title="Imsakiye">📅</button>
+                    <button type="button" class="fly-icon-btn" id="flySwitchStyle" title="Theme">◐</button>
+                  </div>
+                </div>
+
+                <div class="fly-hero" id="flyHero">
+                  <div class="fly-qibla-box">
+                    <div style="flex:1">
+                      <div class="fly-hero-top">
+                        <span id="flyUntil">İKİNDİYE KALAN</span>
+                        <span id="flyQiblaTxt" class="num">Kıble 151° GD</span>
+                      </div>
+                      <div class="fly-hero-main">
+                        <span class="fly-countdown num" id="flyCountdown">23 dk</span>
+                        <span class="fly-next-time num" id="flyNextTime">15:25</span>
+                      </div>
+                      <div class="fly-prog-track"><div class="fly-prog-fill"></div></div>
+                    </div>
+                    <svg class="qibla-svg" id="qiblaSvg" viewBox="0 0 52 52" hidden>
+                      <circle cx="26" cy="26" r="22" fill="none" stroke="currentColor" stroke-opacity="0.28" stroke-width="1.5" />
+                      <text x="26" y="10" text-anchor="middle" font-size="7" font-weight="700" fill="currentColor" opacity="0.7">N</text>
+                      <g class="qibla-needle" id="qiblaNeedle">
+                        <line x1="26" y1="26" x2="26" y2="11" stroke="#0f766e" stroke-width="2.5" stroke-linecap="round" />
+                        <circle cx="26" cy="11" r="2.6" fill="#0f766e" />
+                      </g>
+                      <circle cx="26" cy="26" r="2.5" fill="currentColor" />
+                    </svg>
+                  </div>
+                </div>
+
+                <div class="fly-timeline-strip" id="flyTimelineStrip" hidden></div>
+                <div class="fly-rows" id="flyRows"></div>
+                <div class="fly-bento" id="flyBento" hidden></div>
+
+                <div class="fly-foot">
+                  <span id="flySource">Diyanet İşleri</span>
+                  <span data-i18n="flyOffline">Çevrimdışı hazır</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Simulated Windows 11 Taskbar -->
+            <div class="win-taskbar" id="winTaskbar">
+              <div class="tb-left" id="tbLeft"></div>
+              <div class="tb-center" id="tbCenter">
+                <span class="tb-app-icon" title="Start">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="#0078d4"><rect x="1" y="1" width="6.2" height="6.2" rx="0.8"/><rect x="8.8" y="1" width="6.2" height="6.2" rx="0.8"/><rect x="1" y="8.8" width="6.2" height="6.2" rx="0.8"/><rect x="8.8" y="8.8" width="6.2" height="6.2" rx="0.8"/></svg>
+                </span>
+                <span class="tb-app-icon" title="Explorer">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M1.5 3.5h5l1.5 1.5h6.5v8h-13v-9.5z" fill="#eab308"/></svg>
+                </span>
+                <span class="tb-app-icon" title="Code">
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M11.5 2L5 7.5 2.5 5.5 1.5 6.5 4 8.5 1.5 10.5l1 1L5 9.5l6.5 5.5 3-1.4V3.4L11.5 2z" fill="#0284c7"/></svg>
+                </span>
+              </div>
+              <div class="tb-right" id="tbRight">
+                <div class="pb-pill" id="pbPill" title="Click for flyout · Right-click for menu">
+                  <img class="pb-logo" src="/images/app-icon.png" alt="" />
+                  <div class="pb-text">
+                    <span class="pb-l1" id="pbL1">İkindiye kalan</span>
+                    <span class="pb-l2" id="pbL2">23 dk</span>
+                  </div>
+                  <div class="pb-prog"><span></span></div>
+                </div>
+                <div class="tb-tray" id="tbTray">
+                  <span>^</span>
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M8 12.5a1.2 1.2 0 100 2.4 1.2 1.2 0 000-2.4zm-3.2-2.2a4.6 4.6 0 016.4 0l1-1a6 6 0 00-8.4 0l1 1zm-2.4-2.4a8 8 0 0111.2 0l1-1a9.4 9.4 0 00-13.2 0l1 1z"/></svg>
+                  <div class="tb-clock">
+                    <div>15:02</div>
+                    <div>25.11.2026</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+    </section>
 
-      <div class="stats-bar">
-        <div class="stat"><strong>~3 MB RAM</strong><span data-i18n="statRam">Auto-trimmed in background</span></div>
-        <div class="stat"><strong>0.00% CPU</strong><span data-i18n="statCpu">Laptop battery friendly</span></div>
-        <div class="stat"><strong data-i18n="statMethodsVal">23 Methods</strong><span data-i18n="statMethods">Diyanet, MWL, ISNA, Umm al-Qura…</span></div>
-        <div class="stat"><strong data-i18n="statLangsVal">12 Languages</strong><span data-i18n="statLangs">EN, TR, AR, DE, FR, ID, UR, BN, MS, FA, RU, ES</span></div>
+    <!-- REAL NATIVE APP RENDERS -->
+    <section class="section" id="renders">
+      <div class="section-head">
+        <h2 data-i18n="rendersTitle">Doğrudan Uygulamadan Gerçek Çıktılar</h2>
+        <p data-i18n="rendersLead">Pazarlama görseli değil; PrayerBar.exe'nin kendi GDI+ çizim motorunun ürettiği gerçek pencere görüntüleri.</p>
       </div>
-    </header>
-
-    <section id="features">
-      <h2 data-i18n="featHeading">Designed as a True Part of Windows 11</h2>
-      <div class="grid-3">
-        <div class="card"><h3 data-i18n="f1Title">4 Taskbar Positions &amp; 9 Styles</h3><p data-i18n="f1Desc">Dock near tray, far right corner, center, or left with pixel-accurate offset and Segoe UI Variable typography.</p></div>
-        <div class="card"><h3 data-i18n="f2Title">4 Fluent Flyout Layouts</h3><p data-i18n="f2Desc">Choose Compact Fluent, Minimal Glass, 2×3 Bento Cards, or Timeline Dashboard with a live vector Qibla compass.</p></div>
-        <div class="card"><h3 data-i18n="f3Title">Monthly &amp; Ramadan Imsakiye</h3><p data-i18n="f3Desc">Browse any month or full 30-day Ramadan Suhoor/Iftar calendar, plus export to CSV or printable HTML.</p></div>
-        <div class="card"><h3 data-i18n="f4Title">Per-Prayer Alerts &amp; Free Adhan</h3><p data-i18n="f4Desc">Set independent pre-prayer reminders (5–60 min), built-in Public Domain Adhans, or load your own MP3/WAV.</p></div>
-        <div class="card"><h3 data-i18n="f5Title">Fullscreen Quiet Mode &amp; Kerahat</h3><p data-i18n="f5Desc">Automatically mutes audio during games, presentations, or Focus Assist and displays subtle Makruh/Jumu'ah indicators.</p></div>
-        <div class="card"><h3 data-i18n="f6Title">Custom Prayer Names &amp; Privacy First</h3><p data-i18n="f6Desc">Rename prayers in your preferred script or transliteration. Zero analytics, zero ads, works offline anytime.</p></div>
+      <div class="renders-grid">
+        <figure class="render-card" style="margin:0">
+          <img src="/images/flyout-compact.png" alt="PrayerBar Compact Fluent Flyout" loading="lazy" />
+          <figcaption class="render-caption" data-i18n="ren1Title">Kompakt Fluent</figcaption>
+          <div class="render-sub" data-i18n="ren1Sub">Günlük vakit listesi, ilerleme çubuğu ve ek vakitler</div>
+        </figure>
+        <figure class="render-card" style="margin:0">
+          <img src="/images/flyout-bento.png" alt="PrayerBar 2x3 Card Grid Flyout" loading="lazy" />
+          <figcaption class="render-caption" data-i18n="ren2Title">2×3 Kart Izgara</figcaption>
+          <div class="render-sub" data-i18n="ren2Sub">Vakit yüzdesi halkası ve geniş tipografik kartlar</div>
+        </figure>
+        <figure class="render-card" style="margin:0">
+          <img src="/images/flyout-timeline.png" alt="PrayerBar Timeline and Qibla Compass Flyout" loading="lazy" />
+          <figcaption class="render-caption" data-i18n="ren3Title">Zaman Çizelgesi &amp; Kıble</figcaption>
+          <div class="render-sub" data-i18n="ren3Sub">Canlı Kıble pusulası ve tüm güne göre kalan süreler</div>
+        </figure>
       </div>
     </section>
 
-    <section id="screenshots">
-      <h2 data-i18n="shotsHeading">Screenshots</h2>
-      <div class="gallery-grid">
-        <div class="shot-card"><img src="images/01_taskbar_countdown.png" alt="Taskbar Countdown &amp; ~3 MB RAM" loading="lazy" /></div>
-        <div class="shot-card"><img src="images/02_fluent_flyout_qibla.png" alt="4 Fluent Flyouts &amp; Live Qibla Compass" loading="lazy" /></div>
-        <div class="shot-card"><img src="images/03_ramadan_imsakiye.png" alt="Monthly Schedule &amp; 30-Day Ramadan Imsakiye" loading="lazy" /></div>
-        <div class="shot-card"><img src="images/04_settings_features.png" alt="12 Languages &amp; Modular Features" loading="lazy" /></div>
+    <!-- TECHNICAL SPECS -->
+    <section class="section" id="specs">
+      <div class="section-head">
+        <h2 data-i18n="specsTitle">Ne Yapar, Ne Yapmaz?</h2>
+        <p data-i18n="specsLead">Electron, WebView veya arka plan servisleri yok. Doğrudan Win32 / C++20 olarak çalışır.</p>
       </div>
+      <dl class="spec-grid">
+        <div class="spec-item">
+          <dt data-i18n="sp1T">Bellek ve İşlemci (~3 MB RAM, %0 CPU)</dt>
+          <dd data-i18n="sp1D">Uyku/uyanma sonrası anında güncellenir, boşta sıfır CPU harcar. Eski dizüstü bilgisayarlarda dahi fark edilmez.</dd>
+        </div>
+        <div class="spec-item">
+          <dt data-i18n="sp2T">Sadeleştirilmiş Menü &amp; Ayarlar</dt>
+          <dd data-i18n="sp2D">Karmaşık iç içe alt menüler yerine tek bakışta okunan sağ-tık menüsü ve canlı görev çubuğu önizlemeli Ayarlar penceresi.</dd>
+        </div>
+        <div class="spec-item">
+          <dt data-i18n="sp3T">23 Metod &amp; Tam Çevrimdışı Çalışma</dt>
+          <dd data-i18n="sp3D">Diyanet, MWL, ISNA, Ümmü'l-Kura, Mısır, Karaçi dahil 23 metod. İnternet kesilse bile dahili astronomik hesaplama sürer.</dd>
+        </div>
+        <div class="spec-item">
+          <dt data-i18n="sp4T">Tam Ekran &amp; Oyun Sessiz Modu</dt>
+          <dd data-i18n="sp4D">Oyun oynarken, film izlerken veya sunum yaparken ezan ve uyarı seslerini otomatik susturur.</dd>
+        </div>
+        <div class="spec-item">
+          <dt data-i18n="sp5T">12 Dil ve Özel Vakit İsimleri</dt>
+          <dd data-i18n="sp5D">Türkçe, İngilizce, Arapça (tam RTL), Almanca, Fransızca, Endonezce, Urduca, Bengalce, Malayca, Farsça, Rusça, İspanyolca.</dd>
+        </div>
+        <div class="spec-item">
+          <dt data-i18n="sp6T">Sıfır Telemetri, Sıfır Reklam</dt>
+          <dd data-i18n="sp6D">Hesap açılmaz, izleme kodu bulunmaz. Tüm tercihler yalnızca yerel %LocalAppData%\PrayerBar klasöründe tutulur.</dd>
+        </div>
+      </dl>
     </section>
 
-    <section id="pricing">
-      <h2 data-i18n="priceHeading">Simple, Ethical Pricing — Core Prayer Times Are Forever Free</h2>
+    <!-- PRICING -->
+    <section class="section" id="pricing">
+      <div class="section-head">
+        <h2 data-i18n="priceTitle">Basit Fiyatlandırma</h2>
+        <p data-i18n="priceLead">Temel namaz vakitleri, bildirimler ve aylık imsakiye daima ücretsiz ve reklamsızdır.</p>
+      </div>
       <div class="pricing-grid">
-        <div class="price-card" id="download">
-          <h3 data-i18n="planFree">Free Edition</h3>
-          <div class="price-val">$0</div>
-          <div class="price-sub" data-i18n="planFreeSub">Forever free · Zero ads</div>
-          <ul class="feat-list">
-            <li>✓ <span data-i18n="pf1">All 23 global calculation methods &amp; offline fallback</span></li>
-            <li>✓ <span data-i18n="pf2">Core taskbar styles &amp; Compact Fluent flyout</span></li>
-            <li>✓ <span data-i18n="pf3">Per-prayer reminders &amp; built-in Adhan sounds</span></li>
-            <li>✓ <span data-i18n="pf4">View Monthly &amp; 30-day Ramadan Imsakiye</span></li>
+        <div class="price-card">
+          <h3 class="price-name" data-i18n="pFreeName">Ücretsiz</h3>
+          <div class="price-val num">$0</div>
+          <div class="price-sub" data-i18n="pFreeSub">Sonsuza kadar ücretsiz · Sıfır reklam</div>
+          <ul class="price-list">
+            <li data-i18n="pf1">23 hesaplama metodu ve çevrimdışı mod</li>
+            <li data-i18n="pf2">Temel görev çubuğu stilleri &amp; Kompakt açılır ekran</li>
+            <li data-i18n="pf3">Vakit bazlı bildirimler ve dahili ezan sesleri</li>
+            <li data-i18n="pf4">Aylık ve 30 günlük Ramazan İmsakiyesi</li>
           </ul>
-          <a href="https://apps.microsoft.com/detail/9MSQBZTPGWX6" target="_blank" rel="noopener" class="btn btn-ghost" data-i18n="btnDownloadFree">Download Free Windows x64</a>
+          <a href="https://apps.microsoft.com/detail/9MSQBZTPGWX6" target="_blank" rel="noopener" class="btn btn-secondary" data-i18n="btnStoreFree">Microsoft Store'dan İndir</a>
         </div>
 
         <div class="price-card">
-          <h3 data-i18n="planAnnual">Annual Pro</h3>
-          <div class="price-val">$4.99</div>
-          <div class="price-sub" data-i18n="planAnnualSub">Per year (₺100 in Türkiye) · Cancel anytime</div>
-          <ul class="feat-list">
-            <li>✓ <span data-i18n="pa1">All 4 Flyout layouts + live Qibla compass</span></li>
-            <li>✓ <span data-i18n="pa2">All 9 taskbar styles + custom template editor</span></li>
-            <li>✓ <span data-i18n="pa3">Custom MP3/WAV Adhan &amp; editable prayer names</span></li>
-            <li>✓ <span data-i18n="pa4">Export/Print CSV &amp; HTML Imsakiye + JSON backup</span></li>
+          <h3 class="price-name" data-i18n="pAnnualName">Yıllık Pro</h3>
+          <div class="price-val num" data-i18n="pAnnualVal">₺100 <small style="font-size:15px;font-weight:500;color:var(--ink-muted)">/ yıl ($4.99)</small></div>
+          <div class="price-sub" data-i18n="pAnnualSub">14 gün ücretsiz deneme · İstediğiniz an iptal</div>
+          <ul class="price-list">
+            <li data-i18n="pa1">4 açılır pencere tasarımı ve canlı Kıble pusulası</li>
+            <li data-i18n="pa2">9 görev çubuğu stili ve özel şablon düzenleyici</li>
+            <li data-i18n="pa3">Özel MP3/WAV ezan ve düzenlenebilir vakit isimleri</li>
+            <li data-i18n="pa4">CSV/HTML imsakiye çıktısı ve ayar yedekleme</li>
           </ul>
-          <a href="https://apps.microsoft.com/detail/9MSQBZTPGWX6" target="_blank" rel="noopener" class="btn btn-ghost" data-i18n="btnBuyAnnual">Get Annual License</a>
+          <a href="https://apps.microsoft.com/detail/9MSQBZTPGWX6" target="_blank" rel="noopener" class="btn btn-secondary" data-i18n="btnStartTrial">14 Gün Ücretsiz Dene</a>
         </div>
 
-        <div class="price-card featured">
-          <div class="pop-badge" data-i18n="popBadge">MOST POPULAR</div>
-          <h3 data-i18n="planLife">Lifetime Pro</h3>
-          <div class="price-val">$9.99</div>
-          <div class="price-sub" data-i18n="planLifeSub">One-time payment · Up to 3 Windows PCs</div>
-          <ul class="feat-list">
-            <li>✓ <span data-i18n="pl1">Everything in Pro unlocked permanently</span></li>
-            <li>✓ <span data-i18n="pl2">Synced automatically with your Microsoft Store account</span></li>
-            <li>✓ <span data-i18n="pl3">Installed &amp; verified securely via Microsoft Store</span></li>
-            <li>✓ <span data-i18n="pl4">14-day money-back guarantee</span></li>
+        <div class="price-card recommended">
+          <h3 class="price-name" data-i18n="pLifeName">Ömür Boyu Pro</h3>
+          <div class="price-val num" data-i18n="pLifeVal">₺250 <small style="font-size:15px;font-weight:500;color:var(--ink-muted)">tek seferlik ($9.99)</small></div>
+          <div class="price-sub" data-i18n="pLifeSub">Microsoft hesabınızla en fazla 3 Windows PC</div>
+          <ul class="price-list">
+            <li data-i18n="pl1">Tüm Pro özellikleri kalıcı olarak açık</li>
+            <li data-i18n="pl2">Gelecekteki tüm güncellemeler dahil</li>
+            <li data-i18n="pl3">Microsoft Store üzerinden güvenli lisans doğrulama</li>
+            <li data-i18n="pl4">Abonelik veya yenileme ücreti yok</li>
           </ul>
-          <a href="https://apps.microsoft.com/detail/9MSQBZTPGWX6" target="_blank" rel="noopener" class="btn btn-primary" data-i18n="btnBuyLife">Get Lifetime Pro ($9.99)</a>
+          <a href="https://apps.microsoft.com/detail/9MSQBZTPGWX6" target="_blank" rel="noopener" class="btn btn-primary" data-i18n="btnGetLife">Microsoft Store'dan Al</a>
         </div>
       </div>
     </section>
 
-    <section id="support" style="text-align:center; padding-top:10px;">
-      <p style="color:var(--muted)" data-i18n="supportText">Includes a 14-day free Pro trial right after install. Questions or bulk mosque/office licenses? Contact us through the Microsoft Store page.</p>
+    <!-- FAQ -->
+    <section class="section" id="faq">
+      <div class="section-head">
+        <h2 data-i18n="faqTitle">Sık Sorulanlar</h2>
+      </div>
+      <div class="faq-list">
+        <details>
+          <summary data-i18n="fq1Q">Neden sadece ~3 MB RAM harcıyor?</summary>
+          <p data-i18n="fq1A">PrayerBar içinde tarayıcı motoru (Electron / WebView2) barındırmaz. Doğrudan C++20 ve Windows Win32/GDI+ API'leri ile yazıldığı için bellek ve pil tüketimi minimumdur.</p>
+        </details>
+        <details>
+          <summary data-i18n="fq2Q">İnternet bağlantısı olmadan çalışır mı?</summary>
+          <p data-i18n="fq2A">Evet. Aylık eşitlemeyi kapatsanız veya internetiniz kesilse bile dahili astronomik hesaplama motoru bulunduğunuz koordinat ve metoda göre vakitleri yerel olarak hesaplar.</p>
+        </details>
+        <details>
+          <summary data-i18n="fq3Q">Oyun veya toplantı sırasında ses çıkarır mı?</summary>
+          <p data-i18n="fq3A">Tam ekran sessiz modu açıkken oyun, video veya sunum sırasında ezan ve bildirim seslerini otomatik olarak susturur.</p>
+        </details>
+        <details>
+          <summary data-i18n="fq4Q">Ücretsiz sürümde süre veya özellik kısıtı var mı?</summary>
+          <p data-i18n="fq4A">Vakitler, geri sayım, günlük bildirimler, dahili ezanlar ve imsakiye görüntüleme süre sınırı olmadan sonsuza kadar ücretsizdir. Yalnızca ekstra temalar, özel MP3 ve dışa aktarım araçları 14 günlük deneme sonrası Pro gerektirir.</p>
+        </details>
+      </div>
     </section>
 
     <footer>
-      <p>© 2026 PrayerBar · Windows 10 / 11</p>
-      <div>
-        <a href="privacy.html">Privacy Policy</a>
-        <a href="terms.html">Terms &amp; Refund Policy</a>
-        <a href="#download">Download</a>
+      <span>© 2026 PrayerBar · OOE CO</span>
+      <div class="footer-links">
+        <a href="/privacy" data-i18n="ftPrivacy">Gizlilik Politikası</a>
+        <a href="/terms" data-i18n="ftTerms">Kullanım Koşulları</a>
+        <a href="https://github.com/ooemir23/PrayerBar" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://apps.microsoft.com/detail/9MSQBZTPGWX6" target="_blank" rel="noopener">Microsoft Store</a>
       </div>
     </footer>
-  </div>
+  </main>
 
   <script>
+    const CITIES = [
+      { id: "ist", name: "İstanbul", country: "Türkiye", method: "Diyanet İşleri", qibla: 151, qiblaDir: "GD", qiblaDirEn: "SE", hijri: "15 Cemaziyelahir 1448", times: ["06:20", "07:51", "12:55", "15:25", "17:48", "19:14"] },
+      { id: "lon", name: "London", country: "UK", method: "MWL", qibla: 119, qiblaDir: "GD", qiblaDirEn: "SE", hijri: "15 Jumada II 1448", times: ["05:44", "07:34", "11:51", "13:47", "16:07", "17:50"] },
+      { id: "nyc", name: "New York", country: "USA", method: "ISNA", qibla: 58, qiblaDir: "KD", qiblaDirEn: "NE", hijri: "15 Jumada II 1448", times: ["05:31", "06:54", "11:46", "14:15", "16:37", "18:00"] },
+      { id: "mak", name: "Makkah", country: "Saudi Arabia", method: "Umm al-Qura", qibla: 0, qiblaDir: "—", qiblaDirEn: "—", hijri: "15 Jumada II 1448", times: ["05:13", "06:34", "12:12", "15:23", "17:48", "19:18"] },
+      { id: "ber", name: "Berlin", country: "Germany", method: "Diyanet", qibla: 136, qiblaDir: "GD", qiblaDirEn: "SE", hijri: "15 Jumada II 1448", times: ["05:52", "07:45", "12:00", "13:52", "16:12", "17:58"] },
+      { id: "jkt", name: "Jakarta", country: "Indonesia", method: "KEMENAG", qibla: 295, qiblaDir: "KB", qiblaDirEn: "NW", hijri: "15 Jumadil Akhir 1448", times: ["04:11", "05:29", "11:44", "15:06", "17:53", "19:07"] }
+    ];
+
     const T = {
-      en: {
-        navGetPro: "Get Pro", heroBadge: "Ultra-Light & Battery Friendly · Windows 10 & 11",
-        heroTitle: "Live Prayer Countdown Right on Your Windows 11 Taskbar",
-        heroDesc: "Never miss a prayer while working, studying, or gaming. Runs quietly without slowing down your PC (~3 MB RAM, 0% idle CPU), with 23 worldwide methods and Monthly/Ramadan Imsakiye.",
-        ctaFree: "Download Free (14-Day Pro Trial)", ctaStore: "Get from Microsoft Store",
-        mockLine1: "Until Asr", mockLine2: "23 min",
-        statRam: "Auto-trimmed in background", statCpu: "Laptop battery friendly",
-        statMethodsVal: "23 Methods", statMethods: "Diyanet, MWL, ISNA, Umm al-Qura…",
-        statLangsVal: "12 Languages", statLangs: "EN, TR, AR, DE, FR, ID, UR, BN, MS, FA, RU, ES",
-        featHeading: "Designed as a True Part of Windows 11",
-        f1Title: "4 Taskbar Positions & 9 Styles", f1Desc: "Dock near tray, far right corner, center, or left with pixel-accurate offset and Segoe UI Variable typography.",
-        f2Title: "4 Fluent Flyout Layouts", f2Desc: "Choose Compact Fluent, Minimal Glass, 2×3 Bento Cards, or Timeline Dashboard with a live vector Qibla compass.",
-        f3Title: "Monthly & Ramadan Imsakiye", f3Desc: "Browse any month or full 30-day Ramadan Suhoor/Iftar calendar, plus export to CSV or printable HTML.",
-        f4Title: "Per-Prayer Alerts & Free Adhan", f4Desc: "Set independent pre-prayer reminders (5–60 min), built-in Public Domain Adhans, or load your own MP3/WAV.",
-        f5Title: "Fullscreen Quiet Mode & Kerahat", f5Desc: "Automatically mutes audio during games, presentations, or Focus Assist and displays subtle Makruh/Jumu'ah indicators.",
-        f6Title: "Custom Prayer Names & Privacy First", f6Desc: "Rename prayers in your preferred script or transliteration. Zero analytics, zero ads, works offline anytime.",
-        shotsHeading: "Screenshots",
-        priceHeading: "Simple, Ethical Pricing — Core Prayer Times Are Forever Free",
-        planFree: "Free Edition", planFreeSub: "Forever free · Zero ads",
-        btnDownloadFree: "Download Free Windows x64",
-        planAnnual: "Annual Pro", planAnnualSub: "Per year (₺100 in Türkiye) · Cancel anytime",
-        btnBuyAnnual: "Get Annual License",
-        popBadge: "MOST POPULAR", planLife: "Lifetime Pro", planLifeSub: "One-time payment · Up to 3 Windows PCs",
-        btnBuyLife: "Get Lifetime Pro ($9.99)"
-      },
       tr: {
-        navGetPro: "Pro'ya Geç", heroBadge: "PC'yi Hiç Yormaz · Windows 10 & 11",
-        heroTitle: "Windows 11 Görev Çubuğunuzda Canlı Namaz Vakti Sayacı",
-        heroDesc: "Çalışırken, kod yazarken veya oyun oynarken vakti kaçırmayın. Yalnızca ~3 MB RAM, %0 boşta CPU, 23 dünya hesaplama metodu ve Aylık/Ramazan İmsakiyesi.",
-        ctaFree: "Ücretsiz İndir (14 Gün Pro Deneme)", ctaStore: "Microsoft Store'dan İndir",
-        mockLine1: "İkindiye kalan", mockLine2: "23 dk",
-        statRam: "Belleği otomatik optimize eder", statCpu: "Laptop pili ve eski PC dostu",
-        statMethodsVal: "23 Metod", statMethods: "Diyanet, MWL, ISNA, Ümmü'l-Kura…",
-        statLangsVal: "12 Dil Desteği", statLangs: "EN, TR, AR, DE, FR, ID, UR, BN, MS, FA, RU, ES + Özel İsimler",
-        featHeading: "Windows 11'in Gerçek Bir Parçası Gibi Tasarlandı",
-        f1Title: "4 Konum & 9 Görev Çubuğu Stili", f1Desc: "Tepsi yanı, saatin sağ köşesi, orta veya sol konuma piksel hassasiyetinde yerleşim ve Windows 11 tipografisi.",
-        f2Title: "4 Fluent Açılır Ekran Tasarımı", f2Desc: "Kompakt Fluent, Minimal Cam, 2×3 Bento Kartları veya canlı Kıble Pusulalı Zaman Çizelgesi arasından seçin.",
-        f3Title: "Aylık & 30 Günlük Ramazan İmsakiyesi", f3Desc: "Tüm ayları veya Ramazan İftar/Sahur takvimini görüntüleyin, CSV ve yazdırılabilir HTML olarak dışa aktarın.",
-        f4Title: "Her Vakit İçin Ayrı Bildirim & Ezan", f4Desc: "Her vakte ayrı ön hatırlatma (5–60 dk), ücretsiz dahili ezanlar veya kendi özel MP3/WAV dosyanız.",
-        f5Title: "Tam Ekran Sessiz Modu & Kerahat", f5Desc: "Oyun, video veya sunumda sesi otomatik susturur; açılır ekranda Kerahat ve Cuma vurgusu gösterir.",
-        f6Title: "Özel Vakit İsimleri & Tam Gizlilik", f6Desc: "Vakit isimlerini manuel değiştirin. Reklam yok, telemetri yok, internetsiz dahi eksiksiz çalışır.",
-        shotsHeading: "Ekran Görüntüleri",
-        priceHeading: "Etik Fiyatlandırma — Temel Namaz Vakitleri Daima Ücretsiz",
-        planFree: "Ücretsiz Sürüm", planFreeSub: "Daima ücretsiz · Sıfır reklam",
-        btnDownloadFree: "Ücretsiz İndir (Windows x64)",
-        planAnnual: "Yıllık Pro", planAnnualSub: "Yıllık ₺100 · İstediğiniz an iptal",
-        btnBuyAnnual: "Yıllık Lisans Al",
-        popBadge: "EN ÇOK TERCİH EDİLEN", planLife: "Ömür Boyu Pro", planLifeSub: "Tek seferlik ödeme · 3 Windows PC",
-        btnBuyLife: "Ömür Boyu Al (₺250)"
+        navDemo: "Canlı Önizleme", navSpecs: "Özellikler", navPricing: "Fiyatlandırma", navStore: "Microsoft Store",
+        heroTitle: "Namaz vakitleri, Windows görev çubuğunda.",
+        heroLead: "Arka planda ~3 MB bellek kullanan, reklamsız ve internetsiz çalışabilen sade Windows 10 & 11 aracı. Görev çubuğuna yerleşir, vaktinde haber verir.",
+        ctaStore: "Microsoft Store'dan İndir", ctaDemo: "Özellikleri Canlı Göster",
+        heroMeta: "Windows 10 / 11 (x64) · Çekirdek sürüm ücretsiz · 14 gün Pro deneme · Hesap gerekmez",
+        tabTaskbar: "Görev Çubuğu", tabFlyout: "4 Açılır Pencere & Kıble", tabRamadan: "Ramazan & İmsakiye",
+        tabAlerts: "Bildirim & Sessiz Mod", tabCities: "Şehir & 23 Metod",
+        demoHint: "Sayaca tıkla: açılır pencere · Sağ tıkla: sade menü",
+        lblStyle: "Görev Çubuğu Stili", stClassic: "İki Satır", stArrow: "İ → 23 dk", stTime: "Vakit · Saat", stDot: "● 00:23",
+        lblDock: "Konum", dkTray: "Tepsi Yanı", dkFarRight: "En Sağ", dkCenter: "Orta", dkLeft: "Sol",
+        lblOptions: "Görünüm Seçenekleri", optFrame: "Çerçeve", optLogo: "Logo", optBar: "İlerleme çubuğu", optSec: "Saniyeyi göster", optDark: "Koyu Windows teması",
+        lblFlyDesign: "Açılır Pencere Tasarımı", flyDesc: "Görev çubuğundaki sayaca tıkladığınızda veya Win+Alt+P bastığınızda açılır.",
+        flCompact: "1. Kompakt Fluent", flMinimal: "2. Minimal Cam", flBento: "3. 2×3 Kart Izgara", flTimeline: "4. Zaman Çizelgesi + Kıble",
+        btnShowMenu: "Sadeleştirilmiş Sağ-Tık Menüsünü Göster",
+        lblRamadan: "Ramazan & Aylık Takvim", ramDesc: "Ramazan ayında geri sayım otomatik olarak İftar / Sahur moduna geçer. Tek tıkla CSV veya yazdırılabilir HTML çıkarabilirsiniz.",
+        optRamMode: "Ramazan İftar/Sahur modu", optShowIms: "İmsakiye penceresi",
+        lblAlerts: "Bildirimler & Oyun Modu", alDesc: "Her vakit için ayrı ön hatırlatma (5–60 dk) ve ezan seçimi. Tam ekran oyun, video veya sunumda sesi otomatik susturur.",
+        optToast: "Windows bildirim kartı", optQuiet: "Oyun / Tam ekran sessiz modu",
+        lblCities: "Şehir & Hesaplama Metodu", citDesc: "23 dünya hesaplama metodu, Hanefi/Standart ikindi seçimi ve internetsiz çalışma desteği.",
+        controlsNote: "Gerçek Windows uygulaması C++20 & GDI+ ile derlenir (~3 MB RAM). Bu alan uygulama davranışını birebir gösterir.",
+        gameTitle: "Tam ekran uygulama / oyun algılandı (1920×1080)", gameMuted: "Ses otomatik susturuldu",
+        btnCsv: "CSV Dışa Aktar", btnHtml: "HTML Yazdır",
+        colDay: "Gün", colFajr: "İmsak", colSun: "Güneş", colDhuhr: "Öğle", colAsr: "İkindi", colMaghrib: "Akşam", colIsha: "Yatsı",
+        btnMuteAdhan: "Ezanı Sustur", btnDismiss: "Kapat",
+        ctxIms: "Aylık İmsakiye...", ctxRefresh: "Vakitleri Şimdi Güncelle", ctxNotif: "Bildirimler ▸", ctxSettings: "Ayarlar...", ctxExit: "Çıkış",
+        flyOffline: "Çevrimdışı hazır",
+        prayers: ["İmsak", "Güneş", "Öğle", "İkindi", "Akşam", "Yatsı"],
+        shortCode: "İ", untilWord: "İkindiye kalan", untilUpper: "İKİNDİYE KALAN", iftarUpper: "İFTARA KALAN", iftarBar: "İftara kalan",
+        minUnit: "dk", qiblaLabel: "Kıble", badgeNext: "Sıradaki", badgeNow: "Şu an",
+        toastTitleTxt: "İkindi vakti girdi", toastMutedTxt: "Ezan susturuldu",
+        ramBanner: "Ramazan Modu · İftara 02s 14d", stdBanner: "Kasım 2026 Takvimi",
+        csvSaved: "prayerbar_2026_11.csv hazırlandı (örnek önizleme)", htmlSaved: "Yazdırılabilir HTML takvimi oluşturuldu (örnek önizleme)",
+        rendersTitle: "Doğrudan Uygulamadan Gerçek Çıktılar",
+        rendersLead: "Pazarlama görseli değil; PrayerBar.exe'nin kendi GDI+ çizim motorunun ürettiği gerçek pencere görüntüleri.",
+        ren1Title: "Kompakt Fluent", ren1Sub: "Günlük vakit listesi, ilerleme çubuğu ve ek vakitler",
+        ren2Title: "2×3 Kart Izgara", ren2Sub: "Vakit yüzdesi halkası ve geniş tipografik kartlar",
+        ren3Title: "Zaman Çizelgesi & Kıble", ren3Sub: "Canlı Kıble pusulası ve tüm güne göre kalan süreler",
+        specsTitle: "Ne Yapar, Ne Yapmaz?", specsLead: "Electron, WebView veya arka plan servisleri yok. Doğrudan Win32 / C++20 olarak çalışır.",
+        sp1T: "Bellek ve İşlemci (~3 MB RAM, %0 CPU)", sp1D: "Uyku/uyanma sonrası anında güncellenir, boşta sıfır CPU harcar. Eski dizüstü bilgisayarlarda dahi fark edilmez.",
+        sp2T: "Sadeleştirilmiş Menü & Ayarlar", sp2D: "Karmaşık iç içe alt menüler yerine tek bakışta okunan sağ-tık menüsü ve canlı görev çubuğu önizlemeli Ayarlar penceresi.",
+        sp3T: "23 Metod & Tam Çevrimdışı Çalışma", sp3D: "Diyanet, MWL, ISNA, Ümmü'l-Kura, Mısır, Karaçi dahil 23 metod. İnternet kesilse bile dahili astronomik hesaplama sürer.",
+        sp4T: "Tam Ekran & Oyun Sessiz Modu", sp4D: "Oyun oynarken, film izlerken veya sunum yaparken ezan ve uyarı seslerini otomatik susturur.",
+        sp5T: "12 Dil ve Özel Vakit İsimleri", sp5D: "Türkçe, İngilizce, Arapça (tam RTL), Almanca, Fransızca, Endonezce, Urduca, Bengalce, Malayca, Farsça, Rusça, İspanyolca.",
+        sp6T: "Sıfır Telemetri, Sıfır Reklam", sp6D: "Hesap açılmaz, izleme kodu bulunmaz. Tüm tercihler yalnızca yerel %LocalAppData%\\PrayerBar klasöründe tutulur.",
+        priceTitle: "Basit Fiyatlandırma", priceLead: "Temel namaz vakitleri, bildirimler ve aylık imsakiye daima ücretsiz ve reklamsızdır.",
+        pFreeName: "Ücretsiz", pFreeSub: "Sonsuza kadar ücretsiz · Sıfır reklam",
+        pf1: "23 hesaplama metodu ve çevrimdışı mod", pf2: "Temel görev çubuğu stilleri & Kompakt açılır ekran",
+        pf3: "Vakit bazlı bildirimler ve dahili ezan sesleri", pf4: "Aylık ve 30 günlük Ramazan İmsakiyesi",
+        btnStoreFree: "Microsoft Store'dan İndir",
+        pAnnualName: "Yıllık Pro", pAnnualVal: "₺100 / yıl ($4.99)", pAnnualSub: "14 gün ücretsiz deneme · İstediğiniz an iptal",
+        pa1: "4 açılır pencere tasarımı ve canlı Kıble pusulası", pa2: "9 görev çubuğu stili ve özel şablon düzenleyici",
+        pa3: "Özel MP3/WAV ezan ve düzenlenebilir vakit isimleri", pa4: "CSV/HTML imsakiye çıktısı ve ayar yedekleme",
+        btnStartTrial: "14 Gün Ücretsiz Dene",
+        pLifeName: "Ömür Boyu Pro", pLifeVal: "₺250 tek seferlik ($9.99)", pLifeSub: "Microsoft hesabınızla en fazla 3 Windows PC",
+        pl1: "Tüm Pro özellikleri kalıcı olarak açık", pl2: "Gelecekteki tüm güncellemeler dahil",
+        pl3: "Microsoft Store üzerinden güvenli lisans doğrulama", pl4: "Abonelik veya yenileme ücreti yok",
+        btnGetLife: "Microsoft Store'dan Al",
+        faqTitle: "Sık Sorulanlar",
+        fq1Q: "Neden sadece ~3 MB RAM harcıyor?", fq1A: "PrayerBar içinde tarayıcı motoru (Electron / WebView2) barındırmaz. Doğrudan C++20 ve Windows Win32/GDI+ API'leri ile yazıldığı için bellek ve pil tüketimi minimumdur.",
+        fq2Q: "İnternet bağlantısı olmadan çalışır mı?", fq2A: "Evet. Aylık eşitlemeyi kapatsanız veya internetiniz kesilse bile dahili astronomik hesaplama motoru bulunduğunuz koordinat ve metoda göre vakitleri yerel olarak hesaplar.",
+        fq3Q: "Oyun veya toplantı sırasında ses çıkarır mı?", fq3A: "Tam ekran sessiz modu açıkken oyun, video veya sunum sırasında ezan ve bildirim seslerini otomatik olarak susturur.",
+        fq4Q: "Ücretsiz sürümde süre veya özellik kısıtı var mı?", fq4A: "Vakitler, geri sayım, günlük bildirimler, dahili ezanlar ve imsakiye görüntüleme süre sınırı olmadan sonsuza kadar ücretsizdir. Yalnızca ekstra temalar, özel MP3 ve dışa aktarım araçları 14 günlük deneme sonrası Pro gerektirir.",
+        ftPrivacy: "Gizlilik Politikası", ftTerms: "Kullanım Koşulları"
+      },
+      en: {
+        navDemo: "Live Preview", navSpecs: "Specs", navPricing: "Pricing", navStore: "Microsoft Store",
+        heroTitle: "Prayer times, right in your Windows taskbar.",
+        heroLead: "A quiet native Windows 10 & 11 utility using ~3 MB RAM with zero ads and full offline calculation. Sits neatly beside your clock.",
+        ctaStore: "Get on Microsoft Store", ctaDemo: "Show Features Live",
+        heroMeta: "Windows 10 / 11 (x64) · Core edition free forever · 14-day Pro trial · No account required",
+        tabTaskbar: "Taskbar", tabFlyout: "4 Flyouts & Qibla", tabRamadan: "Ramadan & Imsakiye",
+        tabAlerts: "Alerts & Quiet Mode", tabCities: "Cities & 23 Methods",
+        demoHint: "Click pill: open flyout · Right-click: simplified menu",
+        lblStyle: "Taskbar Style", stClassic: "Two-Line", stArrow: "A → 23 min", stTime: "Prayer · Time", stDot: "● 00:23",
+        lblDock: "Position", dkTray: "Near Tray", dkFarRight: "Far Right", dkCenter: "Center", dkLeft: "Left",
+        lblOptions: "Display Options", optFrame: "Show frame", optLogo: "Show logo", optBar: "Progress bar", optSec: "Show seconds", optDark: "Dark Windows theme",
+        lblFlyDesign: "Flyout Layout", flyDesc: "Opens when you click the taskbar countdown or press Win+Alt+P.",
+        flCompact: "1. Compact Fluent", flMinimal: "2. Minimal Glass", flBento: "3. 2×3 Bento Cards", flTimeline: "4. Timeline + Qibla",
+        btnShowMenu: "Show Simplified Right-Click Menu",
+        lblRamadan: "Ramadan & Monthly Calendar", ramDesc: "Automatically switches to Iftar / Suhoor countdown during Ramadan. Export to CSV or printable HTML anytime.",
+        optRamMode: "Ramadan Iftar/Suhoor mode", optShowIms: "Imsakiye window",
+        lblAlerts: "Alerts & Fullscreen Quiet Mode", alDesc: "Independent pre-prayer reminders (5–60 min) and Adhan choices. Automatically mutes during games, movies, or presentations.",
+        optToast: "Windows notification toast", optQuiet: "Game / Fullscreen quiet mode",
+        lblCities: "City & Calculation Method", citDesc: "23 global calculation methods, Hanafi/Standard Asr juristic rule, and offline fallback.",
+        controlsNote: "The real Windows app is built in native C++20 & GDI+ (~3 MB RAM). Every control here mirrors its actual behavior.",
+        gameTitle: "Fullscreen app / game detected (1920×1080)", gameMuted: "Audio auto-muted",
+        btnCsv: "Export CSV", btnHtml: "Print HTML",
+        colDay: "Day", colFajr: "Fajr", colSun: "Sunrise", colDhuhr: "Dhuhr", colAsr: "Asr", colMaghrib: "Maghrib", colIsha: "Isha",
+        btnMuteAdhan: "Mute Adhan", btnDismiss: "Dismiss",
+        ctxIms: "Monthly Calendar...", ctxRefresh: "Refresh Prayer Times", ctxNotif: "Notifications ▸", ctxSettings: "Settings...", ctxExit: "Exit",
+        flyOffline: "Offline ready",
+        prayers: ["Fajr", "Sunrise", "Dhuhr", "Asr", "Maghrib", "Isha"],
+        shortCode: "A", untilWord: "Until Asr", untilUpper: "UNTIL ASR", iftarUpper: "UNTIL IFTAR", iftarBar: "Until Iftar",
+        minUnit: "min", qiblaLabel: "Qibla", badgeNext: "Next", badgeNow: "Now",
+        toastTitleTxt: "Asr prayer time", toastMutedTxt: "Adhan muted",
+        ramBanner: "Ramadan Mode · Iftar in 02h 14m", stdBanner: "November 2026 Schedule",
+        csvSaved: "prayerbar_2026_11.csv prepared (demo preview)", htmlSaved: "Printable HTML schedule generated (demo preview)",
+        rendersTitle: "Genuine App Renders",
+        rendersLead: "Unretouched GDI+ renders generated directly by PrayerBar.exe — no marketing illustrations.",
+        ren1Title: "Compact Fluent", ren1Sub: "Daily prayer list, progress bar, and optional Sunnah times",
+        ren2Title: "2×3 Bento Cards", ren2Sub: "Elapsed interval ring and clean two-column cards",
+        ren3Title: "Timeline & Qibla", ren3Sub: "Vector Qibla compass and relative time offsets for every prayer",
+        specsTitle: "What It Does — and What It Doesn't", specsLead: "No Electron, no WebView2, no background telemetry services. Compiled directly to native Win32 C++20.",
+        sp1T: "Memory & CPU (~3 MB RAM, 0% Idle)", sp1D: "Trims working set automatically, updates immediately on sleep/wake, and stays invisible on laptop batteries.",
+        sp2T: "Simplified Menu & Settings", sp2D: "Flat, scannable right-click menu with one-click mute and a live-preview Settings window without developer clutter.",
+        sp3T: "23 Methods & True Offline Mode", sp3D: "Diyanet, MWL, ISNA, Umm al-Qura, Egyptian, Karachi, Singapore, and more — plus built-in astronomical calculation offline.",
+        sp4T: "Fullscreen & Game Quiet Mode", sp4D: "Detects fullscreen games, videos, and Focus Assist to mute Adhan audio automatically.",
+        sp5T: "12 Languages & Custom Names", sp5D: "English, Turkish, Arabic (full RTL), German, French, Indonesian, Urdu, Bengali, Malay, Persian, Russian, Spanish.",
+        sp6T: "Zero Telemetry, Zero Ads", sp6D: "No accounts, no trackers. All preferences live locally under %LocalAppData%\\PrayerBar.",
+        priceTitle: "Simple, Honest Pricing", priceLead: "Core prayer times, daily reminders, and monthly/Ramadan schedules are free forever with zero ads.",
+        pFreeName: "Free Edition", pFreeSub: "Forever free · Zero ads",
+        pf1: "All 23 calculation methods & offline calculation", pf2: "Core taskbar styles & Compact Fluent flyout",
+        pf3: "Per-prayer reminders & built-in Adhan audio", pf4: "View Monthly & 30-day Ramadan Imsakiye",
+        btnStoreFree: "Get Free on Microsoft Store",
+        pAnnualName: "Annual Pro", pAnnualVal: "$4.99 / year (₺100)", pAnnualSub: "14-day free Pro trial · Cancel anytime",
+        pa1: "All 4 flyout layouts & live Qibla compass", pa2: "All 9 taskbar styles & custom format editor",
+        pa3: "Custom MP3/WAV Adhan & editable prayer names", pa4: "CSV/HTML calendar export & JSON backup",
+        btnStartTrial: "Start 14-Day Trial",
+        pLifeName: "Lifetime Pro", pLifeVal: "$9.99 one-time (₺250)", pLifeSub: "One-time payment · Up to 3 Windows PCs",
+        pl1: "Everything in Pro unlocked permanently", pl2: "All future updates included",
+        pl3: "Synced securely via your Microsoft Store account", pl4: "No subscription or renewal fees",
+        btnGetLife: "Get Lifetime Pro",
+        faqTitle: "Questions",
+        fq1Q: "Why does it only use ~3 MB RAM?", fq1A: "PrayerBar contains no browser engine (no Electron or WebView2). It renders directly with native Win32 and GDI+ in C++20.",
+        fq2Q: "Does it work completely offline?", fq2A: "Yes. You can turn off monthly schedule sync anytime and rely entirely on the built-in astronomical calculation engine.",
+        fq3Q: "Will Adhan play during fullscreen games or calls?", fq3A: "No when Fullscreen Quiet Mode is enabled — PrayerBar automatically detects fullscreen apps and Focus Assist and silences audio.",
+        fq4Q: "Is there a time limit on the Free edition?", fq4A: "Never. Core prayer countdowns, reminders, built-in Adhans, and Imsakiye viewing remain free forever. Only extra themes, custom MP3 audio, and export tools require Pro after the 14-day trial.",
+        ftPrivacy: "Privacy Policy", ftTerms: "Terms & Refunds"
       },
       ar: {
-        navGetPro: "الترقية لـ Pro", heroBadge: "خفيف جداً على الجهاز · ويندوز 10 و 11",
-        heroTitle: "عدّاد مباشر لمواقيت الصلاة على شريط مهام ويندوز 11",
-        heroDesc: "لا تفوّت صلاة أثناء العمل أو البرمجة. استهلاك ~3 ميجابايت للذاكرة فقط مع 23 طريقة حساب عالمية وإمساكية رمضان.",
-        ctaFree: "تنزيل مجاني (تجربة 14 يوماً)", ctaStore: "احصل عليه من Microsoft Store",
-        mockLine1: "متبقي للعصر", mockLine2: "23 د",
-        priceHeading: "أسعار واضحة — مواقيت الصلاة الأساسية مجانية للأبد",
-        planFree: "النسخة المجانية", btnDownloadFree: "تنزيل مجاني Windows x64",
-        planAnnual: "Pro سنوي", btnBuyAnnual: "اشتراك سنوي ($4.99)",
-        popBadge: "الأكثر طلباً", planLife: "Pro مدى الحياة", btnBuyLife: "شراء مدى الحياة ($9.99)"
+        navDemo: "معاينة مباشرة", navSpecs: "المواصفات", navPricing: "الأسعار", navStore: "Microsoft Store",
+        heroTitle: "مواقيت الصلاة مباشرة على شريط مهام ويندوز.",
+        heroLead: "أداة أصلية خفيفة لويندوز 10 و 11 تستهلك ~3 ميجابايت من الذاكرة فقط، بلا إعلانات وتعمل دون اتصال.",
+        ctaStore: "احصل عليه من Microsoft Store", ctaDemo: "استعراض الميزات مباشرة",
+        heroMeta: "ويندوز 10 / 11 (x64) · النسخة الأساسية مجانية للأبد · تجربة Pro لـ 14 يوماً · بدون تسجيل",
+        tabTaskbar: "شريط المهام", tabFlyout: "4 نوافذ منبثقة والقبلة", tabRamadan: "رمضان والإمساكية",
+        tabAlerts: "التنبيهات والهدوء", tabCities: "المدن و 23 طريقة",
+        demoHint: "انقر للنافذة المنبثقة · انقر باليمين للقائمة المبسطة",
+        lblStyle: "نمط شريط المهام", stClassic: "سطران", stArrow: "ع ← 23 د", stTime: "الصلاة · الوقت", stDot: "● 00:23",
+        lblDock: "الموقع", dkTray: "بجانب الساعة", dkFarRight: "أقصى اليمين", dkCenter: "المنتصف", dkLeft: "اليسار",
+        lblOptions: "خيارات العرض", optFrame: "إظهار الإطار", optLogo: "إظهار الشعار", optBar: "شريط التقدم", optSec: "إظهار الثواني", optDark: "الوضع الداكن",
+        lblFlyDesign: "تصميم النافذة", flyDesc: "تفتح عند النقر على العداد أو الضغط على Win+Alt+P.",
+        flCompact: "1. مدمج Fluent", flMinimal: "2. زجاجي بسيط", flBento: "3. بطاقات 2×3", flTimeline: "4. خط زمني + قبلة",
+        btnShowMenu: "إظهار قائمة النقر الأيمن المبسطة",
+        lblRamadan: "رمضان والإمساكية الشهرية", ramDesc: "يتحول تلقائياً إلى عداد الإفطار والسحور في رمضان مع تصدير CSV و HTML.",
+        optRamMode: "وضع الإفطار والسحور", optShowIms: "نافذة الإمساكية",
+        lblAlerts: "التنبيهات ووضع الألعاب", alDesc: "تذكير مسبق لكل صلاة (5–60 د) وكتم تلقائي أثناء الألعاب والعروض.",
+        optToast: "إشعار ويندوز", optQuiet: "كتم الصوت بوضع ملء الشاشة",
+        lblCities: "المدينة وطريقة الحساب", citDesc: "23 طريقة حساب عالمية ومذهب العصر والعمل بدون إنترنت.",
+        controlsNote: "التطبيق مبني بـ C++20 و Win32 (~3 ميجابايت ذاكرة).",
+        gameTitle: "تم رصد تطبيق ملء الشاشة / لعبة", gameMuted: "تم كتم الصوت تلقائياً",
+        btnCsv: "تصدير CSV", btnHtml: "طباعة HTML",
+        colDay: "اليوم", colFajr: "الفجر", colSun: "الشروق", colDhuhr: "الظهر", colAsr: "العصر", colMaghrib: "المغرب", colIsha: "العشاء",
+        btnMuteAdhan: "إيقاف الأذان", btnDismiss: "إغلاق",
+        ctxIms: "الإمساكية الشهرية...", ctxRefresh: "تحديث المواقيت", ctxNotif: "التنبيهات ▸", ctxSettings: "الإعدادات...", ctxExit: "خروج",
+        flyOffline: "جاهز دون اتصال",
+        prayers: ["الفجر", "الشروق", "الظهر", "العصر", "المغرب", "العشاء"],
+        shortCode: "ع", untilWord: "متبقي للعصر", untilUpper: "متبقي للعصر", iftarUpper: "متبقي للإفطار", iftarBar: "متبقي للإفطار",
+        minUnit: "د", qiblaLabel: "القبلة", badgeNext: "التالي", badgeNow: "الآن",
+        toastTitleTxt: "دخل وقت العصر", toastMutedTxt: "تم إيقاف الأذان",
+        ramBanner: "وضع رمضان · متبقي للإفطار 02س 14د", stdBanner: "جدول نوفمبر 2026",
+        csvSaved: "تم تجهيز prayerbar_2026_11.csv", htmlSaved: "تم تجهيز صفحة الطباعة HTML",
+        rendersTitle: "لقطات حقيقية من التطبيق", rendersLead: "صور أصلية من محرك الرسم GDI+ داخل التطبيق مباشرة.",
+        ren1Title: "مدمج Fluent", ren1Sub: "قائمة المواقيت وشريط التقدم",
+        ren2Title: "بطاقات 2×3", ren2Sub: "بطاقات واضحة مع نسبة الوقت المنقضي",
+        ren3Title: "الخط الزمني والقبلة", ren3Sub: "بوصلة القبلة المباشرة والفارق الزمني",
+        specsTitle: "المواصفات التقنية", specsLead: "بدون Electron أو متصفح مدمج — برمجة أصلية بـ C++20.",
+        sp1T: "الذاكرة والمعالج (~3 MB RAM)", sp1D: "استهلاك معدوم للمعالج في الخلفية ومناسب للبطارية.",
+        sp2T: "قائمة مبسطة وإعدادات واضحة", sp2D: "قائمة مختصرة وسهلة الفهم مع معاينة فورية لشريط المهام.",
+        sp3T: "23 طريقة حساب وعمل دون إنترنت", sp3D: "حساب فلكي محلي دقيق في أي وقت.",
+        sp4T: "وضع الهدوء التلقائي", sp4D: "يكتم الصوت أثناء الألعاب أو الاجتماعات بوضع ملء الشاشة.",
+        sp5T: "12 لغة مع دعم RTL كامل", sp5D: "العربية، التركية، الإنجليزية، الفرنسية، الألمانية، الإندونيسية وغيرها.",
+        sp6T: "خصوصية تامة بدون إعلانات", sp6D: "لا جمع للبيانات ولا حسابات.",
+        priceTitle: "أسعار واضحة", priceLead: "مواقيت الصلاة الأساسية والتنبيهات مجانية للأبد.",
+        pFreeName: "النسخة المجانية", pFreeSub: "مجانية للأبد · بدون إعلانات",
+        pf1: "23 طريقة حساب والعمل دون اتصال", pf2: "الأنماط الأساسية والنافذة المدمجة", pf3: "تنبيهات كل صلاة والأذان المدمج", pf4: "عرض الإمساكية الشهرية ورمضان",
+        btnStoreFree: "تنزيل مجاني",
+        pAnnualName: "Pro سنوي", pAnnualVal: "$4.99 / سنة", pAnnualSub: "تجربة مجانية 14 يوماً · إلغاء في أي وقت",
+        pa1: "جميع التصاميم الأربعة وبوصلة القبلة", pa2: "9 أنماط لشريط المهام ومحرر القوالب", pa3: "ملفات أذان مخصصة وتعديل الأسماء", pa4: "تصدير CSV/HTML والنسخ الاحتياطي",
+        btnStartTrial: "ابدأ التجربة المجانية",
+        pLifeName: "Pro مدى الحياة", pLifeVal: "$9.99 دفعة واحدة", pLifeSub: "حتى 3 أجهزة ويندوز عبر حساب مايكروسوفت",
+        pl1: "فتح جميع ميزات Pro للأبد", pl2: "يشمل جميع التحديثات المستقبلية", pl3: "مزامنة آمنة عبر Microsoft Store", pl4: "بدون اشتراكات متكررة",
+        btnGetLife: "شراء مدى الحياة",
+        faqTitle: "الأسئلة الشائعة",
+        fq1Q: "لماذا يستهلك 3 ميجابايت فقط؟", fq1A: "لأنه مكتوب بلغة C++20 مباشرة لنظام ويندوز بدون أي محرك متصفح.",
+        fq2Q: "هل يعمل بدون إنترنت؟", fq2A: "نعم، يعتمد على حساب فلكي محلي بالكامل.",
+        fq3Q: "هل يعمل الأذان أثناء الألعاب؟", fq3A: "يقوم وضع الهدوء بكتم الصوت تلقائياً في وضع ملء الشاشة.",
+        fq4Q: "هل النسخة المجانية محدودة بوقت؟", fq4A: "لا، المواقيت والتنبيهات الأساسية مجانية للأبد.",
+        ftPrivacy: "سياسة الخصوصية", ftTerms: "الشروط والأحكام"
       },
       de: {
-        navGetPro: "Pro holen", heroTitle: "Live-Gebetszeiten direkt in Ihrer Windows-11-Taskleiste",
-        ctaFree: "Kostenlos laden (14 Tage Pro-Test)", ctaStore: "Im Microsoft Store laden",
-        mockLine1: "Bis Asr", mockLine2: "23 Min", popBadge: "AM BELIEBTESTEN",
-        btnBuyAnnual: "Jährlich (4,99 €)", btnBuyLife: "Lebenslang (9,99 €)"
+        navDemo: "Live-Vorschau", navSpecs: "Funktionen", navPricing: "Preise", navStore: "Microsoft Store",
+        heroTitle: "Gebetszeiten direkt in Ihrer Windows-Taskleiste.",
+        heroLead: "Ein schlankes natives Windows-10/11-Werkzeug (~3 MB RAM, 0 % Leerlauf-CPU), werbefrei und vollständig offline nutzbar.",
+        ctaStore: "Im Microsoft Store laden", ctaDemo: "Funktionen live zeigen",
+        heroMeta: "Windows 10 / 11 (x64) · Basisversion dauerhaft kostenlos · 14 Tage Pro-Test",
+        tabTaskbar: "Taskleiste", tabFlyout: "4 Flyouts & Qibla", tabRamadan: "Ramadan & Kalender",
+        tabAlerts: "Hinweise & Ruhemodus", tabCities: "Städte & 23 Methoden",
+        demoHint: "Klick: Flyout · Rechtsklick: kompaktes Menü",
+        lblStyle: "Taskleisten-Stil", stClassic: "Zweizeilig", stArrow: "A → 23 Min", stTime: "Gebet · Uhrzeit", stDot: "● 00:23",
+        lblDock: "Position", dkTray: "Am Infobereich", dkFarRight: "Ganz rechts", dkCenter: "Mitte", dkLeft: "Links",
+        lblOptions: "Anzeigeoptionen", optFrame: "Rahmen", optLogo: "Logo", optBar: "Fortschrittsbalken", optSec: "Sekunden", optDark: "Dunkles Design",
+        lblFlyDesign: "Flyout-Design", flyDesc: "Öffnet beim Klick auf die Taskleiste oder mit Win+Alt+P.",
+        flCompact: "1. Kompakt Fluent", flMinimal: "2. Minimal Glas", flBento: "3. 2×3 Karten", flTimeline: "4. Zeitachse + Qibla",
+        btnShowMenu: "Vereinfachtes Rechtsklick-Menü zeigen",
+        lblRamadan: "Ramadan & Monatskalender", ramDesc: "Wechselt im Ramadan automatisch auf Iftar/Suhoor und exportiert als CSV oder druckbares HTML.",
+        optRamMode: "Ramadan-Modus", optShowIms: "Kalenderfenster",
+        lblAlerts: "Benachrichtigungen & Vollbild", alDesc: "Vorab-Erinnerungen (5–60 Min.) je Gebet. Schaltet im Vollbild und bei Spielen automatisch stumm.",
+        optToast: "Windows-Benachrichtigung", optQuiet: "Spiel- / Vollbild-Ruhemodus",
+        lblCities: "Stadt & Methode", citDesc: "23 Berechnungsmethoden, Standard/Hanafi Asr und vollständige Offline-Berechnung.",
+        controlsNote: "Native C++20- & GDI+-App (~3 MB RAM).",
+        gameTitle: "Vollbild-App / Spiel erkannt (1920×1080)", gameMuted: "Ton automatisch stumm",
+        btnCsv: "CSV exportieren", btnHtml: "HTML drucken",
+        colDay: "Tag", colFajr: "Fadschr", colSun: "Sonne", colDhuhr: "Dhuhr", colAsr: "Asr", colMaghrib: "Maghrib", colIsha: "Ischa",
+        btnMuteAdhan: "Stummschalten", btnDismiss: "Schließen",
+        ctxIms: "Monatskalender...", ctxRefresh: "Zeiten aktualisieren", ctxNotif: "Benachrichtigungen ▸", ctxSettings: "Einstellungen...", ctxExit: "Beenden",
+        flyOffline: "Offline bereit",
+        prayers: ["Fadschr", "Sonne", "Dhuhr", "Asr", "Maghrib", "Ischa"],
+        shortCode: "A", untilWord: "Bis Asr", untilUpper: "BIS ASR", iftarUpper: "BIS IFTAR", iftarBar: "Bis Iftar",
+        minUnit: "Min", qiblaLabel: "Qibla", badgeNext: "Nächstes", badgeNow: "Jetzt",
+        toastTitleTxt: "Asr-Gebetszeit", toastMutedTxt: "Adhan stummgeschaltet",
+        ramBanner: "Ramadan-Modus · Iftar in 02h 14m", stdBanner: "November 2026",
+        csvSaved: "prayerbar_2026_11.csv vorbereitet", htmlSaved: "Druckbare HTML-Ansicht erstellt",
+        rendersTitle: "Echte App-Ausgaben", rendersLead: "Direkt von PrayerBar.exe gerenderte GDI+-Ansichten.",
+        ren1Title: "Kompakt Fluent", ren1Sub: "Tagesübersicht, Fortschrittsbalken und Zusatzzeiten",
+        ren2Title: "2×3 Kartenraster", ren2Sub: "Übersichtliche Kacheln mit Fortschrittsring",
+        ren3Title: "Zeitachse & Qibla", ren3Sub: "Qibla-Kompass und relative Abstände",
+        specsTitle: "Technik & Datenschutz", specsLead: "Kein Electron, kein WebView2 — reines Win32 C++20.",
+        sp1T: "~3 MB RAM & 0 % Leerlauf-CPU", sp1D: "Minimaler Speicherbedarf und voller Akkuschutz.",
+        sp2T: "Aufgeräumtes Menü & Einstellungen", sp2D: "Klares Rechtsklick-Menü und Live-Vorschau in den Einstellungen.",
+        sp3T: "23 Methoden & Offline-Modus", sp3D: "Diyanet, MWL, ISNA, Umm al-Qura und lokale Astronomie-Berechnung.",
+        sp4T: "Vollbild-Ruhemodus", sp4D: "Automatisch leise bei Spielen, Filmen oder Präsentationen.",
+        sp5T: "12 Sprachen", sp5D: "Inklusive Deutsch, Türkisch, Englisch, Arabisch (RTL) und mehr.",
+        sp6T: "Keine Werbung, keine Telemetrie", sp6D: "Alle Einstellungen bleiben lokal unter %LocalAppData%\\PrayerBar.",
+        priceTitle: "Einfache Preise", priceLead: "Alle Grundfunktionen bleiben dauerhaft kostenlos.",
+        pFreeName: "Kostenlos", pFreeSub: "Dauerhaft kostenlos · Keine Werbung",
+        pf1: "Alle 23 Methoden & Offline-Modus", pf2: "Basis-Taskleistenstile & Kompakt-Flyout", pf3: "Gebetserinnerungen & integrierter Adhan", pf4: "Monats- & Ramadan-Kalender",
+        btnStoreFree: "Kostenlos laden",
+        pAnnualName: "Pro Jährlich", pAnnualVal: "4,99 € / Jahr", pAnnualSub: "14 Tage kostenlos testen · Jederzeit kündbar",
+        pa1: "Alle 4 Flyouts & Qibla-Kompass", pa2: "Alle 9 Taskleistenstile & Vorlageneditor", pa3: "Eigene MP3/WAV-Dateien & Gebetsnamen", pa4: "CSV/HTML-Export & Backup",
+        btnStartTrial: "14 Tage testen",
+        pLifeName: "Pro Lebenslang", pLifeVal: "9,99 € einmalig", pLifeSub: "Einmalzahlung · Bis zu 3 Windows-PCs",
+        pl1: "Alle Pro-Funktionen dauerhaft", pl2: "Alle künftigen Updates inklusive", pl3: "Über Ihr Microsoft-Konto synchronisiert", pl4: "Kein Abo",
+        btnGetLife: "Lebenslang sichern",
+        faqTitle: "Häufige Fragen",
+        fq1Q: "Warum nur ~3 MB RAM?", fq1A: "Kein eingebetteter Browser — natives C++20 mit Win32 und GDI+.",
+        fq2Q: "Funktioniert es offline?", fq2A: "Ja, die astronomische Berechnung läuft jederzeit lokal.",
+        fq3Q: "Stört der Ton beim Spielen?", fq3A: "Im Vollbild-Ruhemodus wird Audio automatisch stummgeschaltet.",
+        fq4Q: "Ist die Basisversion zeitlich begrenzt?", fq4A: "Nein, sie bleibt dauerhaft kostenlos.",
+        ftPrivacy: "Datenschutz", ftTerms: "Bedingungen"
       },
       fr: {
-        navGetPro: "Passer à Pro", heroTitle: "Compte à rebours des prières en direct sur Windows 11",
-        ctaFree: "Télécharger (Essai Pro 14 jours)", ctaStore: "Sur Microsoft Store",
-        mockLine1: "Avant Asr", mockLine2: "23 min", popBadge: "LE PLUS POPULAIRE",
-        btnBuyAnnual: "Annuel (4,99 €)", btnBuyLife: "À vie (9,99 €)"
+        navDemo: "Aperçu", navSpecs: "Détails", navPricing: "Tarifs", navStore: "Microsoft Store",
+        heroTitle: "Les horaires de prière dans la barre des tâches Windows.",
+        heroLead: "Un utilitaire natif Windows 10 & 11 léger (~3 Mo de RAM, 0 % CPU au repos), sans publicité et utilisable hors ligne.",
+        ctaStore: "Télécharger sur Microsoft Store", ctaDemo: "Voir les fonctions en direct",
+        heroMeta: "Windows 10 / 11 (x64) · Version de base gratuite · Essai Pro 14 jours",
+        tabTaskbar: "Barre des tâches", tabFlyout: "4 Panneaux & Qibla", tabRamadan: "Ramadan & Calendrier",
+        tabAlerts: "Alertes & Silence", tabCities: "Villes & 23 Méthodes",
+        demoHint: "Clic : panneau · Clic droit : menu simplifié",
+        lblStyle: "Style", stClassic: "Deux lignes", stArrow: "A → 23 min", stTime: "Prière · Heure", stDot: "● 00:23",
+        lblDock: "Position", dkTray: "Près de l'horloge", dkFarRight: "À droite", dkCenter: "Centre", dkLeft: "À gauche",
+        lblOptions: "Options", optFrame: "Cadre", optLogo: "Logo", optBar: "Barre de progression", optSec: "Secondes", optDark: "Thème sombre",
+        lblFlyDesign: "Style du panneau", flyDesc: "S'ouvre au clic ou via Win+Alt+P.",
+        flCompact: "1. Fluent Compact", flMinimal: "2. Verre Minimal", flBento: "3. Grille 2×3", flTimeline: "4. Chronologie + Qibla",
+        btnShowMenu: "Afficher le menu contextuel simplifié",
+        lblRamadan: "Ramadan & Calendrier", ramDesc: "Compte à rebours Iftar / Sahur automatique et export CSV / HTML.",
+        optRamMode: "Mode Ramadan", optShowIms: "Fenêtre calendrier",
+        lblAlerts: "Alertes & Mode Jeu", alDesc: "Rappels par prière et mise en sourdine automatique en plein écran.",
+        optToast: "Notification Windows", optQuiet: "Silence en plein écran / jeu",
+        lblCities: "Ville & Méthode", citDesc: "23 méthodes mondiales et calcul astronomique hors ligne.",
+        controlsNote: "Application native C++20 & GDI+ (~3 Mo RAM).",
+        gameTitle: "Mode plein écran / jeu détecté", gameMuted: "Son coupé automatiquement",
+        btnCsv: "Export CSV", btnHtml: "Imprimer HTML",
+        colDay: "Jour", colFajr: "Fajr", colSun: "Lever", colDhuhr: "Dhuhr", colAsr: "Asr", colMaghrib: "Maghrib", colIsha: "Isha",
+        btnMuteAdhan: "Couper l'adhan", btnDismiss: "Fermer",
+        ctxIms: "Calendrier mensuel...", ctxRefresh: "Actualiser", ctxNotif: "Notifications ▸", ctxSettings: "Paramètres...", ctxExit: "Quitter",
+        flyOffline: "Prêt hors ligne",
+        prayers: ["Fajr", "Lever", "Dhuhr", "Asr", "Maghrib", "Isha"],
+        shortCode: "A", untilWord: "Avant Asr", untilUpper: "AVANT ASR", iftarUpper: "AVANT IFTAR", iftarBar: "Avant Iftar",
+        minUnit: "min", qiblaLabel: "Qibla", badgeNext: "Suivant", badgeNow: "Actuel",
+        toastTitleTxt: "Heure de l'Asr", toastMutedTxt: "Adhan coupé",
+        ramBanner: "Mode Ramadan · Iftar dans 02h 14m", stdBanner: "Novembre 2026",
+        csvSaved: "prayerbar_2026_11.csv prêt", htmlSaved: "HTML imprimable généré",
+        rendersTitle: "Rendus réels de l'application", rendersLead: "Captures GDI+ directes générées par PrayerBar.exe.",
+        ren1Title: "Fluent Compact", ren1Sub: "Liste quotidienne et barre de progression",
+        ren2Title: "Grille 2×3", ren2Sub: "Cartes lisibles avec anneau de progression",
+        ren3Title: "Chronologie & Qibla", ren3Sub: "Boussole Qibla en direct et écarts horaires",
+        specsTitle: "Architecture & Confidentialité", specsLead: "Zéro Electron, zéro WebView2 — C++20 natif.",
+        sp1T: "~3 Mo RAM, 0 % CPU au repos", sp1D: "Léger sur batterie et instantané au réveil.",
+        sp2T: "Menu & Paramètres simplifiés", sp2D: "Menu contextuel direct et aperçu en temps réel.",
+        sp3T: "23 méthodes & mode hors ligne", sp3D: "Diyanet, MWL, ISNA, UOIF France et calcul local.",
+        sp4T: "Silence automatique en jeu", sp4D: "Coupe le son pendant les jeux et présentations.",
+        sp5T: "12 langues", sp5D: "Français, anglais, arabe (RTL), turc, allemand, etc.",
+        sp6T: "Zéro pub, zéro suivi", sp6D: "Données locales uniquement dans %LocalAppData%\\PrayerBar.",
+        priceTitle: "Tarification simple", priceLead: "Les fonctions essentielles restent gratuites à vie.",
+        pFreeName: "Gratuit", pFreeSub: "Gratuit pour toujours · Sans pub",
+        pf1: "23 méthodes et mode hors ligne", pf2: "Styles de base et panneau compact", pf3: "Rappels et adhans intégrés", pf4: "Calendrier mensuel & Ramadan",
+        btnStoreFree: "Télécharger gratuitement",
+        pAnnualName: "Pro Annuel", pAnnualVal: "4,99 € / an", pAnnualSub: "Essai gratuit 14 jours · Résiliable à tout moment",
+        pa1: "4 panneaux et boussole Qibla", pa2: "9 styles et éditeur de modèle", pa3: "Audio MP3/WAV personnalisé", pa4: "Export CSV/HTML et sauvegarde",
+        btnStartTrial: "Essayer 14 jours",
+        pLifeName: "Pro À vie", pLifeVal: "9,99 € une fois", pLifeSub: "Jusqu'à 3 PC Windows via Microsoft Store",
+        pl1: "Tout Pro débloqué définitivement", pl2: "Mises à jour futures incluses", pl3: "Synchronisé avec votre compte Microsoft", pl4: "Aucun abonnement",
+        btnGetLife: "Obtenir à vie",
+        faqTitle: "Questions",
+        fq1Q: "Pourquoi seulement ~3 Mo de RAM ?", fq1A: "Aucun moteur de navigateur embarqué — C++20 natif avec Win32 et GDI+.",
+        fq2Q: "Fonctionne-t-il hors ligne ?", fq2A: "Oui, le calcul astronomique intégré fonctionne sans connexion.",
+        fq3Q: "Le son joue-t-il pendant un jeu ?", fq3A: "Non, le mode plein écran coupe l'audio automatiquement.",
+        fq4Q: "La version gratuite expire-t-elle ?", fq4A: "Non, les horaires et rappels de base restent gratuits.",
+        ftPrivacy: "Confidentialité", ftTerms: "Conditions"
       },
       id: {
-        navGetPro: "Upgrade Pro", heroTitle: "Hitung Mundur Waktu Sholat Langsung di Taskbar Windows 11",
-        ctaFree: "Unduh Gratis (Uji Pro 14 Hari)", ctaStore: "Unduh di Microsoft Store",
-        mockLine1: "Menuju Ashar", mockLine2: "23 mnt", popBadge: "PALING POPULER",
-        btnBuyAnnual: "Tahunan ($4.99)", btnBuyLife: "Selamanya ($9.99)"
+        navDemo: "Pratinjau", navSpecs: "Spesifikasi", navPricing: "Harga", navStore: "Microsoft Store",
+        heroTitle: "Waktu sholat langsung di taskbar Windows.",
+        heroLead: "Aplikasi native Windows 10 & 11 yang ringan (~3 MB RAM, 0% CPU diam), bebas iklan, dan bekerja penuh secara offline.",
+        ctaStore: "Unduh di Microsoft Store", ctaDemo: "Lihat Fitur Langsung",
+        heroMeta: "Windows 10 / 11 (x64) · Versi inti gratis selamanya · Uji Pro 14 hari",
+        tabTaskbar: "Taskbar", tabFlyout: "4 Panel & Kiblat", tabRamadan: "Ramadan & Imsakiyah",
+        tabAlerts: "Notifikasi & Senyap", tabCities: "Kota & 23 Metode",
+        demoHint: "Klik kiri: buka panel · Klik kanan: menu ringkas",
+        lblStyle: "Gaya Taskbar", stClassic: "Dua Baris", stArrow: "A → 23 mnt", stTime: "Waktu · Jam", stDot: "● 00:23",
+        lblDock: "Posisi", dkTray: "Dekat Tray", dkFarRight: "Ujung Kanan", dkCenter: "Tengah", dkLeft: "Kiri",
+        lblOptions: "Opsi Tampilan", optFrame: "Bingkai", optLogo: "Logo", optBar: "Bilah progres", optSec: "Detik", optDark: "Tema gelap",
+        lblFlyDesign: "Desain Panel", flyDesc: "Terbuka saat mengklik taskbar atau menekan Win+Alt+P.",
+        flCompact: "1. Fluent Ringkas", flMinimal: "2. Kaca Minimal", flBento: "3. Kartu 2×3", flTimeline: "4. Linimasa + Kiblat",
+        btnShowMenu: "Lihat Menu Klik-Kanan Ringkas",
+        lblRamadan: "Ramadan & Imsakiyah", ramDesc: "Hitung mundur Berbuka/Sahur otomatis saat Ramadan plus ekspor CSV & HTML.",
+        optRamMode: "Mode Ramadan", optShowIms: "Jendela Imsakiyah",
+        lblAlerts: "Pengingat & Mode Game", alDesc: "Pengingat tiap waktu (5–60 mnt) dan otomatis bisu saat game atau presentasi layar penuh.",
+        optToast: "Notifikasi Windows", optQuiet: "Bisu saat game / layar penuh",
+        lblCities: "Kota & Metode", citDesc: "23 metode global termasuk KEMENAG, MWL, Diyanet, dan hitungan offline.",
+        controlsNote: "Aplikasi Windows asli dibangun dengan C++20 & GDI+ (~3 MB RAM).",
+        gameTitle: "Layar penuh / game terdeteksi", gameMuted: "Audio otomatis dibisukan",
+        btnCsv: "Ekspor CSV", btnHtml: "Cetak HTML",
+        colDay: "Hari", colFajr: "Subuh", colSun: "Terbit", colDhuhr: "Dzuhur", colAsr: "Ashar", colMaghrib: "Maghrib", colIsha: "Isya",
+        btnMuteAdhan: "Hentikan Azan", btnDismiss: "Tutup",
+        ctxIms: "Jadwal Bulanan...", ctxRefresh: "Perbarui Jadwal", ctxNotif: "Notifikasi ▸", ctxSettings: "Pengaturan...", ctxExit: "Keluar",
+        flyOffline: "Siap offline",
+        prayers: ["Subuh", "Terbit", "Dzuhur", "Ashar", "Maghrib", "Isya"],
+        shortCode: "As", untilWord: "Menuju Ashar", untilUpper: "MENUJU ASHAR", iftarUpper: "MENUJU BERBUKA", iftarBar: "Menuju Berbuka",
+        minUnit: "mnt", qiblaLabel: "Kiblat", badgeNext: "Berikutnya", badgeNow: "Saat ini",
+        toastTitleTxt: "Waktu Ashar tiba", toastMutedTxt: "Azan dihentikan",
+        ramBanner: "Mode Ramadan · Berbuka 02j 14m lagi", stdBanner: "Jadwal November 2026",
+        csvSaved: "prayerbar_2026_11.csv siap", htmlSaved: "HTML siap cetak dibuat",
+        rendersTitle: "Tangkapan Asli Aplikasi", rendersLead: "Render GDI+ langsung dari PrayerBar.exe.",
+        ren1Title: "Fluent Ringkas", ren1Sub: "Daftar harian dan bilah progres",
+        ren2Title: "Kartu 2×3", ren2Sub: "Kartu jelas dengan cincin progres",
+        ren3Title: "Linimasa & Kiblat", ren3Sub: "Kompas Kiblat langsung dan selisih waktu",
+        specsTitle: "Spesifikasi & Privasi", specsLead: "Tanpa Electron atau WebView2 — murni C++20 Win32.",
+        sp1T: "~3 MB RAM & 0% CPU Diam", sp1D: "Hemat baterai laptop dan responsif seketika.",
+        sp2T: "Menu & Pengaturan Ringkas", sp2D: "Menu klik kanan sederhana dengan pratinjau langsung.",
+        sp3T: "23 Metode & Offline", sp3D: "KEMENAG, MWL, ISNA, Diyanet, dan hitungan astronomi lokal.",
+        sp4T: "Mode Senyap Layar Penuh", sp4D: "Otomatis senyap saat game, video, atau rapat.",
+        sp5T: "12 Bahasa", sp5D: "Indonesia, Melayu, Inggris, Arab (RTL), Turki, dan lainnya.",
+        sp6T: "Bebas Iklan & Pelacakan", sp6D: "Semua pengaturan tersimpan lokal di %LocalAppData%\\PrayerBar.",
+        priceTitle: "Harga Jelas", priceLead: "Jadwal sholat inti dan notifikasi gratis selamanya.",
+        pFreeName: "Gratis", pFreeSub: "Gratis selamanya · Tanpa iklan",
+        pf1: "23 metode & mode offline", pf2: "Gaya taskbar dasar & panel ringkas", pf3: "Pengingat & suara azan bawaan", pf4: "Lihat Imsakiyah Bulanan & Ramadan",
+        btnStoreFree: "Unduh Gratis",
+        pAnnualName: "Pro Tahunan", pAnnualVal: "$4.99 / tahun", pAnnualSub: "Uji coba gratis 14 hari · Batal kapan saja",
+        pa1: "4 desain panel & kompas Kiblat", pa2: "9 gaya taskbar & editor format", pa3: "Audio MP3/WAV & nama sholat kustom", pa4: "Ekspor CSV/HTML & cadangan JSON",
+        btnStartTrial: "Coba Gratis 14 Hari",
+        pLifeName: "Pro Selamanya", pLifeVal: "$9.99 sekali bayar", pLifeSub: "Hingga 3 PC Windows lewat Microsoft Store",
+        pl1: "Semua fitur Pro permanen", pl2: "Termasuk pembaruan mendatang", pl3: "Sinkronisasi aman via Microsoft Store", pl4: "Tanpa biaya langganan",
+        btnGetLife: "Beli Selamanya",
+        faqTitle: "Pertanyaan Umum",
+        fq1Q: "Mengapa hanya memakai ~3 MB RAM?", fq1A: "Tidak memakai mesin peramban seperti Electron; ditulis langsung dengan C++20 Win32 & GDI+.",
+        fq2Q: "Apakah bisa jalan tanpa internet?", fq2A: "Ya, kalkulator astronomi bawaan bekerja penuh secara offline.",
+        fq3Q: "Apakah azan berbunyi saat main game?", fq3A: "Tidak jika Mode Senyap Layar Penuh aktif.",
+        fq4Q: "Apakah versi gratis punya batas waktu?", fq4A: "Tidak, jadwal inti dan notifikasi gratis selamanya.",
+        ftPrivacy: "Privasi", ftTerms: "Ketentuan"
       }
     };
-    const picker = document.getElementById("langPicker");
-    function applyLang(l) {
-      const dict = Object.assign({}, T.en, T[l] || {});
-      document.documentElement.dir = (l === "ar") ? "rtl" : "ltr";
-      document.querySelectorAll("[data-i18n]").forEach(el => {
-        const k = el.getAttribute("data-i18n");
-        if (dict[k]) el.textContent = dict[k];
+
+    const state = {
+      lang: "tr",
+      mode: "taskbar",
+      tbStyle: "classic",
+      dock: "tray",
+      frame: true,
+      logo: true,
+      bar: true,
+      sec: false,
+      dark: false,
+      flyOpen: false,
+      flyDesign: "compact",
+      ramadan: true,
+      imsOpen: false,
+      toastOpen: false,
+      toastMuted: false,
+      quiet: false,
+      ctxOpen: false,
+      cityIdx: 0,
+      remSeconds: 23 * 60 + 41
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function dict() {
+      return Object.assign({}, T.en, T[state.lang] || {});
+    }
+
+    function renderCityList() {
+      const list = $("cityList");
+      list.innerHTML = "";
+      CITIES.forEach((c, idx) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "city-btn" + (idx === state.cityIdx ? " active" : "");
+        b.innerHTML = `<span>${c.name}, ${c.country}</span><small>${c.method}</small>`;
+        b.addEventListener("click", () => {
+          state.cityIdx = idx;
+          renderCityList();
+          renderDesktop();
+        });
+        list.appendChild(b);
       });
     }
-    picker.addEventListener("change", () => applyLang(picker.value));
-    const navLang = (navigator.language || "en").slice(0,2).toLowerCase();
-    if (T[navLang]) { picker.value = navLang; applyLang(navLang); }
+
+    function renderDesktop() {
+      const d = dict();
+      const c = CITIES[state.cityIdx];
+      const stage = $("winStage");
+      stage.classList.toggle("tb-dark", state.dark);
+
+      // Pill formatting
+      const pill = $("pbPill");
+      pill.classList.toggle("no-frame", !state.frame);
+      pill.classList.toggle("no-logo", !state.logo);
+      pill.classList.toggle("no-bar", !state.bar);
+
+      const m = Math.floor(state.remSeconds / 60);
+      const s = state.remSeconds % 60;
+      const secStr = state.sec ? ` ${String(s).padStart(2, "0")}${state.lang === "tr" ? "sn" : "s"}` : "";
+      const remTxt = `${m} ${d.minUnit}${secStr}`;
+      const isRam = state.mode === "ramadan" && state.ramadan;
+      const targetTime = isRam ? c.times[4] : c.times[3];
+      const targetName = isRam ? (state.lang === "tr" ? "İftar" : "Iftar") : d.prayers[3];
+
+      let l1 = "", l2 = "", single = false;
+      if (state.tbStyle === "classic") {
+        l1 = isRam ? d.iftarBar : d.untilWord;
+        l2 = remTxt;
+      } else if (state.tbStyle === "arrow") {
+        l1 = `${isRam ? "İf" : d.shortCode} → ${m} ${d.minUnit}`;
+        single = true;
+      } else if (state.tbStyle === "time") {
+        l1 = `${targetName} · ${targetTime}`;
+        l2 = remTxt;
+      } else {
+        l1 = `● 00:${String(m).padStart(2, "0")}`;
+        single = true;
+      }
+      pill.classList.toggle("single-line", single);
+      $("pbL1").textContent = l1;
+      $("pbL2").textContent = l2;
+
+      // Dock positioning inside taskbar
+      const leftSlot = $("tbLeft");
+      const centerSlot = $("tbCenter");
+      const rightSlot = $("tbRight");
+      const tray = $("tbTray");
+      if (state.dock === "left") {
+        leftSlot.appendChild(pill);
+      } else if (state.dock === "center") {
+        centerSlot.appendChild(pill);
+      } else if (state.dock === "farright") {
+        rightSlot.appendChild(tray);
+        rightSlot.appendChild(pill);
+      } else {
+        rightSlot.appendChild(pill);
+        rightSlot.appendChild(tray);
+      }
+
+      // Context menu header
+      $("ctxHeader").textContent = `${d.badgeNext}: ${targetName} ${targetTime} · ${m} ${d.minUnit}`;
+      $("ctxCity").textContent = `${state.lang === "tr" ? "Konum" : "Location"}: ${c.name}...`;
+      $("winCtxMenu").classList.toggle("visible", state.ctxOpen);
+
+      // Flyout content & design
+      const fly = $("winFlyout");
+      fly.className = "win-flyout" + (state.flyOpen ? " visible" : "");
+      if (state.flyDesign === "minimal") fly.classList.add("design-minimal");
+      if (state.flyDesign === "bento") fly.classList.add("design-bento");
+      if (state.flyDesign === "timeline") fly.classList.add("design-timeline");
+
+      $("flyCity").textContent = `${c.name}, ${c.country}`;
+      $("flyDate").textContent = `25 Nov 2026 · ${c.hijri}`;
+      $("flyUntil").textContent = isRam ? d.iftarUpper : d.untilUpper;
+      $("flyCountdown").textContent = `${m} ${d.minUnit} ${String(s).padStart(2, "0")}${state.lang === "tr" ? " sn" : " s"}`;
+      $("flyNextTime").textContent = targetTime;
+      $("flySource").textContent = c.method;
+
+      const qDir = (state.lang === "tr") ? c.qiblaDir : c.qiblaDirEn;
+      $("flyQiblaTxt").textContent = c.qibla ? `${d.qiblaLabel} ${c.qibla}° ${qDir}` : `${d.qiblaLabel} —`;
+      const showQibla = state.flyDesign === "timeline";
+      $("qiblaSvg").hidden = !showQibla;
+      $("qiblaNeedle").style.transform = `rotate(${c.qibla}deg)`;
+
+      // Timeline strip
+      const tlStrip = $("flyTimelineStrip");
+      tlStrip.hidden = state.flyDesign !== "timeline";
+      if (!tlStrip.hidden) {
+        tlStrip.innerHTML = d.prayers.map((p, idx) =>
+          `<div class="tl-node${idx === 3 ? " active" : ""}"><span class="tl-dot"></span><span>${p.slice(0, 3)}</span></div>`
+        ).join("");
+      }
+
+      // Rows vs Bento
+      const rowsEl = $("flyRows");
+      const bentoEl = $("flyBento");
+      if (state.flyDesign === "bento") {
+        rowsEl.hidden = true;
+        bentoEl.hidden = false;
+        bentoEl.innerHTML = d.prayers.map((p, idx) => `
+          <div class="bento-cell${idx === 3 ? " is-next" : ""}">
+            <div class="bento-name">${p}${idx === 3 ? " · " + d.badgeNext : ""}</div>
+            <div class="bento-time">${c.times[idx]}</div>
+          </div>
+        `).join("");
+      } else {
+        bentoEl.hidden = true;
+        rowsEl.hidden = false;
+        const offsets = ["-8h 42m", "-7h 11m", "-2h 07m", `+${m}m`, "+2h 46m", "+4h 12m"];
+        rowsEl.innerHTML = d.prayers.map((p, idx) => {
+          let badge = "";
+          if (idx === 2) badge = `<span class="fly-badge">${d.badgeNow}</span>`;
+          if (idx === 3) badge = `<span class="fly-badge">${d.badgeNext}</span>`;
+          const extraOffset = (state.flyDesign === "timeline") ? `<span style="font-size:11px;opacity:.65;margin-inline-end:8px">${offsets[idx]}</span>` : "";
+          return `
+            <div class="fly-row${idx === 3 ? " is-next" : ""}">
+              <span class="fly-row-left"><span class="fly-dot"></span><span>${p}</span></span>
+              <span style="display:flex;align-items:center;gap:6px">${badge}${extraOffset}<strong class="num">${c.times[idx]}</strong></span>
+            </div>
+          `;
+        }).join("");
+      }
+
+      // Imsakiye Window
+      $("winImsakiye").classList.toggle("visible", state.mode === "ramadan" && state.imsOpen);
+      $("imsBanner").textContent = state.ramadan ? d.ramBanner : d.stdBanner;
+      const tbody = $("imsTbody");
+      tbody.innerHTML = [12, 13, 14, 15].map((day, i) => `
+        <tr class="${i === 2 ? "today-row" : ""}">
+          <td>${day}</td>
+          <td>05:${56 - i * 2}</td>
+          <td>07:${21 - i}</td>
+          <td>${c.times[2]}</td>
+          <td>${c.times[3]}</td>
+          <td class="ims-iftar">${c.times[4]}</td>
+          <td>${c.times[5]}</td>
+        </tr>
+      `).join("");
+
+      // Toast & Quiet Mode
+      $("winToast").classList.toggle("visible", state.mode === "alerts" && state.toastOpen);
+      $("toastTitle").textContent = state.toastMuted ? d.toastMutedTxt : d.toastTitleTxt;
+      $("toastBody").textContent = `${c.name} · ${c.times[3]} · ${c.method}`;
+      $("gameOverlay").classList.toggle("visible", state.mode === "alerts" && state.quiet);
+    }
+
+    function setMode(mode) {
+      state.mode = mode;
+      state.ctxOpen = false;
+      document.querySelectorAll(".mode-tab").forEach(btn => btn.classList.toggle("active", btn.dataset.mode === mode));
+      document.querySelectorAll(".ctrl-mode").forEach(pane => { pane.hidden = pane.dataset.pane !== mode; });
+      if (mode === "flyout") state.flyOpen = true;
+      else if (mode === "taskbar") state.flyOpen = false;
+      else if (mode === "ramadan") { state.flyOpen = false; state.imsOpen = true; $("chkImsWin").checked = true; }
+      else if (mode === "alerts") { state.flyOpen = false; state.toastOpen = true; state.toastMuted = false; $("chkToast").checked = true; }
+      else if (mode === "cities") { state.flyOpen = true; state.flyDesign = "timeline"; }
+      renderDesktop();
+    }
+
+    function applyLang(l) {
+      state.lang = T[l] ? l : "en";
+      document.documentElement.lang = state.lang;
+      document.documentElement.dir = state.lang === "ar" ? "rtl" : "ltr";
+      const d = dict();
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const k = el.getAttribute("data-i18n");
+        if (d[k]) el.textContent = d[k];
+      });
+      renderCityList();
+      renderDesktop();
+    }
+
+    // Event Wiring
+    document.querySelectorAll(".mode-tab").forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+    document.querySelectorAll("[data-tbstyle]").forEach(b => b.addEventListener("click", () => {
+      state.tbStyle = b.dataset.tbstyle;
+      document.querySelectorAll("[data-tbstyle]").forEach(x => x.classList.toggle("active", x === b));
+      renderDesktop();
+    }));
+    document.querySelectorAll("[data-dock]").forEach(b => b.addEventListener("click", () => {
+      state.dock = b.dataset.dock;
+      document.querySelectorAll("[data-dock]").forEach(x => x.classList.toggle("active", x === b));
+      renderDesktop();
+    }));
+    document.querySelectorAll("[data-fly]").forEach(b => b.addEventListener("click", () => {
+      state.flyDesign = b.dataset.fly;
+      state.flyOpen = true;
+      document.querySelectorAll("[data-fly]").forEach(x => x.classList.toggle("active", x === b));
+      renderDesktop();
+    }));
+
+    $("chkFrame").addEventListener("change", e => { state.frame = e.target.checked; renderDesktop(); });
+    $("chkLogo").addEventListener("change", e => { state.logo = e.target.checked; renderDesktop(); });
+    $("chkBar").addEventListener("change", e => { state.bar = e.target.checked; renderDesktop(); });
+    $("chkSec").addEventListener("change", e => { state.sec = e.target.checked; renderDesktop(); });
+    $("chkDark").addEventListener("change", e => { state.dark = e.target.checked; renderDesktop(); });
+    $("chkRamadan").addEventListener("change", e => { state.ramadan = e.target.checked; renderDesktop(); });
+    $("chkImsWin").addEventListener("change", e => { state.imsOpen = e.target.checked; renderDesktop(); });
+    $("closeImsBtn").addEventListener("click", () => { state.imsOpen = false; $("chkImsWin").checked = false; renderDesktop(); });
+    $("chkToast").addEventListener("change", e => { state.toastOpen = e.target.checked; state.toastMuted = false; renderDesktop(); });
+    $("chkQuiet").addEventListener("change", e => { state.quiet = e.target.checked; renderDesktop(); });
+    $("btnMuteToast").addEventListener("click", () => { state.toastMuted = true; renderDesktop(); });
+    $("btnDismissToast").addEventListener("click", () => { state.toastOpen = false; $("chkToast").checked = false; renderDesktop(); });
+    $("btnExportCsv").addEventListener("click", () => { $("imsStatus").textContent = dict().csvSaved; });
+    $("btnExportHtml").addEventListener("click", () => { $("imsStatus").textContent = dict().htmlSaved; });
+    $("flyOpenIms").addEventListener("click", () => setMode("ramadan"));
+    $("flySwitchStyle").addEventListener("click", () => { state.dark = !state.dark; $("chkDark").checked = state.dark; renderDesktop(); });
+    $("toggleCtxBtn").addEventListener("click", () => { state.ctxOpen = !state.ctxOpen; renderDesktop(); });
+
+    $("pbPill").addEventListener("click", () => {
+      state.ctxOpen = false;
+      state.flyOpen = !state.flyOpen;
+      renderDesktop();
+    });
+    $("pbPill").addEventListener("contextmenu", e => {
+      e.preventDefault();
+      state.ctxOpen = !state.ctxOpen;
+      renderDesktop();
+    });
+    document.querySelectorAll("#winCtxMenu [data-ctx]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const act = btn.dataset.ctx;
+        state.ctxOpen = false;
+        if (act === "flyout") state.flyOpen = !state.flyOpen;
+        else if (act === "imsakiye") setMode("ramadan");
+        else if (act === "cities") setMode("cities");
+        else if (act === "taskbar") setMode("taskbar");
+        else if (act === "mute") setMode("alerts");
+        renderDesktop();
+      });
+    });
+
+    $("jumpDemoBtn").addEventListener("click", () => { setMode("flyout"); });
+    $("langPicker").addEventListener("change", e => applyLang(e.target.value));
+
+    // Live 1-second tick for genuine countdown behavior
+    setInterval(() => {
+      state.remSeconds = state.remSeconds > 60 ? state.remSeconds - 1 : 23 * 60 + 59;
+      if (state.sec || state.flyOpen) renderDesktop();
+    }, 1000);
+
+    const browserLang = (navigator.language || "tr").slice(0, 2).toLowerCase();
+    const initialLang = T[browserLang] ? browserLang : "en";
+    $("langPicker").value = initialLang;
+    applyLang(initialLang);
   </script>
 </body>
 </html>

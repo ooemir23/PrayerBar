@@ -4,40 +4,84 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Terms &amp; Refund Policy — PrayerBar</title>
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="canonical" href="https://prayerbar.ooemir.com/terms" />
   <style>
-    :root { --bg: #0f1318; --card: #191f28; --text: #eef2f6; --muted: #98a2b3; --accent: #2dd4bf; --border: rgba(255,255,255,0.1); }
+    :root {
+      --bg: #f3f3f3;
+      --surface: #ffffff;
+      --border: rgba(0, 0, 0, 0.09);
+      --text: #18181b;
+      --muted: #52525b;
+      --accent: #0f766e;
+    }
     * { box-sizing: border-box; }
-    body { margin: 0; font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.65; }
-    .wrap { max-width: 820px; margin: 40px auto; padding: 0 20px; }
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 28px 32px; margin-bottom: 24px; }
-    h1, h2 { margin-top: 0; font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; }
-    h1 { font-size: 26px; }
-    h2 { font-size: 18px; color: var(--accent); margin-top: 22px; }
-    a { color: var(--accent); text-decoration: none; }
-    .muted { color: var(--muted); font-size: 14px; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrap { max-width: 780px; margin: 0 auto; padding: 32px 20px 64px; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 28px; padding-bottom: 16px; border-bottom: 1px solid var(--border);
+    }
+    .brand { display: inline-flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-weight: 600; }
+    .brand img { width: 24px; height: 24px; border-radius: 6px; }
+    .back-link { color: var(--accent); text-decoration: none; font-size: 14px; font-weight: 500; }
+    .back-link:hover { text-decoration: underline; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 28px 32px;
+      margin-bottom: 20px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+    h1 { font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif; font-size: 24px; margin: 0 0 6px; letter-spacing: -0.015em; }
+    h2 { font-size: 16px; color: var(--accent); margin: 22px 0 6px; }
+    p { color: var(--muted); font-size: 15px; }
+    strong { color: var(--text); }
+    .muted { color: #71717a; font-size: 13px; margin-top: 0; }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <p><a href="index.html">← PrayerBar Home</a></p>
+    <div class="topbar">
+      <a class="brand" href="/">
+        <img src="/images/app-icon.png" alt="PrayerBar" />
+        <span>PrayerBar</span>
+      </a>
+      <a class="back-link" href="/">← Ana Sayfa / Home</a>
+    </div>
+
     <div class="card">
       <h1>Terms of Service &amp; Refund Policy (English)</h1>
       <p class="muted">Last updated: November 2026</p>
+
       <h2>1. Free &amp; Pro Licensing</h2>
-      <p>Core prayer times, daily notifications, built-in countdowns, and viewing monthly/Ramadan schedules are permanently free and ad-free. A paid <strong>PrayerBar Pro</strong> license (Annual or One-Time Lifetime) unlocks advanced layouts, taskbar styles, custom audio files, custom prayer names, export/print tools, and settings backup for up to 3 Windows devices owned by you.</p>
-      <h2>2. 14-Day Free Pro Trial &amp; 14-Day Refund Guarantee</h2>
-      <p>Every new installation includes a full <strong>14-day free Pro trial</strong> with no credit card required. If you purchase a web license and experience any technical issue or are unsatisfied within <strong>14 days</strong> of purchase, you may request a full refund through our Merchant of Record / support email.</p>
+      <p>Core prayer times, daily notifications, built-in countdowns, and viewing monthly/Ramadan schedules are permanently free and ad-free. A paid <strong>PrayerBar Pro</strong> license (Annual or One-Time Lifetime) unlocks additional flyout layouts, extra taskbar styles, custom audio files, custom prayer names, export/print tools, and settings backup for up to 3 Windows devices via your Microsoft Store account.</p>
+
+      <h2>2. 14-Day Free Pro Trial &amp; Microsoft Store Refunds</h2>
+      <p>Every new installation includes a <strong>14-day free Pro trial</strong> with no credit card required. Paid purchases are processed and governed by the Microsoft Store refund terms and your Microsoft Account order history.</p>
+
       <h2>3. Prayer Time Accuracy Disclaimer</h2>
-      <p>Offline astronomical calculations and third-party Aladhan schedules provide accurate estimates, and manual minute offsets allow alignment with local mosque boards. Users remain responsible for verifying critical fasting times (Suhoor / Iftar) against their local religious authority.</p>
+      <p>Offline astronomical calculations and optional Aladhan schedules provide accurate estimates, and manual minute offsets allow alignment with local mosque boards. Users remain responsible for verifying critical fasting times (Suhoor / Iftar) against their local religious authority.</p>
     </div>
 
     <div class="card">
       <h1>Kullanım Koşulları ve İade Politikası (Türkçe)</h1>
       <p class="muted">Son güncelleme: Kasım 2026</p>
+
       <h2>1. Ücretsiz ve Pro Lisans</h2>
-      <p>Temel namaz vakitleri, günlük bildirimler, dahili ezan ve aylık/Ramazan İmsakiyesi görüntüleme daima ücretsiz ve reklamsızdır. <strong>PrayerBar Pro</strong> (Yıllık veya Tek Seferlik Ömür Boyu), kişisel kullanımda en fazla 3 Windows bilgisayarda ileri özelleştirme ve dışa aktarma araçlarını açar.</p>
-      <h2>2. 14 Gün Ücretsiz Deneme ve 14 Gün Koşulsuz İade</h2>
-      <p>Tüm kullanıcılar kredi kartı gerekmeden <strong>14 gün ücretsiz Pro deneme</strong> süresinden yararlanır. Doğrudan web üzerinden alınan lisanslarda 14 gün içinde destek ekibi veya ödeme sağlayıcısı üzerinden tam iade talep edilebilir.</p>
+      <p>Temel namaz vakitleri, günlük bildirimler, dahili ezan ve aylık/Ramazan İmsakiyesi görüntüleme daima ücretsiz ve reklamsızdır. <strong>PrayerBar Pro</strong> (Yıllık veya Tek Seferlik Ömür Boyu), kişisel kullanımda Microsoft Store hesabınızla en fazla 3 Windows bilgisayarda ileri özelleştirme ve dışa aktarma araçlarını açar.</p>
+
+      <h2>2. 14 Gün Ücretsiz Deneme ve İade</h2>
+      <p>Tüm kullanıcılar kredi kartı gerekmeden <strong>14 gün ücretsiz Pro deneme</strong> süresinden yararlanır. Satın almalar ve iade talepleri Microsoft Store mağaza koşulları kapsamında Microsoft Hesabı sipariş geçmişiniz üzerinden yürütülür.</p>
+
       <h2>3. Vakit Doğruluğu</h2>
       <p>Uygulama Diyanet ve diğer resmî metotlarla uyumlu hesaplama yapar; kritik ibadet saatlerinde (İmsak/İftar) yerel müftülük takvimiyle kontrol etmeniz tavsiye edilir.</p>
     </div>
