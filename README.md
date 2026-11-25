@@ -8,7 +8,7 @@
 **Ultra-lightweight (~3–5 MB RAM, 0% idle CPU) Windows 10/11 taskbar prayer times countdown, dynamic tray badge, Monthly/Ramadan Imsakiye & customizable Adhan notifications in 12 languages — never slows down your PC.**
 
 - **Microsoft Store:** https://apps.microsoft.com/detail/9MSQBZTPGWX6
-- **Website:** https://ooemir23.github.io/PrayerBar/
+- **Website:** https://www.ooemir.com
 - **Privacy Policy:** https://ooemir23.github.io/PrayerBar/privacy.html
 
 ![PrayerBar Hero Banner](website/images/hero.png)
