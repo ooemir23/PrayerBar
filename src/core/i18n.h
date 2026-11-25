@@ -98,6 +98,7 @@ enum class StrId : int {
     LocDetectHint,
     LocDetecting,
     LocDetectFailed,
+    ChkAutoDetectLocation,
     ChkAutoMethod,
     LblCitySearch,
     ChkCustomCoord,

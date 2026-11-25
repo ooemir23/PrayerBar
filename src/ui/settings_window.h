@@ -25,6 +25,7 @@ public:
     static constexpr UINT kMsgLocDetected = WM_APP + 210;
     static constexpr UINT kMsgSyncFinished = WM_APP + 211;
     static constexpr UINT kMsgRebuildUi = WM_APP + 212;
+    static constexpr UINT kMsgCitySearchResults = WM_APP + 213;
 
     SettingsWindow(
         SettingsStore& settingsStore,
@@ -42,6 +43,7 @@ public:
     void CloseNow();
     void RefreshPreviewAndMemory();
     void RefreshLicenseStatus();
+    void ApplyDetectedLocation(const DetectedLocationResult& location);
     void RepaintAll() { if (hwnd_) RedrawWindow(hwnd_, nullptr, nullptr, RDW_INVALIDATE | RDW_ALLCHILDREN); }
 
 private:
@@ -56,6 +58,7 @@ private:
     void SwitchTab(int tabIdx);
     void PopulateAllValues();
     void RefreshCityList(const std::wstring& query);
+    void StartWorldwideCitySearch(const std::wstring& query);
     void PaintBackgroundAndCards(HDC hdc, int width, int height);
     void PaintTaskbarPreview(HDC hdc, int width, int height);
     void PaintTabHeader(HDC hdc, int tabIdx, const RECT& rc);
@@ -132,6 +135,7 @@ private:
     // Tab 1 (Konum & Vakitler)
     HWND detectLocBtn_ = nullptr;
     HWND autoLocStatus_ = nullptr;
+    HWND autoDetectLocChk_ = nullptr;
     HWND autoMethodChk_ = nullptr;
     HWND citySearchEdit_ = nullptr;
     HWND cityList_ = nullptr;

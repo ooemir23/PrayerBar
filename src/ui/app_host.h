@@ -32,6 +32,7 @@ public:
     static constexpr UINT kMsgScheduleRefreshed = WM_APP + 103;
     static constexpr UINT kMsgStoreLicenseSynced = WM_APP + 104;
     static constexpr UINT kMsgShowSettings = WM_APP + 105;  // wParam = tab index
+    static constexpr UINT kMsgAutoLocationDetected = WM_APP + 106;
 
     AppHost(SettingsStore& settingsStore, ScheduleService& scheduleService);
     ~AppHost();
@@ -47,6 +48,7 @@ private:
     void EvaluateNotifications(const LocalDateTime& now, const PrayerCountdownState& state);
     void ToggleFlyout(RECT anchorRect);
     void TriggerBackgroundRefresh();
+    void StartAutomaticLocationDetection();
     void ShowUserNotification(const std::wstring& title, const std::wstring& body, bool silent);
     void ShowActionBalloon(const std::wstring& title, const std::wstring& body, int action);
     void CheckTimeZoneChange();

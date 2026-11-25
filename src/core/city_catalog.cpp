@@ -156,7 +156,12 @@ const std::vector<CityLocation>& GetAllCities() {
         {L"lisbon", L"Lizbon", L"Portekiz", L"PT", 38.7223, -9.1393, L"GMT Standard Time", L"Lisbon Portugal Portekiz"},
         {L"moscow", L"Moskova", L"Rusya", L"RU", 55.7558, 37.6173, L"Russian Standard Time", L"Moscow Russia Rusya"},
         {L"tokyo", L"Tokyo", L"Japonya", L"JP", 35.6762, 139.6503, L"Tokyo Standard Time", L"Japan"},
-        {L"sydney", L"Sidney", L"Avustralya", L"AU", -33.8688, 151.2093, L"AUS Eastern Standard Time", L"Sydney Australia"}
+        {L"sydney", L"Sidney", L"Avustralya", L"AU", -33.8688, 151.2093, L"AUS Eastern Standard Time", L"Sydney Australia"},
+        {L"adelaide", L"Adelaide", L"Avustralya", L"AU", -34.9285, 138.6007, L"Cen. Australia Standard Time", L"Adelaide Australia"},
+        {L"melbourne", L"Melbourne", L"Avustralya", L"AU", -37.8136, 144.9631, L"AUS Eastern Standard Time", L"Melbourne Australia"},
+        {L"brisbane", L"Brisbane", L"Avustralya", L"AU", -27.4698, 153.0251, L"E. Australia Standard Time", L"Brisbane Australia"},
+        {L"perth", L"Perth", L"Avustralya", L"AU", -31.9505, 115.8605, L"W. Australia Standard Time", L"Perth Australia"},
+        {L"canberra", L"Canberra", L"Avustralya", L"AU", -35.2809, 149.1300, L"AUS Eastern Standard Time", L"Canberra Australia"}
     };
     return kCities;
 }
@@ -226,6 +231,7 @@ std::vector<CityLocation> SearchCities(std::wstring_view query, size_t maxResult
 std::wstring ResolveCountryCodeFromName(std::wstring_view countryName) {
     std::wstring norm = NormalizeTurkishLower(TrimWide(countryName));
     if (norm == L"turkiye" || norm == L"turkey" || norm == L"kktc") return L"TR";
+    if (norm == L"avustralya" || norm == L"australia") return L"AU";
     if (norm == L"suudi arabistan" || norm == L"saudi arabia") return L"SA";
     if (norm == L"misir" || norm == L"egypt") return L"EG";
     if (norm == L"pakistan") return L"PK";

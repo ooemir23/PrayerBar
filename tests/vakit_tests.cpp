@@ -175,6 +175,9 @@ int TestMidnightRolloverAndQiblaAndCatalog() {
         s.entrySound = NotificationSoundKind::AdhanMakkah;
         s.preNotifySound = NotificationSoundKind::WarmBell;
         s.soundVolumePercent = 65;
+        s.autoDetectLocation = false;
+        s.useCustomCoordinates = true;
+        s.latitude = 80.0;
         s.alerts.GetRule(PrayerKind::Imsak).preNotifyMinutes = 45;
         s.alerts.GetRule(PrayerKind::Ikindi).preNotifyMinutes = 10;
         s.alerts.GetRule(PrayerKind::Gunes).playSound = false;
@@ -187,6 +190,8 @@ int TestMidnightRolloverAndQiblaAndCatalog() {
         CHECK(loaded.entrySound == NotificationSoundKind::AdhanMakkah);
         CHECK(loaded.preNotifySound == NotificationSoundKind::WarmBell);
         CHECK(loaded.soundVolumePercent == 65);
+        CHECK(!loaded.autoDetectLocation);
+        CHECK(loaded.latitude == 80.0);
         CHECK(loaded.alerts.GetRule(PrayerKind::Imsak).preNotifyMinutes == 45);
         CHECK(loaded.alerts.GetRule(PrayerKind::Ikindi).preNotifyMinutes == 10);
         CHECK(!loaded.alerts.GetRule(PrayerKind::Gunes).playSound);
@@ -206,6 +211,10 @@ int TestMidnightRolloverAndQiblaAndCatalog() {
     CHECK(!izmir.empty() && izmir[0].id == L"izmir");
     auto urfa = SearchCities(L"sanliurfa", 20);
     CHECK(!urfa.empty() && urfa[0].id == L"sanliurfa");
+    auto adelaide = SearchCities(L"Adelaide", 20);
+    CHECK(!adelaide.empty() && adelaide[0].id == L"adelaide");
+    CHECK(adelaide[0].countryCode == L"AU");
+    CHECK(adelaide[0].timeZoneId == L"Cen. Australia Standard Time");
 
     auto nearIst = FindNearestCity(41.009, 28.979, 30.0);
     CHECK(nearIst.has_value() && nearIst->id == L"istanbul");

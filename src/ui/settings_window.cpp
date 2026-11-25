@@ -28,6 +28,12 @@ namespace {
 constexpr wchar_t kSettingsClassName[] = L"PrayerBarSettingsWindow";
 constexpr int kBaseW = 648;
 constexpr int kBaseH = 716;
+constexpr UINT_PTR kTimerWorldwideCitySearch = 0xC17;
+
+struct CitySearchResults {
+    std::wstring query;
+    std::vector<CityLocation> cities;
+};
 
 enum CtrlId : WORD {
     IDC_TAB_0 = 100,
@@ -73,6 +79,7 @@ enum CtrlId : WORD {
     IDC_SYNC_NOW_BTN = 311,
     IDC_OPEN_IMSAKIYE_BTN = 312,
     IDC_APPLY_OFFSETS_BTN = 313,
+    IDC_AUTO_DETECT_LOC_CHK = 314,
     IDC_OFFSET_EDIT_BASE = 320, // 320..325
 
     // Tab 2 (Bildirim & Ses)
@@ -604,43 +611,44 @@ void SettingsWindow::CreateControls() {
     // ==================== TAB 1: KONUM & VAKİTLER ====================
     detectLocBtn_ = makeBtn(1, IDC_DETECT_LOC_BTN, 26, 120, 185, 28, Tr(lang, StrId::BtnDetectLocation));
     autoLocStatus_ = makeLabel(1, 220, 123, 382, 24, Tr(lang, StrId::LocDetectHint), false, true);
-    autoMethodChk_ = makeChk(1, IDC_AUTO_METHOD_CHK, 26, 154, 576, 22, Tr(lang, StrId::ChkAutoMethod));
+    autoDetectLocChk_ = makeChk(1, IDC_AUTO_DETECT_LOC_CHK, 26, 154, 576, 22, Tr(lang, StrId::ChkAutoDetectLocation));
+    autoMethodChk_ = makeChk(1, IDC_AUTO_METHOD_CHK, 26, 180, 576, 22, Tr(lang, StrId::ChkAutoMethod));
 
-    makeLabel(1, 26, 184, 175, 22, Tr(lang, StrId::LblCitySearch), true);
-    citySearchEdit_ = makeEdit(1, IDC_CITY_SEARCH_EDIT, 206, 181, 396, 24);
+    makeLabel(1, 26, 210, 175, 22, Tr(lang, StrId::LblCitySearch), true);
+    citySearchEdit_ = makeEdit(1, IDC_CITY_SEARCH_EDIT, 206, 207, 396, 24);
 
     cityList_ = CreateWindowExW(0, L"LISTBOX", L"",
                                 WS_CHILD | WS_TABSTOP | WS_BORDER | WS_VSCROLL | LBS_NOTIFY | LBS_NOINTEGRALHEIGHT,
-                                S(26), S(211), S(576), S(104),
+                                S(26), S(237), S(576), S(104),
                                 hwnd_, reinterpret_cast<HMENU>(static_cast<UINT_PTR>(IDC_CITY_LIST)), hInst, nullptr);
     applyCtrlTheme(cityList_, false);
     track(1, cityList_);
 
-    customCoordChk_ = makeChk(1, IDC_CUSTOM_COORD_CHK, 26, 324, 156, 22, Tr(lang, StrId::ChkCustomCoord));
-    makeLabel(1, 188, 326, 48, 20, Tr(lang, StrId::LblLat));
-    latEdit_ = makeEdit(1, IDC_LAT_EDIT, 238, 323, 92, 24);
-    makeLabel(1, 338, 326, 50, 20, Tr(lang, StrId::LblLon));
-    lonEdit_ = makeEdit(1, IDC_LON_EDIT, 390, 323, 92, 24);
-    applyCoordBtn_ = makeBtn(1, IDC_APPLY_COORD_BTN, 492, 322, 110, 26, Tr(lang, StrId::BtnApplyCoord));
+    customCoordChk_ = makeChk(1, IDC_CUSTOM_COORD_CHK, 26, 350, 156, 22, Tr(lang, StrId::ChkCustomCoord));
+    makeLabel(1, 188, 352, 48, 20, Tr(lang, StrId::LblLat));
+    latEdit_ = makeEdit(1, IDC_LAT_EDIT, 238, 349, 92, 24);
+    makeLabel(1, 338, 352, 50, 20, Tr(lang, StrId::LblLon));
+    lonEdit_ = makeEdit(1, IDC_LON_EDIT, 390, 349, 92, 24);
+    applyCoordBtn_ = makeBtn(1, IDC_APPLY_COORD_BTN, 492, 348, 110, 26, Tr(lang, StrId::BtnApplyCoord));
 
-    makeLabel(1, 26, 378, 175, 22, Tr(lang, StrId::LblCalcMethod), true);
-    methodCombo_ = makeCombo(1, IDC_METHOD_COMBO, 206, 375, 396, 280);
+    makeLabel(1, 26, 404, 175, 22, Tr(lang, StrId::LblCalcMethod), true);
+    methodCombo_ = makeCombo(1, IDC_METHOD_COMBO, 206, 401, 396, 280);
 
-    makeLabel(1, 26, 412, 175, 22, Tr(lang, StrId::LblAsrMethod));
-    asrCombo_ = makeCombo(1, IDC_ASR_COMBO, 206, 409, 396, 120);
+    makeLabel(1, 26, 438, 175, 22, Tr(lang, StrId::LblAsrMethod));
+    asrCombo_ = makeCombo(1, IDC_ASR_COMBO, 206, 435, 396, 120);
 
-    onlineSyncChk_ = makeChk(1, IDC_ONLINE_SYNC_CHK, 26, 444, 576, 22, Tr(lang, StrId::ChkOnlineSync));
-    syncBtn_ = makeBtn(1, IDC_SYNC_NOW_BTN, 26, 472, 170, 27, Tr(lang, StrId::BtnSyncNow));
-    openImsakiyeBtn_ = makeBtn(1, IDC_OPEN_IMSAKIYE_BTN, 204, 472, 170, 27, Tr(lang, StrId::BtnOpenImsakiye));
-    syncStatus_ = makeLabel(1, 26, 504, 576, 20, L"", false, true);
+    onlineSyncChk_ = makeChk(1, IDC_ONLINE_SYNC_CHK, 26, 470, 576, 22, Tr(lang, StrId::ChkOnlineSync));
+    syncBtn_ = makeBtn(1, IDC_SYNC_NOW_BTN, 26, 498, 170, 27, Tr(lang, StrId::BtnSyncNow));
+    openImsakiyeBtn_ = makeBtn(1, IDC_OPEN_IMSAKIYE_BTN, 204, 498, 170, 27, Tr(lang, StrId::BtnOpenImsakiye));
+    syncStatus_ = makeLabel(1, 26, 530, 576, 20, L"", false, true);
 
-    makeLabel(1, 26, 530, 340, 20, Tr(lang, StrId::LblOffsets), true);
-    makeBtn(1, IDC_APPLY_OFFSETS_BTN, 476, 527, 126, 24, Tr(lang, StrId::BtnApplyOffsets));
+    makeLabel(1, 26, 556, 340, 20, Tr(lang, StrId::LblOffsets), true);
+    makeBtn(1, IDC_APPLY_OFFSETS_BTN, 476, 553, 126, 24, Tr(lang, StrId::BtnApplyOffsets));
     for (int i = 0; i < 6; ++i) {
         int col = i % 3;
         int row = i / 3;
         int bx = 26 + col * 195;
-        int by = 556 + row * 31;
+        int by = 582 + row * 31;
         makeLabel(1, bx, by + 3, 74, 20, GetEffectivePrayerName(static_cast<PrayerKind>(i), settings_).c_str());
         offsetEdits_[i] = makeEdit(1, static_cast<WORD>(IDC_OFFSET_EDIT_BASE + i), bx + 80, by, 72, 24);
     }
@@ -822,6 +830,7 @@ void SettingsWindow::PopulateAllValues() {
     SetComboSelectionByData(themeCombo_, static_cast<int>(settings_.themeMode));
 
     // Tab 1
+    SetFluentCheck(IDC_AUTO_DETECT_LOC_CHK, autoDetectLocChk_, settings_.autoDetectLocation);
     SetFluentCheck(IDC_AUTO_METHOD_CHK, autoMethodChk_, settings_.autoSelectMethodByCountry);
     RefreshCityList(L"");
     SetFluentCheck(IDC_CUSTOM_COORD_CHK, customCoordChk_, settings_.useCustomCoordinates);
@@ -936,6 +945,51 @@ void SettingsWindow::RefreshCityList(const std::wstring& query) {
     if (selIdx >= 0) {
         SendMessageW(cityList_, LB_SETCURSEL, selIdx, 0);
     }
+}
+
+void SettingsWindow::StartWorldwideCitySearch(const std::wstring& query) {
+    HWND target = hwnd_;
+    std::thread([target, query]() {
+        auto* result = new CitySearchResults{query, ScheduleService::SearchWorldwideCities(query)};
+        if (!PostMessageW(target, kMsgCitySearchResults, 0, reinterpret_cast<LPARAM>(result))) {
+            delete result;
+        }
+    }).detach();
+}
+
+void SettingsWindow::ApplyDetectedLocation(const DetectedLocationResult& location) {
+    settings_.cityId = location.cityId;
+    settings_.cityName = location.cityName;
+    settings_.countryName = location.countryName;
+    settings_.latitude = location.latitude;
+    settings_.longitude = location.longitude;
+    settings_.timeZoneId = location.timeZoneId;
+    settings_.useCustomCoordinates = location.cityId == L"custom";
+    if (settings_.autoSelectMethodByCountry) {
+        settings_.calculationMethod = location.recommendedMethod;
+    }
+
+    if (!hwnd_) return;
+    isLoading_ = true;
+    if (settings_.autoSelectMethodByCountry) {
+        SetComboSelectionByData(methodCombo_, static_cast<int>(settings_.calculationMethod));
+    }
+    SetFluentCheck(IDC_CUSTOM_COORD_CHK, customCoordChk_, settings_.useCustomCoordinates);
+    EnableWindow(latEdit_, settings_.useCustomCoordinates);
+    EnableWindow(lonEdit_, settings_.useCustomCoordinates);
+    EnableWindow(applyCoordBtn_, settings_.useCustomCoordinates);
+
+    wchar_t latBuf[32], lonBuf[32];
+    swprintf_s(latBuf, L"%.4f", settings_.latitude);
+    swprintf_s(lonBuf, L"%.4f", settings_.longitude);
+    SetWindowTextW(latEdit_, latBuf);
+    SetWindowTextW(lonEdit_, lonBuf);
+    RefreshCityList(GetEditText(citySearchEdit_));
+    std::wstring statusMsg = location.cityName + L", " + location.countryName + L" (" + location.sourceLabel + L") · " +
+                             GetMethodFriendlyName(settings_.calculationMethod);
+    SetWindowTextW(autoLocStatus_, statusMsg.c_str());
+    isLoading_ = false;
+    RefreshPreviewAndMemory();
 }
 
 void SettingsWindow::SwitchTab(int tabIdx) {
@@ -1409,7 +1463,7 @@ void SettingsWindow::StartAutoDetectLocation() {
     HWND target = hwnd_;
 
     std::thread([target]() {
-        auto detected = ScheduleService::DetectLocationByIp();
+        auto detected = ScheduleService::DetectCurrentLocation();
         auto* heapPtr = detected ? new DetectedLocationResult(*detected) : nullptr;
         if (!PostMessageW(target, kMsgLocDetected, 0, reinterpret_cast<LPARAM>(heapPtr))) {
             delete heapPtr;
@@ -1554,6 +1608,14 @@ void SettingsWindow::HandleCommand(WORD id, WORD code, HWND ctrl) {
         StartAutoDetectLocation();
         return;
     }
+    if (id == IDC_AUTO_DETECT_LOC_CHK && code == BN_CLICKED) {
+        bool nextVal = !GetFluentCheck(IDC_AUTO_DETECT_LOC_CHK);
+        SetFluentCheck(IDC_AUTO_DETECT_LOC_CHK, ctrl, nextVal);
+        settings_.autoDetectLocation = nextVal;
+        SaveAndNotify();
+        if (nextVal) StartAutoDetectLocation();
+        return;
+    }
     if (id == IDC_AUTO_METHOD_CHK && code == BN_CLICKED) {
         bool nextVal = !GetFluentCheck(IDC_AUTO_METHOD_CHK);
         SetFluentCheck(IDC_AUTO_METHOD_CHK, ctrl, nextVal);
@@ -1562,7 +1624,10 @@ void SettingsWindow::HandleCommand(WORD id, WORD code, HWND ctrl) {
         return;
     }
     if (id == IDC_CITY_SEARCH_EDIT && code == EN_CHANGE) {
-        RefreshCityList(GetEditText(citySearchEdit_));
+        std::wstring query = GetEditText(citySearchEdit_);
+        RefreshCityList(query);
+        KillTimer(hwnd_, kTimerWorldwideCitySearch);
+        if (query.size() >= 3) SetTimer(hwnd_, kTimerWorldwideCitySearch, 450, nullptr);
         return;
     }
     if (id == IDC_CITY_LIST && code == LBN_SELCHANGE) {
@@ -1576,8 +1641,10 @@ void SettingsWindow::HandleCommand(WORD id, WORD code, HWND ctrl) {
             settings_.longitude = c.longitude;
             settings_.timeZoneId = c.timeZoneId;
             settings_.useCustomCoordinates = false;
+            settings_.autoDetectLocation = false;
 
             isLoading_ = true;
+            SetFluentCheck(IDC_AUTO_DETECT_LOC_CHK, autoDetectLocChk_, false);
             SetFluentCheck(IDC_CUSTOM_COORD_CHK, customCoordChk_, false);
             EnableWindow(latEdit_, FALSE);
             EnableWindow(lonEdit_, FALSE);
@@ -1600,6 +1667,10 @@ void SettingsWindow::HandleCommand(WORD id, WORD code, HWND ctrl) {
         bool nextVal = !GetFluentCheck(IDC_CUSTOM_COORD_CHK);
         SetFluentCheck(IDC_CUSTOM_COORD_CHK, ctrl, nextVal);
         settings_.useCustomCoordinates = nextVal;
+        if (nextVal) {
+            settings_.autoDetectLocation = false;
+            SetFluentCheck(IDC_AUTO_DETECT_LOC_CHK, autoDetectLocChk_, false);
+        }
         EnableWindow(latEdit_, nextVal);
         EnableWindow(lonEdit_, nextVal);
         EnableWindow(applyCoordBtn_, nextVal);
@@ -1902,6 +1973,13 @@ LRESULT CALLBACK SettingsWindow::WndProcStatic(HWND hWnd, UINT msg, WPARAM wPara
 
 LRESULT SettingsWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
+        case WM_TIMER:
+            if (wParam == kTimerWorldwideCitySearch) {
+                KillTimer(hWnd, kTimerWorldwideCitySearch);
+                StartWorldwideCitySearch(GetEditText(citySearchEdit_));
+            }
+            return 0;
+
         case WM_ERASEBKGND:
             return 1;
 
@@ -1983,6 +2061,31 @@ LRESULT SettingsWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
             RebuildUiAfterChange();
             return 0;
 
+        case kMsgCitySearchResults: {
+            auto* result = reinterpret_cast<CitySearchResults*>(lParam);
+            if (!result) return 0;
+            if (result->query == GetEditText(citySearchEdit_)) {
+                for (auto& city : result->cities) {
+                    bool duplicate = std::any_of(visibleCities_.begin(), visibleCities_.end(), [&](const CityLocation& existing) {
+                        return std::abs(existing.latitude - city.latitude) < 0.02 &&
+                               std::abs(existing.longitude - city.longitude) < 0.02;
+                    });
+                    if (!duplicate) visibleCities_.push_back(std::move(city));
+                }
+
+                SendMessageW(cityList_, LB_RESETCONTENT, 0, 0);
+                int selIdx = -1;
+                for (size_t i = 0; i < visibleCities_.size(); ++i) {
+                    std::wstring label = visibleCities_[i].DisplayLabel();
+                    SendMessageW(cityList_, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(label.c_str()));
+                    if (visibleCities_[i].id == settings_.cityId) selIdx = static_cast<int>(i);
+                }
+                if (selIdx >= 0) SendMessageW(cityList_, LB_SETCURSEL, selIdx, 0);
+            }
+            delete result;
+            return 0;
+        }
+
         case kMsgLocDetected: {
             auto* detected = reinterpret_cast<DetectedLocationResult*>(lParam);
             EnableWindow(detectLocBtn_, TRUE);
@@ -1992,33 +2095,8 @@ LRESULT SettingsWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
             }
 
             isLoading_ = true;
-            settings_.cityId = detected->cityId;
-            settings_.cityName = detected->cityName;
-            settings_.countryName = detected->countryName;
-            settings_.latitude = detected->latitude;
-            settings_.longitude = detected->longitude;
-            settings_.timeZoneId = detected->timeZoneId;
-            settings_.useCustomCoordinates = (detected->cityId == L"custom");
-            if (settings_.autoSelectMethodByCountry) {
-                settings_.calculationMethod = detected->recommendedMethod;
-                SetComboSelectionByData(methodCombo_, static_cast<int>(settings_.calculationMethod));
-            }
-            SetFluentCheck(IDC_CUSTOM_COORD_CHK, customCoordChk_, settings_.useCustomCoordinates);
-            EnableWindow(latEdit_, settings_.useCustomCoordinates);
-            EnableWindow(lonEdit_, settings_.useCustomCoordinates);
-            EnableWindow(applyCoordBtn_, settings_.useCustomCoordinates);
-
-            wchar_t latBuf[32], lonBuf[32];
-            swprintf_s(latBuf, L"%.4f", settings_.latitude);
-            swprintf_s(lonBuf, L"%.4f", settings_.longitude);
-            SetWindowTextW(latEdit_, latBuf);
-            SetWindowTextW(lonEdit_, lonBuf);
-            RefreshCityList(GetEditText(citySearchEdit_));
+            ApplyDetectedLocation(*detected);
             isLoading_ = false;
-
-            std::wstring statusMsg = detected->cityName + L", " + detected->countryName + L" (" + detected->sourceLabel + L") · " +
-                                     GetMethodFriendlyName(settings_.calculationMethod);
-            SetWindowTextW(autoLocStatus_, statusMsg.c_str());
             delete detected;
             SaveAndNotify();
             return 0;
