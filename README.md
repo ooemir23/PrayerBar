@@ -1,11 +1,11 @@
 # PrayerBar
 
 [![Windows 10/11](https://img.shields.io/badge/Platform-Windows%2010%2F11%20(x64)-0078D4?logo=windows)](https://apps.microsoft.com/detail/9MSQBZTPGWX6)
-[![C++20](https://img.shields.io/badge/Language-Pure%20C%2B%2B20%20%2B%20Win32-00599C?logo=cplusplus)](https://github.com/ooemir23/PrayerBar)
+[![Ad-Free](https://img.shields.io/badge/Privacy-Ad--Free%20%26%20Offline--Ready-2EA44F)](#key-features)
 [![RAM](https://img.shields.io/badge/RAM-~3--5%20MB-2EA44F)](#key-features)
 [![Idle CPU](https://img.shields.io/badge/Idle%20CPU-0.000%25-2EA44F)](#key-features)
 
-**Ultra-lightweight (~3–5 MB RAM, 0% idle CPU) native Windows 10/11 taskbar prayer times countdown, dynamic tray badge, Monthly/Ramadan Imsakiye & customizable Adhan notifications in 12 languages.**
+**Ultra-lightweight (~3–5 MB RAM, 0% idle CPU) Windows 10/11 taskbar prayer times countdown, dynamic tray badge, Monthly/Ramadan Imsakiye & customizable Adhan notifications in 12 languages — never slows down your PC.**
 
 - **Microsoft Store:** https://apps.microsoft.com/detail/9MSQBZTPGWX6
 - **Website:** https://ooemir23.github.io/PrayerBar/
@@ -28,35 +28,32 @@
 ## English Overview
 
 ### Why PrayerBar?
-Most desktop prayer applications rely on Electron, .NET, or web runtimes that consume 150–400 MB of memory in the background. **PrayerBar** is written from scratch in **pure native C++20 + Win32 + GDI+ + WinHTTP + WinMM** to behave like a built-in Windows 11 system widget.
+Many desktop prayer apps stay heavy in the background and consume hundreds of megabytes of memory. **PrayerBar** is designed to feel like a clean, built-in Windows 11 taskbar widget that never slows down your PC or drains laptop battery.
 
 ### Key Features
-- **Zero-Bloat Performance:** ~3–5 MB RAM, 0% idle CPU, aligned to a single minute-boundary Win32 `SetTimer` with `SetWinEventHook` and `WM_POWERBROADCAST` sleep/wake support.
-- **Flexible Taskbar Integration:** 4 dock positions (near tray, far right, center, left) with `-500..+500 px` fine offset, 9 taskbar styles, 4 flyout themes, and automatic Windows Light/Dark + Accent color sync.
+- **Never Slows Down Your PC:** Uses only ~3–5 MB RAM and 0% idle CPU, with instant startup and sleep/wake awareness.
+- **Flexible Taskbar Integration:** 4 dock positions (near tray, far right, center, left) with `-500..+500 px` fine offset, 9 taskbar styles, 4 popup themes, and automatic Windows Light/Dark + Accent color sync.
+- **Game & Fullscreen Quiet Mode:** Automatically mutes audio when you are gaming, watching videos, or presenting.
 - **12 Languages (`Auto` OS Detection):** English, Türkçe, العربية, Deutsch, Français, Bahasa Indonesia, اردو, বাংলা, Bahasa Melayu, فارسی, Русский, Español (with full RTL layout support).
-- **23 Global Calculation Methods:** Diyanet, MWL, ISNA, Umm al-Qura, Egyptian, Karachi, Singapore, France UOIF, Malaysia JAKIM, Indonesia KEMENAG, Russia, and more — plus Standard/Hanafi Asr and offline astronomical calculation.
-- **Ramadan & Daily Tools:** Automatic Ramadan Iftar/Suhoor countdown, Monthly Imsakiye (CSV/HTML export), Qibla bearing, Hijri date, optional Duha/Midnight/Tahajjud times, Friday & holiday reminders, Travel mode (timezone change alert), prayer tracking, fullscreen quiet mode, and `Win+Alt+P` global hotkey.
-- **Ethical Freemium:** Core prayer times, daily notifications, built-in Adhan/chime sounds, and Monthly Imsakiye are **free forever**. Pro (`$4.99/yr` or `$9.99` lifetime via Microsoft Store IAP, with a **14-day free trial**) unlocks extra taskbar styles, flyout themes, custom audio files, and backup/restore.
+- **23 Global Calculation Methods:** Diyanet, MWL, ISNA, Umm al-Qura, Egyptian, Karachi, Singapore, France UOIF, Malaysia JAKIM, Indonesia KEMENAG, Russia, and more — plus Standard/Hanafi Asr and 100% offline calculation.
+- **Ramadan & Daily Tools:** Automatic Ramadan Iftar/Suhoor countdown, Monthly Imsakiye (CSV/HTML export), live Qibla compass, Hijri date, optional Duha/Midnight/Tahajjud times, Friday & holiday reminders, Travel mode (timezone change alert), prayer tracking, and `Win+Alt+P` global hotkey.
+- **Ethical Freemium & Ad-Free:** Zero ads and zero tracking. Core prayer times, daily notifications, built-in Adhan/chime sounds, and Monthly Imsakiye are **free forever**. Pro (`$4.99/yr` or `$9.99` lifetime via Microsoft Store, with a **14-day free trial**) unlocks extra taskbar styles, popup themes, custom audio files, and backup/restore.
 
 ---
 
-## Türkçe Genel Bakış (Saf Native C++20 + Win32)
+## Türkçe Genel Bakış
 
-Windows 10/11 görev çubuğunun istediğiniz bölümünde (sistem tepsisi yanı, en sağ / saatin sağ köşesi, orta veya sol) ve sistem tepsisinde çalışan, **ultra düşük RAM (~3–5 MB) ve sıfır boşta CPU (%0.000)** tüketimli modern namaz vakitleri uygulaması.
+Windows 10/11 görev çubuğunun istediğiniz bölümünde (sistem tepsisi yanı, en sağ / saatin sağ köşesi, orta veya sol) ve sistem tepsisinde çalışan, **bilgisayarınızı hiç yormayan (~3–5 MB RAM, boşta %0 CPU)** modern namaz vakitleri uygulaması.
 
-### Mimari Avantajlar
-- **Saf Native C++20 + Win32 + GDI+ + WinHTTP + WinMM:** .NET / WPF / Direct3D yükü yoktur; açılışta birkaç milisaniyede açılır ve eski laptoplarda dahi takılmadan, pil ömrünü koruyarak çalışır.
-- **Sıfır Boşta CPU & Uyku/Uyanma Uyumu:** Dakika değişimine hizalı tek Win32 `SetTimer` ve olay güdümlü `SetWinEventHook` + `WM_POWERBROADCAST` desteği.
-- **Sağ Kenara Yaslı Kompakt Açılır Panel:** Kapatıldığında pencere tutamacı yok edilir ve bellek `SetProcessWorkingSetSize` ile sisteme iade edilir.
-- **4 Görev Çubuğu Konumu & 9 Stil:** Sağ (tepsi yanı), En Sağ (opak arka planlı), Orta ve En Sol + `-500..+500 px` ince kaydırma.
-- **Her Vakit İçin Ayrı Bildirim & Ücretsiz Ezan Sesleri:** 6 vaktin her biri için ayrı *Vaktinde bildir*, *Önce hatırlat (5–60 dk)* ve *Ses/Ezan* seçimi (Public Domain kısa/uzun ezan MP3, yumuşak çan, huzurlu zil veya özel `.mp3`/`.wav`).
-- **23 Dünya Hesaplama Metodu + Otomatik Konum:** Diyanet, MWL, ISNA, Ümmü'l-Kura, Mısır, Karaçi, UOIF Fransa vb. tüm Aladhan metotları, Standart/Hanefi İkindi mezhebi ve IP/ülke bazlı otomatik konum ve metot seçimi.
-- **Microsoft Store Hazır:** ASLR / DEP / High-Entropy VA uyumlu statik tek `.exe` ve ~3–4 MB kompakt Store `.msix` paketi.
-
-### v2.0+ Global & Ticari Özellikler
+### Öne Çıkan Özellikler
+- **PC'yi Hiç Yormaz & Pil Dostu:** Yalnızca ~3–5 MB bellek ve %0 boşta CPU tüketir; eski laptoplarda dahi takılmadan, pil ömrünü koruyarak çalışır ve uyku/uyanma sonrası anında güncellenir.
+- **Oyun & Tam Ekran Sessiz Modu:** Oyun oynarken, video izlerken veya sunum yaparken bildirim sesini otomatik susturur.
+- **4 Görev Çubuğu Konumu & 9 Stil:** Sağ (tepsi yanı), En Sağ (opak arka planlı), Orta ve En Sol + `-500..+500 px` ince kaydırma ve 4 açılır pencere tasarımı.
+- **Her Vakit İçin Ayrı Bildirim & Ücretsiz Ezan Sesleri:** 6 vaktin her biri için ayrı *Vaktinde bildir*, *Önce hatırlat (5–60 dk)* ve *Ses/Ezan* seçimi (kısa/uzun ezan, yumuşak çan, huzurlu zil veya kendi özel `.mp3`/`.wav` dosyanız).
+- **23 Dünya Hesaplama Metodu + Otomatik Konum:** Diyanet, MWL, ISNA, Ümmü'l-Kura, Mısır, Karaçi, UOIF Fransa vb. tüm metotlar, Standart/Hanefi İkindi mezhebi, otomatik konum algılama ve internetsiz çalışma desteği.
 - **12 Dilli Global Arayüz (`Auto` OS Dili Algılama):** English, Türkçe, العربية, Deutsch, Français, Bahasa Indonesia, اردو, বাংলা, Bahasa Melayu, فارسی, Русский, Español.
 - **Ramazan İftar & Sahur Geri Sayımı + Aylık İmsakiye:** İmsakiye penceresi, CSV/HTML dışa aktarım ve otomatik Ramazan İftar/Sahur modu.
-- **Etik Hibrit Freemium & 14 Gün Ücretsiz Pro Deneme:** Çekirdek vakitler, günlük bildirimler, dahili ezan sesleri ve İmsakiye görüntüleme daima ücretsizdir. Pro (`$4.99/yıl` veya `$9.99 ömür boyu`) 14 gün tam deneme sunar; satın alma yalnızca Microsoft Store eklentileriyle yapılır ve lisans her açılışta Store'dan doğrulanır.
+- **Etik Freemium & 14 Gün Ücretsiz Pro Deneme:** Reklamsız ve takipçisizdir. Çekirdek vakitler, günlük bildirimler, dahili ezan sesleri ve İmsakiye görüntüleme daima ücretsizdir. Pro (`$4.99/yıl` veya `$9.99 ömür boyu`, Türkiye'de `₺100 / ₺250`) 14 gün tam deneme sunar ve ekstra temalar ile özel ses/yedekleme özelliklerini açar.
 - **Aç/Kapa Özellikler Sekmesi:** Cuma ve dini gün hatırlatmaları, seyahat modu (saat dilimi değişince uyarı), Ertele düğmeli Windows bildirimleri, Kuşluk / Gece yarısı / Teheccüd vakitleri, haftalık özetli namaz takibi ve `Win+Alt+P` kısayolu.
 - **Sabah Ezanı Seçimi:** İmsak vakti için ayrı ses seçilebilir.
 

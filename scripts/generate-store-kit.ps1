@@ -389,8 +389,8 @@ $Strings = @{
         s1_band_bot = "in 23 min  15:25"
         s1_badge_p  = "Asr  15:25"
         s1_badge_s  = "23m left"
-        s1_card_t   = "Ultra-Lightweight Native C++20 Engine"
-        s1_card_l   = @("Working Set RAM: 2.7 MB", "Background CPU Usage: 0.0%", "Battery Saver & Fullscreen Quiet Mode", "9 Countdown Styles + Custom Template")
+        s1_card_t   = "Never Slows Down Your PC"
+        s1_card_l   = @("Uses Only ~3 MB Memory (Zero Lag)", "0% Background CPU & Battery Friendly", "Auto-Mutes During Games & Fullscreen", "9 Taskbar Styles + Custom Text Format")
 
         s2_title = "4 Windows 11 Fluent Flyouts & Live Qibla Compass"
         s2_sub   = "Click the taskbar countdown anytime for daily prayer times and instant Qibla bearing"
@@ -451,12 +451,12 @@ $Strings = @{
         s1_band_bot = T "23 dk kald\u0131  \u00b7  15:25"
         s1_badge_p  = T "\u0130kindi \u00b7 15:25"
         s1_badge_s  = T "23 dk kald\u0131"
-        s1_card_t   = T "Ultra Hafif Yerel C++20 Motoru"
+        s1_card_t   = T "Bilgisayar\u0131n\u0131z\u0131 Hi\u00e7 Yormaz"
         s1_card_l   = @(
-            (T "RAM T\u00fcketimi: 2.7 MB \u00d6zel Bellek"),
-            (T "Arka Plan CPU Kullan\u0131m\u0131: %0.0"),
-            (T "Pil Tasarrufu ve Oyun Sessiz Modu"),
-            (T "9 G\u00f6r\u00fcn\u00fcm Stili + \u00d6zel \u015eablon")
+            (T "Sadece ~3 MB Bellek (S\u0131f\u0131r Kasma)"),
+            (T "Arka Planda %0 CPU ve Pil Dostu"),
+            (T "Oyun ve Tam Ekranda Otomatik Sessiz"),
+            (T "9 G\u00f6r\u00fcn\u00fcm Stili + \u00d6zel Metin Bi\u00e7imi")
         )
 
         s2_title = T "4 Fluent A\u00e7\u0131l\u0131r Ekran & Canl\u0131 K\u0131ble Pusulas\u0131"
@@ -587,8 +587,8 @@ function Save-HeroArt1920x1080 {
     $fH3 = New-Font -Size 26 -Weight "Regular"
     Draw-StringAt -G $g -Text "PrayerBar" -Font $fH1 -Color $C.TextPrimary -X 130 -Y 375
     Draw-StringAt -G $g -Text "Windows 11 Prayer Times & Adhan" -Font $fH2 -Color $C.Accent -X 134 -Y 478
-    Draw-StringAt -G $g -Text "Native C++20 taskbar countdown, 4 Fluent flyouts," -Font $fH3 -Color $C.TextMuted -X 134 -Y 538
-    Draw-StringAt -G $g -Text "live Qibla compass & 30-day Ramadan Imsakiye." -Font $fH3 -Color $C.TextMuted -X 134 -Y 574
+    Draw-StringAt -G $g -Text "Live taskbar countdown that never slows down your PC," -Font $fH3 -Color $C.TextMuted -X 134 -Y 538
+    Draw-StringAt -G $g -Text "4 clean popups, Qibla compass & Ramadan Imsakiye." -Font $fH3 -Color $C.TextMuted -X 134 -Y 574
     $fH1.Dispose(); $fH2.Dispose(); $fH3.Dispose()
 
     $pf = New-Font -Size 22 -Weight "Bold"

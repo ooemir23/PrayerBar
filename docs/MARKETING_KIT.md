@@ -1,6 +1,6 @@
 # PrayerBar — Çok Kanallı Tanıtım ve Pazarlama Kiti
 
-Bu doküman; **PrayerBar v2.1** uygulamasını Reddit, Türkiye teknoloji forumları, global yazılım dizinleri ve kısa video platformlarında **spam filtresine takılmadan**, her topluluğun kültürüne uygun dille tanıtmak için hazırlanmış hazır metinleri içerir.
+Bu doküman; **PrayerBar** uygulamasını Reddit, Türkiye teknoloji forumları, global yazılım dizinleri ve kısa video platformlarında **spam filtresine takılmadan**, her topluluğun anlayacağı sade, fayda odaklı bir dille tanıtmak için hazırlanmış hazır metinleri içerir.
 
 **Temel Bağlantılar:**
 - **Web Sitesi:** https://ooemir23.github.io/PrayerBar/
@@ -15,8 +15,8 @@ Bu doküman; **PrayerBar v2.1** uygulamasını Reddit, Türkiye teknoloji foruml
 > [!IMPORTANT]
 > **Reddit Altın Kuralları:**
 > - Aynı gün içinde 1 veya en fazla 2 subreddit'e paylaşım yapın; aksi hâlde Reddit anti-spam filtresi hesabınızı shadowbanlayabilir.
-> - Gönderilere mutlaka **10–15 saniyelik bir GIF veya temiz ekran görüntüsü** ekleyin (görselsiz link/metin gönderileri çok daha az tıklanır).
-> - Başlığa "BUY / DOWNLOAD NOW" gibi reklam ifadeleri koymayın; geliştirici hikâyesi ve teknik/pratik fayda odaklı yazın.
+> - Gönderilere mutlaka **10–15 saniyelik bir GIF veya temiz ekran görüntüsü** ekleyin (`dist/store-assets/screenshots-en/` altındaki görseller hazır).
+> - Başlığa "BUY / DOWNLOAD NOW" gibi reklam ifadeleri koymayın; günlük fayda ve sade kullanım deneyimi odaklı yazın.
 
 ### A) `r/islam` ve `r/MuslimLounge` (İngilizce — Ana Kitle)
 **Önerilen Zaman:** Cuma günü (TSİ 14:00–18:00 veya ABD sabahı)
@@ -27,111 +27,121 @@ Bu doküman; **PrayerBar v2.1** uygulamasını Reddit, Türkiye teknoloji foruml
 ```markdown
 Assalamu alaikum everyone,
 
-I got tired of desktop prayer apps that either look dated or run Electron in the background eating 200+ MB of RAM just to show a countdown. So I built **PrayerBar** from scratch in pure native C++20 + Win32.
+I wanted a clean prayer times countdown right on my Windows 11 taskbar so I wouldn't miss a prayer while working, studying, or gaming — without cluttering my desktop or slowing down my laptop. So I built **PrayerBar**.
 
 What it does:
-- **Sits natively on your Windows 10/11 taskbar** (near the tray, far right, center, or left) with 9 display styles and 4 flyout themes.
-- **Ultra-lightweight:** Uses ~3–5 MB RAM and 0% idle CPU (wakes up on a single minute-aligned timer).
+- **Always visible on your Windows 10/11 taskbar:** Place it near the tray, far right, center, or left, with 9 display styles and 4 clean popup themes.
+- **Never slows down your PC:** Uses only ~3–5 MB of memory, 0% idle CPU, and stays battery-friendly even on older laptops.
+- **Auto-mutes during games & fullscreen:** Won't interrupt you with loud audio when you're in a game, presentation, or movie.
 - **23 Calculation Methods + Auto-detect:** Diyanet, ISNA, MWL, Umm al-Qura, Egyptian, Karachi, Singapore, France UOIF, etc., plus Standard/Hanafi Asr.
 - **12 Languages:** English, Arabic, Turkish, Urdu, Indonesian, Malay, Bengali, Persian, German, French, Russian, Spanish (with RTL support).
-- **Ramadan & Daily Tools:** Automatic Ramadan Iftar/Suhoor countdown, monthly Imsakiye (CSV/HTML export), Qibla bearing, Hijri date, optional Duha/Tahajjud times, Friday & Islamic holiday reminders, and custom or built-in Adhan sounds.
-- **Privacy-first:** No ads, no telemetry, works 100% offline with local astronomical calculations if you disable monthly sync.
+- **Ramadan & Daily Tools:** Automatic Ramadan Iftar/Suhoor countdown, monthly Imsakiye (CSV/HTML export), Qibla compass, Hijri date, optional Duha/Tahajjud times, Friday & Islamic holiday reminders, and built-in or custom Adhan sounds.
+- **Private & offline-ready:** Zero ads, zero tracking, and works offline anytime.
 
-Core prayer times, notifications, Adhan sounds, and Imsakiye are **free forever**. There is a 14-day free Pro trial for extra taskbar/flyout themes and custom sound files ($4.99/yr or $9.99 lifetime via Microsoft Store).
+Core prayer times, daily reminders, built-in Adhan sounds, and Monthly Imsakiye are **free forever**. There is a 14-day free Pro trial for extra taskbar/popup themes and custom sound files ($4.99/yr or $9.99 lifetime via Microsoft Store).
 
 Links:
 - Microsoft Store: https://apps.microsoft.com/detail/9MSQBZTPGWX6
-- GitHub (source code): https://github.com/ooemir23/PrayerBar
 - Website: https://ooemir23.github.io/PrayerBar/
+- GitHub: https://github.com/ooemir23/PrayerBar
 
 Would love any feedback or feature requests!
 ```
 
 ---
 
-### B) `r/Windows11` ve `r/Windows10` (İngilizce — Taskbar & Performans Odaklı)
+### B) `r/Windows11` ve `r/Windows10` (İngilizce — Taskbar & Hafiflik Odaklı)
 **Başlık:**
-`I made a native C++20 Win32 taskbar countdown widget (~3 MB RAM, 0% idle CPU) — no .NET or Electron`
+`I made an ultra-light Windows 11 taskbar prayer countdown widget (~3 MB RAM, 0% idle CPU, battery friendly)`
 
 **Metin:**
 ```markdown
-I wanted a clean, native-feeling prayer times countdown directly on the Windows 11 taskbar without spinning up an Electron or WebView2 process.
+I wanted a clean prayer times countdown that sits directly on the Windows 11 taskbar like a built-in system widget—without slowing down my PC or draining laptop battery.
 
-Built **PrayerBar** using pure C++20, Win32, GDI+, and WinHTTP:
-- **Footprint:** ~3–5 MB working set, 0.00% idle CPU, trims working set (`SetProcessWorkingSetSize`) when the flyout closes.
-- **Taskbar integration:** Dockable near the system tray, far right, center, or left with pixel-level offset (`-500..+500 px`), follows Windows Light/Dark mode and system accent color.
-- **Power & fullscreen aware:** Handles `WM_POWERBROADCAST` sleep/wake cleanly and stays quiet during fullscreen apps/games.
-- **Global hotkey:** `Win+Alt+P` to toggle the flyout anywhere.
+So I built **PrayerBar**:
+- **Zero lag:** Uses only ~3–5 MB of memory and 0% idle CPU in the background.
+- **Flexible taskbar placement:** Dock it near the system tray, far right corner, center, or left with fine pixel positioning. Matches Windows Light/Dark mode and your system accent color automatically.
+- **4 clean popup layouts & live Qibla compass:** Click the taskbar widget (or press `Win+Alt+P`) for daily times, progress bar, and Qibla direction.
+- **Fullscreen / game quiet mode:** Automatically stays quiet while gaming, watching videos, or presenting.
+- **Monthly & Ramadan Imsakiye:** View the full month or 30-day Ramadan Suhoor/Iftar calendar and export to CSV or printable HTML.
 
-It's open source on GitHub and also packaged as a ~3–4 MB MSIX on the Microsoft Store:
+Available on the Microsoft Store and open source on GitHub:
+- Microsoft Store: https://apps.microsoft.com/detail/9MSQBZTPGWX6
+- Website: https://ooemir23.github.io/PrayerBar/
 - GitHub: https://github.com/ooemir23/PrayerBar
-- Store: https://apps.microsoft.com/detail/9MSQBZTPGWX6
 
-Happy to answer any Win32 / taskbar positioning / GDI+ questions!
+Happy to hear your thoughts on the taskbar layout and styles!
 ```
 
 ---
 
 ### C) `r/software` ve `r/opensource` (İngilizce — Hafif Yazılım Alternatifi)
 **Başlık:**
-`PrayerBar — A pure native C++20 Windows taskbar prayer times widget (~3 MB RAM, 0% idle CPU)`
+`PrayerBar — An ultra-lightweight Windows taskbar prayer times & Ramadan calendar app (~3 MB RAM, 0% CPU)`
 
 **Metin:**
 ```markdown
-Sharing **PrayerBar**, a lightweight Windows 10/11 taskbar & system tray utility for prayer times, written in pure C++20 + Win32 without any heavy framework dependencies.
+Sharing **PrayerBar**, a lightweight Windows 10/11 taskbar & system tray utility for prayer times that stays completely out of your way and never slows down your PC.
 
 Highlights:
-- ~3–5 MB RAM, 0% idle CPU, static single-binary build
-- 23 calculation methods + offline astronomical fallback + optional Aladhan monthly sync
+- ~3–5 MB RAM, 0% idle CPU, laptop battery friendly
+- 4 taskbar dock positions, 9 countdown styles, 4 popup themes
+- 23 global calculation methods + works 100% offline
 - 12 UI languages with full RTL support
-- Monthly Imsakiye export (CSV / HTML)
-- No telemetry, no ads, local JSON storage only
+- Monthly & Ramadan Imsakiye export (CSV / printable HTML)
+- Built-in Adhan sounds + auto-mute during fullscreen/games
+- No ads, no tracking, local settings only
 
-Source & build scripts (LLVM-MinGW + PowerShell): https://github.com/ooemir23/PrayerBar
+Microsoft Store: https://apps.microsoft.com/detail/9MSQBZTPGWX6
+GitHub: https://github.com/ooemir23/PrayerBar
 Website: https://ooemir23.github.io/PrayerBar/
 ```
 
 ---
 
-### D) `r/cpp` (İngilizce — Teknik Geliştirici Topluluğu)
+### D) `r/productivity` (İngilizce — Günlük Planlama & Odaklanma)
 **Başlık:**
-`Show /r/cpp: PrayerBar — Pure C++20 + Win32/GDI+ Windows 11 taskbar band & flyout (~3 MB RAM)`
+`A quiet, distraction-free prayer countdown right on the Windows 11 taskbar (~3 MB RAM, auto-mutes in fullscreen)`
 
 **Metin:**
 ```markdown
-I built a native Windows 10/11 taskbar widget and flyout application in pure C++20 without .NET, WPF, or WebView2, compiled with LLVM-MinGW (`x86_64-w64-mingw32-clang++`).
+If you work or study on Windows all day, it's easy to lose track of prayer times—and phone alerts often break focus.
 
-A few technical details that might interest Win32 devs here:
-- **Zero-idle-CPU timer:** Aligns a single Win32 `SetTimer` to minute boundaries and listens to `SetWinEventHook` + `WM_POWERBROADCAST` for taskbar geometry and sleep/wake changes.
-- **Memory trimming:** Destroys the flyout HWND on close and calls `SetProcessWorkingSetSize` to keep working set around 3–5 MB.
-- **Self-contained:** Hand-rolled lightweight JSON parser, GDI+ flat API wrapper, WinHTTP client, WinMM audio playback, and native `StoreContext` WinRT interop without pulling in heavy SDKs.
-- **Security & CI:** Built with ASLR, DEP, High-Entropy VA, and automated C++20 unit tests + `--diag-smoke` headless render checks on GitHub Actions.
+I built **PrayerBar** to sit quietly on the Windows 10/11 taskbar so you can check the remaining time at a glance:
+- **Always in sight, never distracting:** Small countdown badge right next to your system clock.
+- **Quick shortcut (`Win+Alt+P`):** Open daily times, Qibla compass, or your prayer tracker anytime.
+- **Smart quiet mode:** Automatically mutes audio when you're in fullscreen calls, presentations, or games.
+- **Travel-ready:** Detects time-zone changes automatically when you travel.
 
-Repo: https://github.com/ooemir23/PrayerBar
+Core features are free forever with zero ads:
+- Microsoft Store: https://apps.microsoft.com/detail/9MSQBZTPGWX6
+- Website: https://ooemir23.github.io/PrayerBar/
 ```
 
 ---
 
 ### E) `r/Turkey` (Türkçe — Yerel Topluluk)
 **Başlık:**
-`Windows 11 görev çubuğu için saf C++ ile yazdığım ~3 MB RAM tüketen namaz vakti uygulaması: PrayerBar`
+`Windows 11 görev çubuğu için bilgisayarı hiç yormayan (~3 MB RAM) namaz vakti uygulaması: PrayerBar`
 
 **Metin:**
 ```markdown
 Merhaba,
 
-Windows'ta görev çubuğunun sağında (veya orta/solunda) sade bir geri sayım gösteren, arka planda yüzlerce MB RAM yemeyen bir namaz vakti uygulaması bulamadığım için **PrayerBar**'ı sıfırdan saf C++20 + Win32 ile yazdım.
+Windows'ta görev çubuğunun sağında (veya orta/solunda) sade bir geri sayım gösteren, arka planda bilgisayarı yormayan ve pil tüketmeyen bir namaz vakti uygulaması bulamadığım için **PrayerBar**'ı geliştirdim.
 
 Öne çıkan özellikler:
-- **~3–5 MB RAM, %0 boşta CPU:** .NET/Electron yok, sistem tepsisi ve görev çubuğuyla yerel (native) bütünleşiyor.
-- **Diyanet uyumlu & 23 metot:** Diyanet dahil 23 hesaplama metodu, aylık imsakiye (CSV/HTML dışa aktarım), Ramazan'da otomatik İftar/Sahur modu.
-- **Özelleştirilebilir:** 4 görev çubuğu konumu, 9 görünüm stili, 4 açılır panel tasarımı, her vakit için ayrı ezan/zil ve ön hatırlatma.
-- **Gizlilik:** Reklam ve telemetri yok; internet eşitlemesini kapatırsanız tamamen çevrimdışı çalışıyor.
+- **PC'yi hiç yormaz (~3–5 MB RAM, %0 boşta CPU):** Eski laptoplarda bile kasma yapmaz, pil ömrünü korur.
+- **Diyanet uyumlu & 23 metot:** Diyanet dahil 23 hesaplama metodu, aylık imsakiye (CSV/HTML yazdırma), Ramazan'da otomatik İftar/Sahur geri sayımı.
+- **Tam özelleştirilebilir:** Görev çubuğunda 4 konum, 9 görünüm stili, 4 açılır kart tasarımı, canlı Kıble pusulası ve her vakit için ayrı ezan/zil ve ön hatırlatma.
+- **Oyun & Tam Ekran Dostu:** Oyun oynarken, video izlerken veya sunum yaparken sesi otomatik susturur.
+- **Gizlilik:** Reklam ve takip yok; isterseniz tamamen internetsiz çalışıyor.
 
-Temel tüm özellikler (vakitler, bildirimler, ezan sesleri, imsakiye) sonsuza kadar ücretsiz. Ekstra tema/özel ses gibi kozmetik özellikler için 14 gün Pro deneme ve Microsoft Store üzerinden destek seçeneği bulunuyor.
+Temel tüm özellikler (vakitler, bildirimler, ezan sesleri, imsakiye) sonsuza kadar ücretsiz. Ekstra tema/özel ses gibi özellikler için 14 gün Pro deneme ve Microsoft Store üzerinden destek seçeneği bulunuyor.
 
-- GitHub: https://github.com/ooemir23/PrayerBar
 - Microsoft Store: https://apps.microsoft.com/detail/9MSQBZTPGWX6
+- Web Sitesi: https://ooemir23.github.io/PrayerBar/
+- GitHub: https://github.com/ooemir23/PrayerBar
 ```
 
 ---
@@ -139,30 +149,30 @@ Temel tüm özellikler (vakitler, bildirimler, ezan sesleri, imsakiye) sonsuza k
 ## 2. Türkiye Teknoloji Forumları & Sözlükler
 
 ### Technopat Sosyal / DonanımHaber (*Kullanıcı İncelemeleri / Yazılım*)
-**Başlık:** `PrayerBar: Windows 10/11 Görev Çubuğu İçin Saf C++20 Namaz Vakti Uygulaması (~3 MB RAM)`
+**Başlık:** `PrayerBar: Windows 10/11 Görev Çubuğu İçin PC'yi Hiç Yormayan Namaz Vakti Uygulaması (~3 MB RAM)`
 
 **Metin:**
 ```markdown
-Windows 10 ve 11 görev çubuğunda çalışan, sistem kaynaklarını neredeyse hiç tüketmeyen açık kaynaklı **PrayerBar** projesini paylaşmak istiyorum.
+Windows 10 ve 11 görev çubuğunda çalışan, bilgisayarı hiç yormayan ve tamamen reklamsız **PrayerBar** uygulamasını paylaşmak istiyorum.
 
-**Neden Saf C++20?**
-Piyasadaki çoğu masaüstü vakit uygulaması Electron, .NET veya web tabanlı arayüzler kullandığı için 150–400 MB arası RAM tüketiyor. PrayerBar doğrudan Win32 API ve GDI+ ile yazıldığı için:
-- **RAM Tüketimi:** ~3–5 MB
-- **Boşta CPU:** %0.000 (yalnızca dakika değişiminde uyanan tek zamanlayıcı)
-- **Oyun / Tam Ekran Dostu:** Tam ekran uygulamalarda ve oyunlarda bildirimleri otomatik susturma
+**Neden Farklı?**
+Piyasadaki birçok masaüstü vakit uygulaması arka planda 150–400 MB arası RAM tüketip bilgisayarı yavaşlatabiliyor. PrayerBar ise sadece temel sistem kaynaklarıyla yetinecek şekilde tasarlandı:
+- **RAM Tüketimi:** ~3–5 MB (sıfır kasma)
+- **Boşta CPU:** %0.000 (pil ve eski laptop dostu)
+- **Oyun / Tam Ekran Sessiz Modu:** Oyun oynarken veya video/sunum sırasında sesi otomatik susturur
 
 **Başlıca Özellikler:**
-- Görev çubuğunda 4 farklı konum (sistem tepsisi yanı, en sağ, orta, en sol) ve ince piksel ayarı
-- 9 farklı görev çubuğu stili ve 4 açılır kart teması
-- Diyanet dahil 23 dünya hesaplama metodu + Hanefi/Standart ikindi seçimi
+- Görev çubuğunda 4 farklı konum (saat yanı, en sağ köşe, orta, en sol) ve ince konum ayarı
+- 9 farklı görev çubuğu stili ve 4 açılır kart teması (canlı Kıble pusulası dahil)
+- Diyanet dahil 23 dünya hesaplama metodu + Hanefi/Standart ikindi seçimi + çevrimdışı çalışma
 - Her vakit için ayrı "vaktinde" ve "5–60 dk önce" hatırlatıcı + dahili kısa/uzun ezan sesleri
 - Ramazan İftar/Sahur geri sayımı ve aylık imsakiye (CSV/HTML dışa aktarım)
-- `Win+Alt+P` kısayolu, seyahat modu (saat dilimi değişince uyarı) ve 12 dil desteği
+- `Win+Alt+P` kısayolu, seyahat modu (saat dilimi değişince uyarı), Cuma/kandil hatırlatmaları ve 12 dil desteği
 
-**İndirme ve Kaynak Kod:**
+**İndirme ve Bilgi:**
 - Microsoft Store: https://apps.microsoft.com/detail/9MSQBZTPGWX6
-- GitHub: https://github.com/ooemir23/PrayerBar
 - Web Sitesi: https://ooemir23.github.io/PrayerBar/
+- GitHub: https://github.com/ooemir23/PrayerBar
 ```
 
 ---
@@ -171,32 +181,27 @@ Piyasadaki çoğu masaüstü vakit uygulaması Electron, .NET veya web tabanlı 
 
 ### A) Product Hunt
 * **Name:** `PrayerBar`
-* **Tagline (60 karakter altı):** `Ultra-light native Windows 11 taskbar prayer times (~3 MB)`
-* **Topics:** `Windows`, `Productivity`, `Open Source`, `Developer Tools`
+* **Tagline (60 karakter altı):** `Ultra-light Windows 11 taskbar prayer times (~3 MB RAM)`
+* **Topics:** `Windows`, `Productivity`, `Lifestyle`, `Open Source`
 * **Maker's First Comment:**
 ```markdown
 Hey Product Hunt! 👋
 
-I built **PrayerBar** because I wanted a Windows 11 taskbar prayer timer that feels like a built-in OS widget rather than a heavy browser-wrapped app.
+I built **PrayerBar** because I wanted a Windows 11 taskbar prayer timer that feels like a clean, built-in part of Windows—and never slows down your laptop.
 
-Written in pure C++20 + Win32/GDI+:
-⚡ ~3–5 MB RAM, 0% idle CPU
-🎨 4 taskbar dock positions, 9 styles, 4 flyout themes (Light/Dark + Accent sync)
-🌍 12 languages & 23 global calculation methods
-🌙 Ramadan Iftar/Suhoor countdown & Monthly Imsakiye export
-🔔 Per-prayer notifications, Adhan audio, and fullscreen quiet mode
+Highlights:
+⚡ Only ~3–5 MB RAM and 0% idle CPU (battery friendly)
+🎨 4 taskbar dock positions, 9 styles, 4 popup themes + live Qibla compass
+🌍 12 languages & 23 global calculation methods (works offline too)
+🌙 Automatic Ramadan Iftar/Suhoor countdown & Monthly Imsakiye export
+🔔 Per-prayer reminders, built-in Adhan audio, and auto-mute during games/fullscreen
 
-Core features are free forever, with a 14-day Pro trial for extra themes and custom sounds. Source code is on GitHub and distributed via the Microsoft Store. Would love your feedback!
+Core features are free forever with zero ads, plus a 14-day Pro trial for extra themes and custom sounds. Available directly on the Microsoft Store and open source on GitHub. Would love your feedback!
 ```
 
-### B) Hacker News (`Show HN`)
-* **Title:** `Show HN: PrayerBar – A ~3 MB RAM native C++20 Windows 11 taskbar prayer timer`
-* **URL:** `https://github.com/ooemir23/PrayerBar`
-* **İlk Yorum:** `r/cpp` metnindeki teknik özet (Win32 `SetTimer` dakika hizalaması, `SetProcessWorkingSetSize`, GDI+ flat API, LLVM-MinGW statik derleme ve ASLR/DEP/High-Entropy VA güvenlik kontrolleri).
-
-### C) AlternativeTo
+### B) AlternativeTo
 * **Uygulama Adı:** `PrayerBar`
-* **Kısa Açıklama:** `Ultra-lightweight (~3–5 MB RAM, 0% idle CPU) native C++20 Windows 10/11 taskbar countdown, system tray badge, and monthly Imsakiye app in 12 languages.`
+* **Kısa Açıklama:** `Ultra-lightweight (~3–5 MB RAM, 0% idle CPU) Windows 10/11 taskbar prayer countdown, dynamic tray badge, Qibla compass, and monthly/Ramadan Imsakiye app in 12 languages.`
 * **Alternatif olarak ekleneceği sayfalar:** *Salaat Time*, *Athan (Azan)*, *Islamic Prayer Times*.
 
 ---
@@ -204,22 +209,23 @@ Core features are free forever, with a 14-day Pro trial for extra themes and cus
 ## 4. Kısa Video (YouTube Shorts / Reels / TikTok) & X/Twitter
 
 ### 20 Saniyelik Video Senaryosu
-1. **0–3 sn (Hook):** Görev Yöneticisi ekranı açılır → *"Elektron uygulamalar 300 MB RAM yerken, bu Windows 11 namaz vakti widget'ı sadece **3 MB RAM** kullanıyor."*
-2. **3–10 sn (Demo):** Görev çubuğundaki geri sayıma tıklanır → 4 farklı açılır panel teması ve sağ/orta/sol konum değişimi hızlıca gösterilir.
+1. **0–3 sn (Hook):** Görev Yöneticisi ekranı açılır → *"Bilgisayarınızı hiç yormayan bu Windows 11 namaz vakti uygulaması sadece **3 MB RAM** kullanıyor."*
+2. **3–10 sn (Demo):** Görev çubuğundaki geri sayıma tıklanır → 4 farklı açılır panel teması, Kıble pusulası ve sağ/orta/sol konum değişimi hızlıca gösterilir.
 3. **10–16 sn (Özellikler):** Aylık İmsakiye, Ramazan İftar geri sayımı ve vakit bazlı ezan/bildirim ayarları gösterilir.
-4. **16–20 sn (CTA):** *"Microsoft Store'da PrayerBar yazarak ücretsiz deneyebilirsiniz, kaynak kodu GitHub'da açık."*
+4. **16–20 sn (CTA):** *"Microsoft Store'da PrayerBar yazarak ücretsiz indirebilirsiniz."*
 
 ### X / Twitter Kısa Paylaşım (İngilizce)
 ```text
-Most desktop prayer apps run on Electron and eat 200+ MB of RAM.
+Tired of heavy prayer apps slowing down your laptop?
 
-So I built PrayerBar in pure C++20 + Win32:
-• ~3–5 MB RAM, 0% idle CPU
-• Native Windows 11 taskbar countdown & 4 flyout themes
-• 12 languages, 23 calculation methods, Monthly Imsakiye
+Meet PrayerBar for Windows 10/11:
+• Only ~3–5 MB RAM, 0% idle CPU
+• Live taskbar countdown & 4 clean popup themes
+• Live Qibla compass, 12 languages & Ramadan Imsakiye
+• Auto-mutes during games & fullscreen
 
 Microsoft Store: https://apps.microsoft.com/detail/9MSQBZTPGWX6
-GitHub: https://github.com/ooemir23/PrayerBar
+Website: https://ooemir23.github.io/PrayerBar/
 ```
 
 ---
@@ -228,9 +234,9 @@ GitHub: https://github.com/ooemir23/PrayerBar
 
 | Gün | Platform | Odak |
 | :--- | :--- | :--- |
-| **1. Gün (Salı)** | `r/Windows11` + GitHub Topics güncellemesi | Native C++20 & ~3 MB RAM performansı |
-| **2. Gün (Cuma)** | `r/islam` + `r/Turkey` | Günlük kullanım, Ramazan/İmsakiye, ücretsiz çekirdek özellikler |
-| **3. Gün** | Technopat Sosyal + DonanımHaber | Detaylı Türkçe inceleme ve indirme linkleri |
+| **1. Gün (Salı)** | `r/Windows11` + GitHub Topics güncellemesi | Görev çubuğu görünümü & PC'yi hiç yormaması (~3 MB RAM) |
+| **2. Gün (Cuma)** | `r/islam` + `r/Turkey` | Günlük kullanım, Ramazan/İmsakiye, oyun sessiz modu, ücretsiz çekirdek özellikler |
+| **3. Gün** | Technopat Sosyal + DonanımHaber | Detaylı Türkçe inceleme ve Microsoft Store indirme linki |
 | **4. Gün** | AlternativeTo + `r/software` | Alternatif arayanlar için kalıcı SEO |
-| **5. Gün** | Product Hunt + X/Twitter + `Show HN` | Küresel lansman günü (GIF/ekran görüntüleriyle) |
-| **6. Gün** | `r/cpp` + `r/MuslimLounge` | Teknik detaylar ve topluluk geri bildirimi |
+| **5. Gün** | Product Hunt + X/Twitter | Küresel lansman günü (GIF/ekran görüntüleriyle) |
+| **6. Gün** | `r/productivity` + `r/MuslimLounge` | Odaklanma, seyahat modu ve topluluk geri bildirimi |
