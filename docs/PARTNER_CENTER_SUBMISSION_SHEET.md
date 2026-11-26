@@ -18,11 +18,11 @@ Partner Center'da (`partner.microsoft.com` ➔ **PrayerBar: Prayer Times & Adhan
 ## 2. Properties (Özellikler & Kategoriler)
 - **Primary category (Ana kategori):** `Productivity`
 - **Subcategory (Alt kategori):** `Utilities & tools` *(Yedek: `Personalization`)*
-- **Support info / Website URL:** `https://ooemir23.github.io/PrayerBar/`
+- **Support info / Website URL:** `https://prayerbar.ooemir.com/`
 - **Support contact (email):** Partner Center hesabınızdaki destek e-postası
 - **Privacy policy URL (Zorunlu):**
   ```text
-  https://ooemir23.github.io/PrayerBar/privacy.html
+  https://prayerbar.ooemir.com/privacy
   ```
 - **System requirements / Hardware:**
   - Minimum OS: Windows 10 version 19041.0 (2004) veya Windows 11 (`x64`)

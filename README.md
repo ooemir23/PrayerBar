@@ -8,20 +8,18 @@
 **Ultra-lightweight (~3–5 MB RAM, 0% idle CPU) Windows 10/11 taskbar prayer times countdown, dynamic tray badge, Monthly/Ramadan Imsakiye & customizable Adhan notifications in 12 languages — never slows down your PC.**
 
 - **Microsoft Store:** https://apps.microsoft.com/detail/9MSQBZTPGWX6
-- **Website:** https://www.ooemir.com
-- **Privacy Policy:** https://ooemir23.github.io/PrayerBar/privacy.html
+- **Website:** https://prayerbar.ooemir.com
+- **Privacy Policy:** https://prayerbar.ooemir.com/privacy
 
-![PrayerBar Hero Banner](website/images/hero.png)
+![PrayerBar Preview](website/images/og-card.png)
 
 ---
 
 ## Screenshots
 
-| Taskbar Countdown & ~3 MB RAM | 4 Fluent Flyouts & Live Qibla Compass |
-| :---: | :---: |
-| ![Taskbar Countdown & ~3 MB RAM](website/images/01_taskbar_countdown.png) | ![4 Fluent Flyouts & Live Qibla Compass](website/images/02_fluent_flyout_qibla.png) |
-| **Monthly Schedule & 30-Day Ramadan Imsakiye** | **12 Languages & Modular Features** |
-| ![Monthly Schedule & 30-Day Ramadan Imsakiye](website/images/03_ramadan_imsakiye.png) | ![12 Languages & Modular Features](website/images/04_settings_features.png) |
+| Compact Fluent | 2×3 Bento Cards | Timeline &amp; Live Qibla |
+| :---: | :---: | :---: |
+| ![Compact Fluent](website/images/flyout-compact.png) | ![2×3 Bento Cards](website/images/flyout-bento.png) | ![Timeline &amp; Live Qibla](website/images/flyout-timeline.png) |
 
 ---
 

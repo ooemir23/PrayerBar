@@ -251,6 +251,13 @@ int RunDiagnosticSmoke(const std::wstring& previewBmpPath, const std::wstring& f
 } // namespace
 
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
+    // Ensure PerMonitorV2 DPI awareness before creating any window/DC even if run unpackaged.
+    if (HMODULE u32 = GetModuleHandleW(L"user32.dll")) {
+        using SetDpiCtxFn = BOOL(WINAPI*)(HANDLE);
+        auto fn = reinterpret_cast<SetDpiCtxFn>(reinterpret_cast<void*>(GetProcAddress(u32, "SetProcessDpiAwarenessContext")));
+        if (fn) fn(reinterpret_cast<HANDLE>(static_cast<intptr_t>(-4))); // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
+    }
+
     int argc = 0;
     LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
     bool isSmoke = false;
@@ -269,7 +276,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
             } else if (_wcsicmp(argv[i], L"--lang") == 0 && (i + 1) < argc) {
                 langOverride = std::clamp(_wtoi(argv[++i]), 0, 12);
             } else if (_wcsicmp(argv[i], L"--settings") == 0) {
-                openSettingsTab = ((i + 1) < argc && iswdigit(argv[i + 1][0])) ? std::clamp(_wtoi(argv[++i]), 0, 4) : 0;
+                openSettingsTab = ((i + 1) < argc && iswdigit(argv[i + 1][0])) ? std::clamp(_wtoi(argv[++i]), 0, 5) : 0;
             }
         }
         LocalFree(argv);

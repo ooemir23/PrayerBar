@@ -10,6 +10,16 @@ $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 $configPath = Join-Path $repoRoot "packaging\store.config.json"
 $config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $ver = $config.Version
+$releaseDir = Join-Path $repoRoot "dist\release"
+$storeMsixSrc = Join-Path $repoRoot "dist\PrayerBar_${ver}_${Arch}_Store.msix"
+$storeMsixDst = Join-Path $releaseDir "PrayerBar_${ver}_${Arch}_Store.msix"
+$portableZip = Join-Path $releaseDir "PrayerBar_${ver}_${Arch}_Portable.zip"
+
+foreach ($path in @($storeMsixSrc, $storeMsixDst, $portableZip)) {
+    if (Test-Path $path) {
+        throw "Refusing to overwrite an existing release artifact: $path"
+    }
+}
 
 Write-Host "=== [1/4] Building & Running Unit Tests ==="
 & (Join-Path $PSScriptRoot "build.ps1")
@@ -29,15 +39,11 @@ if ($CreateTestCert) {
 if ($LASTEXITCODE -ne 0) { throw "build-msix.ps1 failed." }
 
 Write-Host "=== [4/4] Assembling Global Release Folder ==="
-$releaseDir = Join-Path $repoRoot "dist\release"
 New-Item -ItemType Directory -Force -Path $releaseDir | Out-Null
 
-$storeMsixSrc = Join-Path $repoRoot "dist\PrayerBar_${ver}_${Arch}_Store.msix"
-$storeMsixDst = Join-Path $releaseDir "PrayerBar_${ver}_${Arch}_Store.msix"
-Copy-Item -Path $storeMsixSrc -Destination $storeMsixDst -Force
+Copy-Item -Path $storeMsixSrc -Destination $storeMsixDst
 
 $portableStage = Join-Path $repoRoot "dist\_portable_${Arch}_$PID"
-$portableZip = Join-Path $releaseDir "PrayerBar_${ver}_${Arch}_Portable.zip"
 try {
     New-Item -ItemType Directory -Force -Path (Join-Path $portableStage "Assets\Sounds") | Out-Null
     Copy-Item -Path $appExe -Destination (Join-Path $portableStage "PrayerBar.exe") -Force
@@ -45,7 +51,6 @@ try {
     Copy-Item -Path (Join-Path $repoRoot "docs\AUDIO_LICENSES.md") -Destination (Join-Path $portableStage "AUDIO_LICENSES.md") -Force
     Copy-Item -Path (Join-Path $repoRoot "README.md") -Destination (Join-Path $portableStage "README.md") -Force
 
-    if (Test-Path $portableZip) { Remove-Item $portableZip -Force }
     Compress-Archive -Path (Join-Path $portableStage "*") -DestinationPath $portableZip -CompressionLevel Optimal
 } finally {
     if (Test-Path $portableStage) {
@@ -54,14 +59,22 @@ try {
 }
 
 $sumsPath = Join-Path $releaseDir "SHA256SUMS.txt"
-$lines = @()
+$newLines = @()
 foreach ($f in @($storeMsixDst, $portableZip)) {
     $hash = (Get-FileHash -Path $f -Algorithm SHA256).Hash
     $name = [System.IO.Path]::GetFileName($f)
-    $lines += "$hash  $name"
+    $newLines += "$hash  $name"
 }
 $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-[System.IO.File]::WriteAllLines($sumsPath, $lines, $utf8NoBom)
+if (Test-Path $sumsPath) {
+    $existingText = [System.IO.File]::ReadAllText($sumsPath, [System.Text.Encoding]::UTF8)
+    if ($existingText.Length -gt 0 -and -not $existingText.EndsWith("`n")) {
+        [System.IO.File]::AppendAllText($sumsPath, "`r`n", $utf8NoBom)
+    }
+    [System.IO.File]::AppendAllText($sumsPath, ($newLines -join "`r`n") + "`r`n", $utf8NoBom)
+} else {
+    [System.IO.File]::WriteAllLines($sumsPath, $newLines, $utf8NoBom)
+}
 
 Write-Host ""
 Write-Host "Release artifacts ready in: $releaseDir"

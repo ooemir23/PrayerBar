@@ -1,5 +1,6 @@
 #include "taskbar_renderer.h"
 #include "gdiplus_flat.h"
+#include "theme_palette.h"
 #include "../platform/theme_utils.h"
 
 #include <algorithm>
@@ -71,53 +72,104 @@ void DrawPillSurface(
 
     gdip::GdipGraphicsClear(g, 0x00000000u);
     gdip::GdipSetSmoothingMode(g, gdip::kSmoothingModeAntiAlias);
-    gdip::GdipSetTextRenderingHint(g, gdip::kTextRenderingHintAntiAliasGridFit);
+    gdip::GdipSetTextRenderingHint(g, gdip::kTextRenderingHintAntiAlias);
     gdip::GdipSetCompositingQuality(g, gdip::kCompositingQualityHighQuality);
 
-    float radius = 4.0f * s;
+    auto pal = theme::GetUiPalette(!isLight, settings.useSystemAccentColor);
+    float radius = 6.0f * s;
     uint32_t bgColor = 0;
-    if (useOpaqueBackdrop) {
-        bgColor = activeHighlight
-            ? (isLight ? 0xFFE6E8EEu : 0xFF2E3038u)
-            : (isLight ? 0xFFF3F3F3u : 0xFF1F2024u);
+    uint32_t borderColor = 0;
+    bool drawFrame = true;
+
+    uint32_t primaryColor = 0;
+    uint32_t secondaryColor = 0;
+    uint32_t singleLineColor = 0;
+    uint32_t accentColor = display.isUrgent ? (isLight ? 0xFFD97706u : pal.gold) : pal.accent;
+
+    if (!settings.showTaskbarFrame) {
+        drawFrame = false;
+        if (isLight) {
+            bgColor = display.isUrgent
+                ? 0xF0FEF3C7u
+                : (activeHighlight ? 0x22000000u : (useOpaqueBackdrop ? 0xF2FFFFFFu : 0x01000000u));
+            primaryColor = display.isUrgent ? 0xFFB45309u : 0xFF0F1B22u;
+            secondaryColor = display.isUrgent ? 0xFF92400Eu : 0xFF334155u;
+            singleLineColor = primaryColor;
+        } else {
+            bgColor = display.isUrgent
+                ? 0xEB3B260Cu
+                : (activeHighlight ? 0x28FFFFFFu : (useOpaqueBackdrop ? 0xFF14181Fu : 0x01000000u));
+            primaryColor = display.isUrgent ? pal.gold : 0xFFFFFFFFu;
+            secondaryColor = display.isUrgent ? 0xFFFFE59Eu : 0xFFCBD5E1u;
+            singleLineColor = primaryColor;
+        }
+    } else if (settings.useSystemAccentColor || settings.pillColorMode == TaskbarPillColorMode::ThemeAdaptive) {
+        if (isLight) {
+            if (display.isUrgent) {
+                bgColor = 0xF5FEF3C7u;
+                borderColor = 0xE0D97706u;
+            } else {
+                bgColor = activeHighlight ? 0xFFE6EFF6u : (useOpaqueBackdrop ? 0xFFFFFFFFu : 0xF2FFFFFFu);
+                borderColor = activeHighlight ? pal.accent : theme::WithAlpha(0xBBu, pal.accent);
+            }
+            primaryColor = display.isUrgent ? 0xFFB45309u : 0xFF0F172Au;
+            secondaryColor = display.isUrgent ? 0xFF92400Eu : 0xFF475569u;
+            singleLineColor = primaryColor;
+        } else {
+            if (display.isUrgent) {
+                bgColor = 0xEB3B260Cu;
+                borderColor = 0xF2FFCE5Cu;
+            } else {
+                bgColor = activeHighlight ? 0xF5222A36u : (useOpaqueBackdrop ? 0xFF161B22u : 0xE6161B22u);
+                borderColor = activeHighlight ? pal.accent : theme::WithAlpha(0xBBu, pal.accent);
+            }
+            primaryColor = display.isUrgent ? pal.gold : 0xFFF8FAFCu;
+            secondaryColor = display.isUrgent ? 0xFFFFE59Eu : 0xFFCBD5E1u;
+            singleLineColor = primaryColor;
+        }
     } else {
-        bgColor = activeHighlight
-            ? (isLight ? 0x16FFFFFFu : 0x16FFFFFFu)
-            : 0x01000000u; // Hit-test için alpha=1
-    }
-    if (!useOpaqueBackdrop && activeHighlight && isLight) {
-        bgColor = 0x14000000u;
+        // TaskbarPillColorMode::Emerald
+        if (isLight) {
+            if (display.isUrgent) {
+                bgColor = 0xF5FEF3C7u;
+                borderColor = 0xE0D97706u;
+            } else {
+                bgColor = activeHighlight ? 0xFFE0F4F0u : (useOpaqueBackdrop ? 0xFFFFFFFFu : 0xEBFFFFFFu);
+                borderColor = activeHighlight ? pal.accent : theme::WithAlpha(0xCCu, pal.accent);
+            }
+            primaryColor = display.isUrgent ? 0xFFB45309u : 0xFF0B5F58u;
+            secondaryColor = display.isUrgent ? 0xFF92400Eu : 0xFF334B57u;
+            singleLineColor = display.isUrgent ? 0xFFB45309u : 0xFF0F1B22u;
+        } else {
+            if (display.isUrgent) {
+                bgColor = 0xEB3B260Cu;
+                borderColor = 0xF2FFCE5Cu;
+            } else {
+                bgColor = activeHighlight ? 0xF5154D49u : (useOpaqueBackdrop ? 0xFF0F3634u : 0xDC0E2E2Du);
+                borderColor = activeHighlight ? pal.accent : theme::WithAlpha(0xCCu, pal.accent);
+            }
+            primaryColor = display.isUrgent ? pal.gold : pal.gold;
+            secondaryColor = display.isUrgent ? 0xFFFFE59Eu : 0xFFD4E5EEu;
+            singleLineColor = display.isUrgent ? pal.gold : 0xFFF4F8FBu;
+        }
     }
 
+    float strokeW = (activeHighlight || display.isUrgent) ? std::max(1.2f, 1.35f * s) : std::max(1.0f, 1.2f * s);
     gdip::FillRoundedRect(g, 0.5f, 0.5f, static_cast<float>(width) - 1.0f, static_cast<float>(height) - 1.0f, radius, bgColor);
-    if (activeHighlight || useOpaqueBackdrop) {
-        uint32_t borderColor = useOpaqueBackdrop
-            ? (isLight ? 0x28000000u : 0x2CFFFFFFu)
-            : (isLight ? 0x1A000000u : 0x20FFFFFFu);
+    if (drawFrame) {
         gdip::StrokeRoundedRect(g, 0.5f, 0.5f, static_cast<float>(width) - 1.0f, static_cast<float>(height) - 1.0f,
-                                radius, borderColor, std::max(1.0f, s));
+                                radius, borderColor, strokeW);
     }
-
-    uint32_t primaryColor = display.isUrgent
-        ? (isLight ? 0xFFB85C00u : 0xFFFFCA62u)
-        : (isLight ? 0xE6000000u : 0xFFFFFFFFu);
-    uint32_t secondaryColor = display.isUrgent
-        ? (isLight ? 0xCC9A4D00u : 0xD8FFD88Au)
-        : (isLight ? 0xA8000000u : 0xB8FFFFFFu);
-    uint32_t accentColor = display.isUrgent
-        ? (isLight ? 0xFFD97706u : 0xFFFFC145u)
-        : (settings.useSystemAccentColor
-            ? GetWindowsAccentColorArgb(!isLight, true)
-            : GetPrayerAccentArgb(display.nextPrayer));
 
     float fontMul = GetFontScaleMultiplier(settings.fontSize);
-    float bottomReserve = settings.showProgressBar ? 4.0f * s : 0.0f;
+    float bottomReserve = settings.showProgressBar ? 4.5f * s : 0.0f;
     float contentHeight = static_cast<float>(height) - bottomReserve;
 
     void* family = gdip::CreateBestUiFontFamily(false);
     void* strFormat = nullptr;
     void* brushPrimary = nullptr;
     void* brushSecondary = nullptr;
+    void* brushSingle = nullptr;
     void* font1 = nullptr;
     void* font2 = nullptr;
 
@@ -127,17 +179,30 @@ void DrawPillSurface(
     gdip::GdipSetStringFormatLineAlign(strFormat, gdip::kStringAlignmentCenter);
     gdip::GdipCreateSolidFill(primaryColor, &brushPrimary);
     gdip::GdipCreateSolidFill(secondaryColor, &brushSecondary);
+    gdip::GdipCreateSolidFill(singleLineColor, &brushSingle);
 
     if (display.hasLine2) {
-        gdip::GdipSetStringFormatAlign(strFormat, gdip::kStringAlignmentCenter);
-        gdip::GdipCreateFont(family, 10.5f * fontMul * s, gdip::kFontStyleRegular, gdip::kUnitPixel, &font1);
-        gdip::GdipCreateFont(family, 12.2f * fontMul * s, gdip::kFontStyleBold, gdip::kUnitPixel, &font2);
+        gdip::GdipCreateFont(family, 10.5f * fontMul * s, gdip::kFontStyleBold, gdip::kUnitPixel, &font1);
+        gdip::GdipCreateFont(family, 12.5f * fontMul * s, gdip::kFontStyleBold, gdip::kUnitPixel, &font2);
 
-        float padX = 6.0f * s;
+        float textX = 5.0f * s;
+        float textW = std::max(12.0f, static_cast<float>(width) - 10.0f * s);
+        if (settings.showTaskbarLogo) {
+            float iconSz = std::min(22.0f * s, contentHeight - 8.0f * s);
+            float iconX = 6.5f * s;
+            float iconY = (contentHeight - iconSz) * 0.5f;
+            theme::DrawBrandLogoTile(g, iconX, iconY, iconSz);
+            gdip::GdipSetStringFormatAlign(strFormat, gdip::kStringAlignmentNear);
+            textX = iconX + iconSz + 6.0f * s;
+            textW = std::max(12.0f, static_cast<float>(width) - textX - 6.0f * s);
+        } else {
+            gdip::GdipSetStringFormatAlign(strFormat, gdip::kStringAlignmentCenter);
+        }
+
         float topY = 2.0f * s;
         float halfH = (contentHeight - topY) * 0.5f;
-        gdip::RectF rect1{padX, topY, static_cast<float>(width) - padX * 2.0f, halfH + 1.0f * s};
-        gdip::RectF rect2{padX, topY + halfH - 2.0f * s, static_cast<float>(width) - padX * 2.0f, halfH + 2.0f * s};
+        gdip::RectF rect1{textX, topY, textW, halfH + 1.0f * s};
+        gdip::RectF rect2{textX, topY + halfH - 2.0f * s, textW, halfH + 2.0f * s};
 
         gdip::GdipDrawString(g, display.line1.c_str(), static_cast<int>(display.line1.size()), font1, &rect1, strFormat, brushSecondary);
         gdip::GdipDrawString(g, display.line2.c_str(), static_cast<int>(display.line2.size()), font2, &rect2, strFormat, brushPrimary);
@@ -145,15 +210,17 @@ void DrawPillSurface(
         gdip::GdipCreateFont(family, 12.5f * fontMul * s, gdip::kFontStyleBold, gdip::kUnitPixel, &font1);
         float textW = MeasureTextWidth(g, display.line1, font1, strFormat);
 
-        float glyphW = display.showPhaseIcon ? 14.0f * s : (display.showDot ? 8.0f * s : 0.0f);
+        bool showPhase = settings.showTaskbarLogo && display.showPhaseIcon;
+        bool showDot = settings.showTaskbarLogo && display.showDot;
+        float glyphW = showPhase ? 14.0f * s : (showDot ? 8.0f * s : 0.0f);
         float gap = glyphW > 0.0f ? 5.0f * s : 0.0f;
-        float totalContentW = std::min(static_cast<float>(width) - 10.0f * s, glyphW + gap + textW);
+        float totalContentW = std::min(static_cast<float>(width) - 12.0f * s, glyphW + gap + textW);
         float startX = (static_cast<float>(width) - totalContentW) * 0.5f;
         float centerY = contentHeight * 0.5f;
 
-        if (display.showPhaseIcon) {
+        if (showPhase) {
             DrawPhaseGlyph(g, startX, centerY - 6.5f * s, 13.0f * s, display.nextPrayer, accentColor);
-        } else if (display.showDot) {
+        } else if (showDot) {
             float dotSize = 7.0f * s;
             void* dotBrush = nullptr;
             gdip::GdipCreateSolidFill(accentColor, &dotBrush);
@@ -165,17 +232,17 @@ void DrawPillSurface(
 
         gdip::GdipSetStringFormatAlign(strFormat, gdip::kStringAlignmentNear);
         float textX = startX + glyphW + gap;
-        gdip::RectF rect{textX, 0.0f, std::max(10.0f, static_cast<float>(width) - textX - 4.0f * s), contentHeight};
-        gdip::GdipDrawString(g, display.line1.c_str(), static_cast<int>(display.line1.size()), font1, &rect, strFormat, brushPrimary);
+        gdip::RectF rect{textX, 0.0f, std::max(10.0f, static_cast<float>(width) - textX - 5.0f * s), contentHeight};
+        gdip::GdipDrawString(g, display.line1.c_str(), static_cast<int>(display.line1.size()), font1, &rect, strFormat, brushSingle);
     }
 
     if (settings.showProgressBar) {
-        float barInset = 8.0f * s;
+        float barInset = 7.0f * s;
         float barW = std::max(16.0f * s, static_cast<float>(width) - barInset * 2.0f);
-        float barH = std::max(2.0f, 2.2f * s);
+        float barH = std::max(2.2f, 2.5f * s);
         float barY = static_cast<float>(height) - barH - 2.2f * s;
 
-        uint32_t trackCol = isLight ? 0x24000000u : 0x2BFFFFFFu;
+        uint32_t trackCol = isLight ? 0x26000000u : 0x3AFFFFFFu;
         gdip::FillRoundedRect(g, barInset, barY, barW, barH, barH * 0.5f, trackCol);
 
         float fillW = std::max(barH, barW * static_cast<float>(std::clamp(display.progress, 0.04, 1.0)));
@@ -184,6 +251,7 @@ void DrawPillSurface(
 
     if (font2) gdip::GdipDeleteFont(font2);
     if (font1) gdip::GdipDeleteFont(font1);
+    if (brushSingle) gdip::GdipDeleteBrush(brushSingle);
     if (brushPrimary) gdip::GdipDeleteBrush(brushPrimary);
     if (brushSecondary) gdip::GdipDeleteBrush(brushSecondary);
     if (strFormat) gdip::GdipDeleteStringFormat(strFormat);
@@ -221,7 +289,7 @@ uint32_t DarkenForWhiteTextContrast(uint32_t argb) {
 void DrawTrayBadge(void* g, int size, const PrayerCountdownState& state, const AppSettings& settings, bool isLight) {
     gdip::GdipGraphicsClear(g, 0x00000000u);
     gdip::GdipSetSmoothingMode(g, gdip::kSmoothingModeAntiAlias);
-    gdip::GdipSetTextRenderingHint(g, gdip::kTextRenderingHintAntiAliasGridFit);
+    gdip::GdipSetTextRenderingHint(g, gdip::kTextRenderingHintAntiAlias);
     gdip::GdipSetPixelOffsetMode(g, gdip::kPixelOffsetModeHighQuality);
 
     uint32_t rawAccent = settings.useSystemAccentColor
@@ -290,7 +358,7 @@ void DrawTrayBadge(void* g, int size, const PrayerCountdownState& state, const A
         float plateDim = fSize - pad * 2.0f;
 
         void* plateBrush = nullptr;
-        gdip::GdipCreateSolidFill(isLight ? 0xFFFFFFFFu : 0xFF0E2225u, &plateBrush);
+        gdip::GdipCreateSolidFill(isLight ? 0xFFFFFFFFu : 0xFF0D2025u, &plateBrush);
         if (plateBrush) {
             gdip::GdipFillEllipse(g, plateBrush, pad, pad, plateDim, plateDim);
             gdip::GdipDeleteBrush(plateBrush);
@@ -309,7 +377,7 @@ void DrawTrayBadge(void* g, int size, const PrayerCountdownState& state, const A
         float ringDim = fSize - inset * 2.0f;
 
         void* trackPen = nullptr;
-        gdip::GdipCreatePen1(isLight ? 0xFFD1D5DBu : 0xFF284B4Eu, ringW, gdip::kUnitPixel, &trackPen);
+        gdip::GdipCreatePen1(isLight ? 0xFFD1D5DBu : 0xFF1F4A4Du, ringW, gdip::kUnitPixel, &trackPen);
         if (trackPen) {
             gdip::GdipDrawEllipse(g, trackPen, inset, inset, ringDim, ringDim);
             gdip::GdipDeletePen(trackPen);
@@ -335,7 +403,7 @@ void DrawTrayBadge(void* g, int size, const PrayerCountdownState& state, const A
     float pad = std::max(0.5f, fSize * 0.02f);
     float boxSize = fSize - pad * 2.0f;
     float radius = boxSize * 0.22f;
-    uint32_t bodyBg = isLight ? 0xFFFFFFFFu : 0xFF111822u;
+    uint32_t bodyBg = isLight ? 0xFFFFFFFFu : 0xFF0D2025u;
     uint32_t hdrBg = state.isUrgent ? 0xFFD97706u : DarkenForWhiteTextContrast(accent);
 
     // Ana gövde + üstte yuvarlak, altta düz şerit başlık
@@ -374,13 +442,13 @@ int MeasureDesiredPillWidth(const FormattedTaskbarDisplay& display, const AppSet
     gdip::GdipSetStringFormatFlags(strFormat, gdip::kStringFormatFlagsNoWrap);
 
     float size1 = display.hasLine2 ? 10.5f * fontMul * s : 12.5f * fontMul * s;
-    int style1 = display.hasLine2 ? gdip::kFontStyleRegular : gdip::kFontStyleBold;
+    int style1 = gdip::kFontStyleBold;
     gdip::GdipCreateFont(family, size1, style1, gdip::kUnitPixel, &font1);
 
     float w1 = MeasureTextWidth(g, display.line1, font1, strFormat);
     float w2 = 0.0f;
     if (display.hasLine2 && !display.line2.empty()) {
-        gdip::GdipCreateFont(family, 12.2f * fontMul * s, gdip::kFontStyleBold, gdip::kUnitPixel, &font2);
+        gdip::GdipCreateFont(family, 12.5f * fontMul * s, gdip::kFontStyleBold, gdip::kUnitPixel, &font2);
         w2 = MeasureTextWidth(g, display.line2, font2, strFormat);
     }
 
@@ -392,11 +460,16 @@ int MeasureDesiredPillWidth(const FormattedTaskbarDisplay& display, const AppSet
     ReleaseDC(nullptr, screenDc);
 
     float textWidth = std::max(w1, w2);
-    float iconGap = display.showPhaseIcon ? 18.0f * s : (display.showDot ? 13.0f * s : 0.0f);
+    float iconGap = 0.0f;
+    if (settings.showTaskbarLogo) {
+        iconGap = display.hasLine2
+            ? 26.0f * s
+            : (display.showPhaseIcon ? 18.0f * s : (display.showDot ? 13.0f * s : 0.0f));
+    }
     float hPad = 18.0f * s;
     int total = static_cast<int>(std::ceil(textWidth + iconGap + hPad));
     int minW = static_cast<int>(std::llround(48.0 * scale));
-    int maxW = static_cast<int>(std::llround(215.0 * scale));
+    int maxW = static_cast<int>(std::llround(245.0 * scale));
     return std::clamp(total, minW, maxW);
 }
 
@@ -535,7 +608,7 @@ HICON CreateTrayIconHandle(
     if (gdip::GdipCreateBitmapFromScan0(iconSize, iconSize, stride, gdip::kPixelFormat32bppARGB, pixels.data(), &gdiBmp) == 0 && gdiBmp) {
         if (gdip::GdipGetImageGraphicsContext(gdiBmp, &g) == 0 && g) {
             gdip::GdipSetSmoothingMode(g, gdip::kSmoothingModeAntiAlias);
-            gdip::GdipSetTextRenderingHint(g, gdip::kTextRenderingHintAntiAliasGridFit);
+            gdip::GdipSetTextRenderingHint(g, gdip::kTextRenderingHintAntiAlias);
             DrawTrayBadge(g, iconSize, state, settings, isTaskbarLight);
             gdip::GdipDeleteGraphics(g);
         }

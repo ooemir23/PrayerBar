@@ -132,7 +132,7 @@ void InvalidateAccentColorCache() {
 
 uint32_t GetWindowsAccentColorArgb(bool isDark, bool useSystemAccent) {
     if (!useSystemAccent) {
-        return isDark ? 0xFF38C9B2u : 0xFF0D7368u;
+        return isDark ? 0xFF2DD4BFu : 0xFF0D7A6Fu;
     }
 
     // Read once and cache: this runs on every paint. InvalidateAccentColorCache() runs on colour changes.
@@ -145,7 +145,7 @@ uint32_t GetWindowsAccentColorArgb(bool isDark, bool useSystemAccent) {
     }
     DWORD raw = g_accentRawCached;
     if (raw == 0) {
-        return isDark ? 0xFF38C9B2u : 0xFF0D7368u;
+        return isDark ? 0xFF2DD4BFu : 0xFF0D7A6Fu;
     }
 
     int r = static_cast<int>(raw & 0xFFu);
@@ -153,10 +153,10 @@ uint32_t GetWindowsAccentColorArgb(bool isDark, bool useSystemAccent) {
     int b = static_cast<int>((raw >> 16) & 0xFFu);
 
     double lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255.0;
-    if (isDark && lum < 0.46) {
-        r = std::min(255, static_cast<int>(r + (255 - r) * 0.42));
-        g = std::min(255, static_cast<int>(g + (255 - g) * 0.42));
-        b = std::min(255, static_cast<int>(b + (255 - b) * 0.42));
+    if (isDark && lum < 0.55) {
+        r = std::min(255, static_cast<int>(r + (255 - r) * 0.48));
+        g = std::min(255, static_cast<int>(g + (255 - g) * 0.48));
+        b = std::min(255, static_cast<int>(b + (255 - b) * 0.48));
     } else if (!isDark && lum > 0.56) {
         r = static_cast<int>(r * 0.68);
         g = static_cast<int>(g * 0.68);
@@ -172,30 +172,20 @@ COLORREF GetWindowsAccentColorRef(bool isDark, bool useSystemAccent) {
 }
 
 const wchar_t* GetWin11UiFontFaceName(bool display) {
-    static struct FontCache {
-        bool hasDisplay = false;
-        bool hasText = false;
-    } cache = []() -> FontCache {
-        FontCache c;
+    (void)display;
+    static const wchar_t* face = []() -> const wchar_t* {
         HDC dc = GetDC(nullptr);
-        if (dc) {
-            c.hasDisplay = HasFontFamily(dc, L"Segoe UI Variable Display");
-            c.hasText = HasFontFamily(dc, L"Segoe UI Variable Text");
-            ReleaseDC(nullptr, dc);
-        }
-        return c;
+        bool hasSegoe = dc ? HasFontFamily(dc, L"Segoe UI") : true;
+        if (dc) ReleaseDC(nullptr, dc);
+        return hasSegoe ? L"Segoe UI" : L"Segoe UI Variable Text";
     }();
-
-    if (display && cache.hasDisplay) return L"Segoe UI Variable Display";
-    if (cache.hasText) return L"Segoe UI Variable Text";
-    if (cache.hasDisplay) return L"Segoe UI Variable Display";
-    return L"Segoe UI";
+    return face;
 }
 
 HFONT CreateWin11Font(int pixelHeight, int weight, bool display) {
     return CreateFontW(
         pixelHeight, 0, 0, 0, weight, FALSE, FALSE, FALSE, DEFAULT_CHARSET,
-        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY,
+        OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY,
         DEFAULT_PITCH | FF_SWISS, GetWin11UiFontFaceName(display));
 }
 
@@ -227,6 +217,26 @@ UINT GetDpiForWindowCompat(HWND hwnd) {
     return dpiX >= 96 ? static_cast<UINT>(dpiX) : 96U;
 }
 
+UINT GetDpiForMonitorCompat(HMONITOR mon) {
+    using GetDpiForMonFn = HRESULT(WINAPI*)(HMONITOR, int, UINT*, UINT*);
+    static GetDpiForMonFn fn = []() -> GetDpiForMonFn {
+        HMODULE shcore = GetModuleHandleW(L"shcore.dll");
+        if (!shcore) shcore = LoadLibraryW(L"shcore.dll");
+        if (!shcore) return nullptr;
+        return reinterpret_cast<GetDpiForMonFn>(reinterpret_cast<void*>(GetProcAddress(shcore, "GetDpiForMonitor")));
+    }();
+    if (fn && mon) {
+        UINT dpiX = 96, dpiY = 96;
+        if (SUCCEEDED(fn(mon, 0 /*MDT_EFFECTIVE_DPI*/, &dpiX, &dpiY)) && dpiX >= 96) {
+            return dpiX;
+        }
+    }
+    HDC screenDc = GetDC(nullptr);
+    int dpiX = screenDc ? GetDeviceCaps(screenDc, LOGPIXELSX) : 96;
+    if (screenDc) ReleaseDC(nullptr, screenDc);
+    return dpiX >= 96 ? static_cast<UINT>(dpiX) : 96U;
+}
+
 void ApplyWindowDwmStyle(HWND hwnd, bool isDark, int cornerPref, int backdropType) {
     if (!hwnd) return;
     AllowDarkModeForWindowCompat(hwnd, isDark);
@@ -243,9 +253,9 @@ void ApplyWindowDwmStyle(HWND hwnd, bool isDark, int cornerPref, int backdropTyp
     }
 
     // Windows 11 DWM başlık ve kenarlık uyumu (34=BORDER, 35=CAPTION, 36=TEXT)
-    COLORREF borderCol = isDark ? RGB(58, 58, 64) : RGB(214, 218, 224);
-    COLORREF captionCol = isDark ? RGB(32, 32, 32) : RGB(243, 243, 243);
-    COLORREF textCol = isDark ? RGB(245, 245, 245) : RGB(24, 24, 24);
+    COLORREF borderCol = isDark ? RGB(38, 128, 120) : RGB(180, 204, 206);
+    COLORREF captionCol = isDark ? RGB(12, 18, 24) : RGB(231, 239, 240);
+    COLORREF textCol = isDark ? RGB(244, 248, 251) : RGB(15, 27, 34);
     DwmSetWindowAttribute(hwnd, 34, &borderCol, sizeof(borderCol));
     DwmSetWindowAttribute(hwnd, 35, &captionCol, sizeof(captionCol));
     DwmSetWindowAttribute(hwnd, 36, &textCol, sizeof(textCol));

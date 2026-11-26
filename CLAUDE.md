@@ -1,3 +1,3 @@
-# Claude project context
+# Claude project guidance
 
-For location detection, worldwide city search, timezones, and privacy behavior, read `docs/LOCATION_DETECTION_HANDOFF.md` before editing. It records the implementation and invariants future changes must preserve.
+Before changing location detection, city search, timezone handling, or related privacy disclosures, read `docs/LOCATION_DETECTION_HANDOFF.md`. Preserve the manual-location override and keep built-in city search usable offline.

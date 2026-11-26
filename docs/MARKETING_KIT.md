@@ -3,10 +3,10 @@
 Bu doküman; **PrayerBar** uygulamasını Reddit, Türkiye teknoloji forumları, global yazılım dizinleri ve kısa video platformlarında **spam filtresine takılmadan**, her topluluğun anlayacağı sade, fayda odaklı bir dille tanıtmak için hazırlanmış hazır metinleri içerir.
 
 **Temel Bağlantılar:**
-- **Web Sitesi:** https://www.ooemir.com
+- **Web Sitesi:** https://prayerbar.ooemir.com
 - **Microsoft Store:** https://apps.microsoft.com/detail/9MSQBZTPGWX6
 - **GitHub:** https://github.com/ooemir23/PrayerBar
-- **Gizlilik Politikası:** https://ooemir23.github.io/PrayerBar/privacy.html
+- **Gizlilik Politikası:** https://prayerbar.ooemir.com/privacy
 
 ---
 
@@ -42,7 +42,7 @@ Core prayer times, daily reminders, built-in Adhan sounds, and Monthly Imsakiye 
 
 Links:
 - Microsoft Store: https://apps.microsoft.com/detail/9MSQBZTPGWX6
-- Website: https://www.ooemir.com
+- Website: https://prayerbar.ooemir.com
 - GitHub: https://github.com/ooemir23/PrayerBar
 
 Would love any feedback or feature requests!
@@ -67,7 +67,7 @@ So I built **PrayerBar**:
 
 Available on the Microsoft Store and open source on GitHub:
 - Microsoft Store: https://apps.microsoft.com/detail/9MSQBZTPGWX6
-- Website: https://www.ooemir.com
+- Website: https://prayerbar.ooemir.com
 - GitHub: https://github.com/ooemir23/PrayerBar
 
 Happy to hear your thoughts on the taskbar layout and styles!
@@ -94,7 +94,7 @@ Highlights:
 
 Microsoft Store: https://apps.microsoft.com/detail/9MSQBZTPGWX6
 GitHub: https://github.com/ooemir23/PrayerBar
-Website: https://www.ooemir.com
+Website: https://prayerbar.ooemir.com
 ```
 
 ---
@@ -115,7 +115,7 @@ I built **PrayerBar** to sit quietly on the Windows 10/11 taskbar so you can che
 
 Core features are free forever with zero ads:
 - Microsoft Store: https://apps.microsoft.com/detail/9MSQBZTPGWX6
-- Website: https://www.ooemir.com
+- Website: https://prayerbar.ooemir.com
 ```
 
 ---
@@ -140,7 +140,7 @@ Windows'ta görev çubuğunun sağında (veya orta/solunda) sade bir geri sayım
 Temel tüm özellikler (vakitler, bildirimler, ezan sesleri, imsakiye) sonsuza kadar ücretsiz. Ekstra tema/özel ses gibi özellikler için 14 gün Pro deneme ve Microsoft Store üzerinden destek seçeneği bulunuyor.
 
 - Microsoft Store: https://apps.microsoft.com/detail/9MSQBZTPGWX6
-- Web Sitesi: https://www.ooemir.com
+- Web Sitesi: https://prayerbar.ooemir.com
 - GitHub: https://github.com/ooemir23/PrayerBar
 ```
 
@@ -171,7 +171,7 @@ Piyasadaki birçok masaüstü vakit uygulaması arka planda 150–400 MB arası 
 
 **İndirme ve Bilgi:**
 - Microsoft Store: https://apps.microsoft.com/detail/9MSQBZTPGWX6
-- Web Sitesi: https://www.ooemir.com
+- Web Sitesi: https://prayerbar.ooemir.com
 - GitHub: https://github.com/ooemir23/PrayerBar
 ```
 
@@ -225,7 +225,7 @@ Meet PrayerBar for Windows 10/11:
 • Auto-mutes during games & fullscreen
 
 Microsoft Store: https://apps.microsoft.com/detail/9MSQBZTPGWX6
-Website: https://www.ooemir.com
+Website: https://prayerbar.ooemir.com
 ```
 
 ---

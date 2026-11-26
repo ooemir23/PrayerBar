@@ -161,6 +161,7 @@ const std::vector<CityLocation>& GetAllCities() {
         {L"melbourne", L"Melbourne", L"Avustralya", L"AU", -37.8136, 144.9631, L"AUS Eastern Standard Time", L"Melbourne Australia"},
         {L"brisbane", L"Brisbane", L"Avustralya", L"AU", -27.4698, 153.0251, L"E. Australia Standard Time", L"Brisbane Australia"},
         {L"perth", L"Perth", L"Avustralya", L"AU", -31.9505, 115.8605, L"W. Australia Standard Time", L"Perth Australia"},
+        {L"darwin", L"Darwin", L"Avustralya", L"AU", -12.4634, 130.8456, L"AUS Central Standard Time", L"Darwin Australia"},
         {L"canberra", L"Canberra", L"Avustralya", L"AU", -35.2809, 149.1300, L"AUS Eastern Standard Time", L"Canberra Australia"}
     };
     return kCities;

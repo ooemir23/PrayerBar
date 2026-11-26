@@ -1,5 +1,6 @@
 #include "imsakiye_window.h"
 #include "gdiplus_flat.h"
+#include "theme_palette.h"
 #include "../core/i18n.h"
 #include "../core/prayer_calc.h"
 #include "../core/utf_util.h"
@@ -397,24 +398,27 @@ void ImsakiyeWindow::PaintClient(HDC hdc, int width, int height) {
     if (gdip::GdipCreateBitmapFromScan0(width, height, width * 4, gdip::kPixelFormat32bppPARGB, bits, &gdiBmp) == 0 && gdiBmp) {
         if (gdip::GdipGetImageGraphicsContext(gdiBmp, &g) == 0 && g) {
             gdip::GdipSetSmoothingMode(g, gdip::kSmoothingModeAntiAlias);
-            gdip::GdipSetTextRenderingHint(g, gdip::kTextRenderingHintAntiAliasGridFit);
+            gdip::GdipSetTextRenderingHint(g, gdip::kTextRenderingHintAntiAlias);
             gdip::GdipSetCompositingQuality(g, gdip::kCompositingQualityHighQuality);
 
             bool isLight = IsAppLight(settings_.themeMode);
-            uint32_t accent = GetWindowsAccentColorArgb(!isLight, settings_.useSystemAccentColor);
+            auto pal = theme::GetUiPalette(!isLight, settings_.useSystemAccentColor);
+            uint32_t accent = pal.accent;
             AppLanguage lang = settings_.language;
 
-            uint32_t bgSurf = isLight ? 0xFFF3F3F3u : 0xFF202020u;
-            uint32_t cardBg = isLight ? 0xFFFFFFFFu : 0xFF2B2B2Bu;
-            uint32_t altRowBg = isLight ? 0xFFF9FAFCu : 0xFF252629u;
-            uint32_t borderCol = isLight ? 0x1E000000u : 0x22FFFFFFu;
-            uint32_t textPrimary = isLight ? 0xFF1A1A1Au : 0xFFF5F7FAu;
-            uint32_t textSecondary = isLight ? 0xFF5D6472u : 0xFFA6AEBCu;
-            uint32_t btnBg = isLight ? 0xFFFFFFFFu : 0xFF303136u;
-            uint32_t btnHover = isLight ? 0xFFE8ECF2u : 0xFF3C3E45u;
-            uint32_t todayBg = WithAlpha(isLight ? 0x1Cu : 0x2Cu, accent);
-            uint32_t gold = isLight ? 0xFFB86600u : 0xFFFFCE5Eu;
-            uint32_t fridayBg = isLight ? 0x16D97706u : 0x18FBBF24u;
+            uint32_t bgSurf = pal.bgWindow;
+            uint32_t cardBg = pal.bgCard;
+            uint32_t altRowBg = pal.bgCardAlt;
+            uint32_t borderCol = pal.border;
+            uint32_t rowBorder = pal.borderSubtle;
+            uint32_t textPrimary = pal.textPrimary;
+            uint32_t textSecondary = pal.textSecondary;
+            uint32_t btnBg = pal.bgBtn;
+            uint32_t btnHover = pal.bgBtnHover;
+            uint32_t todayBg = pal.bgHighlight;
+            uint32_t gold = pal.gold;
+            uint32_t fridayBg = pal.goldSoftBg;
+            uint32_t hdrBg = isLight ? pal.bgHighlight : 0xFF22303Eu;
 
             gdip::GdipGraphicsClear(g, bgSurf);
 
@@ -434,10 +438,10 @@ void ImsakiyeWindow::PaintClient(HDC hdc, int width, int height) {
             auto drawBtn = [&](RECT& outRc, float x, float bw, BtnId id, const wchar_t* label, bool highlighted = false) {
                 outRc = {static_cast<LONG>(x), static_cast<LONG>(topY),
                          static_cast<LONG>(x + bw), static_cast<LONG>(topY + btnH)};
-                uint32_t fill = highlighted ? WithAlpha(0x30u, accent) : (hoveredBtn_ == id ? btnHover : btnBg);
-                uint32_t bdr = highlighted ? accent : borderCol;
-                gdip::FillRoundedRect(g, x, topY, bw, btnH, 6.0f * s, fill);
-                gdip::StrokeRoundedRect(g, x, topY, bw, btnH, 6.0f * s, bdr, 1.0f);
+                uint32_t fill = highlighted ? pal.bgHighlight : (hoveredBtn_ == id ? btnHover : btnBg);
+                uint32_t bdr = highlighted ? pal.borderAccent : (hoveredBtn_ == id ? pal.borderAccentSoft : borderCol);
+                gdip::FillRoundedRect(g, x, topY, bw, btnH, 8.0f * s, fill);
+                gdip::StrokeRoundedRect(g, x, topY, bw, btnH, 8.0f * s, bdr, highlighted ? 1.2f : 1.0f);
                 gdip::DrawTextBox(g, label, uiFam, 11.2f * s, highlighted, highlighted ? accent : textPrimary,
                                   x, topY, bw, btnH, gdip::kStringAlignmentCenter, gdip::kStringAlignmentCenter);
             };
@@ -453,7 +457,7 @@ void ImsakiyeWindow::PaintClient(HDC hdc, int width, int height) {
             float csvW = 82.0f * s;
             float syncW = 78.0f * s;
             rightX -= htmlW;
-            drawBtn(tbRc_.htmlRc, rightX, htmlW, BtnId::ExportHtml, Tr(lang, StrId::BtnExportHtml));
+            drawBtn(tbRc_.htmlRc, rightX, htmlW, BtnId::ExportHtml, Tr(lang, StrId::BtnExportHtml), true);
             rightX -= (csvW + 6.0f * s);
             drawBtn(tbRc_.csvRc, rightX, csvW, BtnId::ExportCsv, Tr(lang, StrId::BtnExportCsv));
             rightX -= (syncW + 6.0f * s);
@@ -469,30 +473,32 @@ void ImsakiyeWindow::PaintClient(HDC hdc, int width, int height) {
                 periodTitle = std::wstring(GetFullMonthName(viewMonth_, lang)) + L" " + std::to_wstring(viewYear_);
             }
             std::wstring fullTitle = settings_.cityName + L" · " + periodTitle;
+            theme::DrawBrandLogoTile(g, pad, 43.0f * s, 20.0f * s);
             gdip::DrawTextBox(g, fullTitle, dispFam, 14.5f * s, true, textPrimary,
-                              pad, 44.0f * s, w - pad * 2.0f, 20.0f * s,
+                              pad + 26.0f * s, 43.0f * s, w - pad * 2.0f - 26.0f * s, 20.0f * s,
                               gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
 
             // Sabit Tablo Başlığı
             float listW = w - pad * 2.0f;
-            float hdrY = 64.0f * s;
+            float hdrY = 66.0f * s;
             float hdrH = 22.0f * s;
-            gdip::FillRoundedRect(g, pad, hdrY, listW, hdrH, 5.0f * s, WithAlpha(isLight ? 0x1Au : 0x2Au, accent));
+            gdip::FillRoundedRect(g, pad, hdrY, listW, hdrH, 6.0f * s, hdrBg);
+            gdip::StrokeRoundedRect(g, pad, hdrY, listW, hdrH, 6.0f * s, borderCol, 1.0f);
 
             float colDateW = listW * 0.21f;
             float colHijriW = listW * 0.21f;
             float colPrayerW = (listW - colDateW - colHijriW) / 6.0f;
 
-            gdip::DrawTextBox(g, Tr(lang, StrId::ColDate), uiFam, 10.5f * s, true, textPrimary,
+            gdip::DrawTextBox(g, Tr(lang, StrId::ColDate), uiFam, 10.5f * s, true, accent,
                               pad + 8.0f * s, hdrY, colDateW - 8.0f * s, hdrH,
                               gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
-            gdip::DrawTextBox(g, Tr(lang, StrId::ColHijri), uiFam, 10.5f * s, true, textPrimary,
+            gdip::DrawTextBox(g, Tr(lang, StrId::ColHijri), uiFam, 10.5f * s, true, accent,
                               pad + colDateW, hdrY, colHijriW, hdrH,
                               gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
             for (int c = 0; c < 6; ++c) {
                 float cx = pad + colDateW + colHijriW + c * colPrayerW;
                 gdip::DrawTextBox(g, GetEffectivePrayerName(static_cast<PrayerKind>(c), settings_),
-                                  uiFam, 10.5f * s, true, textPrimary,
+                                  uiFam, 10.5f * s, true, accent,
                                   cx, hdrY, colPrayerW, hdrH,
                                   gdip::kStringAlignmentCenter, gdip::kStringAlignmentCenter);
             }
@@ -513,10 +519,9 @@ void ImsakiyeWindow::PaintClient(HDC hdc, int width, int height) {
                 bool isFriday = (r.date.DayOfWeek() == 5);
 
                 uint32_t rBg = isToday ? todayBg : (isFriday ? fridayBg : (i % 2 == 0 ? cardBg : altRowBg));
-                gdip::FillRoundedRect(g, pad, ry + 1.0f, listW, rowH - 2.0f, 4.0f * s, rBg);
-                if (isToday) {
-                    gdip::StrokeRoundedRect(g, pad, ry + 1.0f, listW, rowH - 2.0f, 4.0f * s, accent, 1.2f);
-                }
+                gdip::FillRoundedRect(g, pad, ry + 1.0f, listW, rowH - 2.0f, 5.0f * s, rBg);
+                gdip::StrokeRoundedRect(g, pad, ry + 1.0f, listW, rowH - 2.0f, 5.0f * s,
+                                        isToday ? pal.borderAccent : rowBorder, isToday ? 1.6f : 1.0f);
 
                 wchar_t dBuf[64];
                 if (ramadanMode_) {
@@ -529,21 +534,22 @@ void ImsakiyeWindow::PaintClient(HDC hdc, int width, int height) {
                                GetShortWeekdayName(r.date.DayOfWeek(), lang));
                 }
 
-                uint32_t dCol = isToday ? accent : (isFriday ? gold : textPrimary);
+                uint32_t dCol = isToday ? gold : (isFriday ? gold : textPrimary);
                 gdip::DrawTextBox(g, dBuf, uiFam, 10.8f * s, isToday || isFriday, dCol,
                                   pad + 8.0f * s, ry, colDateW - 8.0f * s, rowH,
                                   gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
 
-                gdip::DrawTextBox(g, FormatHijriDateLocalized(r.date, lang), uiFam, 10.2f * s, false, textSecondary,
+                gdip::DrawTextBox(g, FormatHijriDateLocalized(r.date, lang), uiFam, 10.2f * s, false,
+                                  isToday ? gold : textSecondary,
                                   pad + colDateW, ry, colHijriW, rowH,
                                   gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
 
                 TimeHM times[6] = {r.imsak, r.gunes, r.ogle, r.ikindi, r.aksam, r.yatsi};
                 for (int c = 0; c < 6; ++c) {
                     float cx = pad + colDateW + colHijriW + c * colPrayerW;
-                    bool ramAccent = ramadanMode_ && (c == 0 || c == 4);
-                    uint32_t tCol = ramAccent ? accent : textPrimary;
-                    gdip::DrawTextBox(g, times[c].FormatHHMM(), uiFam, 11.2f * s, isToday || ramAccent, tCol,
+                    bool iftarOrSuhoor = (c == 4) || (ramadanMode_ && c == 0);
+                    uint32_t tCol = isToday ? gold : (iftarOrSuhoor ? accent : textPrimary);
+                    gdip::DrawTextBox(g, times[c].FormatHHMM(), uiFam, 11.2f * s, isToday || iftarOrSuhoor, tCol,
                                       cx, ry, colPrayerW, rowH,
                                       gdip::kStringAlignmentCenter, gdip::kStringAlignmentCenter);
                 }

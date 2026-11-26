@@ -18,6 +18,10 @@ $stagingDir = Join-Path $repoRoot "dist\_stage_win-${Arch}_$PID"
 $toolsDir = Join-Path $repoRoot ".tools\winsdk-buildtools"
 
 $config = Get-Content $configPath -Raw -Encoding UTF8 | ConvertFrom-Json
+$storeMsixPath = Join-Path $distDir "PrayerBar_$($config.Version)_${Arch}_Store.msix"
+if (Test-Path $storeMsixPath) {
+    throw "Refusing to overwrite an existing MSIX package: $storeMsixPath"
+}
 
 # 1. Görsel varlıklar eksikse üret
 if (-not (Test-Path (Join-Path $assetsSrc "app.ico"))) {
@@ -112,7 +116,6 @@ try {
     }
 
     # 5. Store MSIX paketle
-    $storeMsixPath = Join-Path $distDir "PrayerBar_$($config.Version)_${Arch}_Store.msix"
     Write-Host "[5/5] Packing MSIX -> $storeMsixPath"
     & $makeappx pack /d $stagingDir /p $storeMsixPath /o
     if ($LASTEXITCODE -ne 0) {

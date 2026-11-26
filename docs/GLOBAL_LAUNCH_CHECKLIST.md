@@ -16,9 +16,9 @@ Partner Center içinde uygulamanızın **Add-ons** bölümünden iki eklenti aç
 3. Ana uygulama Store ID (`9N...`) → `kStoreAppProductId`, `kMicrosoftStorePdpUri`, `kMicrosoftStoreReviewUri`
 
 ## Adım 3 — Gizlilik Politikası Linki (TAMAMLANDI & YAYINDA!)
-Ücretsiz GitHub Pages üzerinden HTTPS gizlilik politikası ve destek siteniz aktif edildi:
-- **Privacy Policy URL (Partner Center için zorunlu):** `https://ooemir23.github.io/PrayerBar/privacy.html`
-- **Support / Website URL:** `https://ooemir23.github.io/PrayerBar/`
+`https://prayerbar.ooemir.com` üzerinden HTTPS gizlilik politikası ve destek siteniz aktif edildi:
+- **Privacy Policy URL (Partner Center için zorunlu):** `https://prayerbar.ooemir.com/privacy`
+- **Support / Website URL:** `https://prayerbar.ooemir.com/`
 - Bu bağlantıyı Partner Center'da her dilin **Privacy policy URL** alanına ekleyin.
 
 ## Adım 4 — Paketleme ve Mağazaya Yükleme

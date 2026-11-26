@@ -24,21 +24,12 @@ constexpr int kCmdOpenSettings = 1003;
 constexpr int kCmdExit = 1004;
 constexpr int kCmdStopSound = 1005;
 constexpr int kCmdOpenImsakiye = 1006;
-constexpr int kCmdToggleTray = 1007;
-constexpr int kCmdTogglePill = 1008;
 constexpr int kCmdOpenPro = 1009;
 constexpr int kCmdMute1h = 1010;
 constexpr int kCmdMuteToday = 1011;
 constexpr int kCmdUnmute = 1012;
 constexpr int kCmdTestNotif = 1013;
-constexpr int kCmdNotifSettings = 1014;
 constexpr int kCmdChangeLocation = 1015;
-constexpr int kCmdToggleSeconds = 1016;
-constexpr int kCmdRateStore = 1017;
-constexpr int kCmdAbout = 1018;
-constexpr int kCmdThemeBase = 1100;
-constexpr int kCmdStyleBase = 2000;
-constexpr int kCmdFlyoutBase = 2100;
 
 TaskbarBandWindow* g_bandInstance = nullptr;
 
@@ -173,14 +164,15 @@ void TaskbarBandWindow::Update(const PrayerCountdownState& state, const AppSetti
     int progressBucket = settings.showProgressBar ? static_cast<int>(std::llround(display.progress * 100.0)) : -1;
 
     wchar_t sigBuf[512];
-    swprintf_s(sigBuf, L"%d|%d|%d|%d|%ls|%ls|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d",
+    swprintf_s(sigBuf, L"%d|%d|%d|%d|%ls|%ls|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d",
                placement.x, placement.y, placement.width, placement.height,
                display.line1.c_str(), display.line2.c_str(),
                display.showPhaseIcon ? 1 : 0, display.showDot ? 1 : 0,
                static_cast<int>(display.nextPrayer), display.isUrgent ? 1 : 0,
                progressBucket, isHovered_ ? 1 : 0, isFlyoutOpen_ ? 1 : 0,
                isLight ? 1 : 0, useOpaque ? 1 : 0, static_cast<int>(settings.fontSize),
-               settings.useSystemAccentColor ? 1 : 0, static_cast<int>(settings.language));
+               settings.useSystemAccentColor ? 1 : 0, static_cast<int>(settings.language),
+               settings.showTaskbarFrame ? 1 : 0, settings.showTaskbarLogo ? 1 : 0);
     std::wstring sig(sigBuf);
 
     currentRect_ = {placement.x, placement.y, placement.x + placement.width, placement.y + placement.height};
@@ -226,26 +218,16 @@ void TaskbarBandWindow::ShowContextMenu(int screenX, int screenY) {
 
     HMENU menu = CreatePopupMenu();
     HMENU notifSub = CreatePopupMenu();
-    HMENU lookSub = CreatePopupMenu();
-    HMENU styleSub = CreatePopupMenu();
-    HMENU flyoutSub = CreatePopupMenu();
-    HMENU themeSub = CreatePopupMenu();
-    HMENU helpSub = CreatePopupMenu();
-    HMENU all[] = {notifSub, lookSub, styleSub, flyoutSub, themeSub, helpSub, menu};
-    for (HMENU m : all) {
-        if (!m) {
-            for (HMENU d : all) if (d) DestroyMenu(d);
-            return;
-        }
+    if (!menu || !notifSub) {
+        if (notifSub) DestroyMenu(notifSub);
+        if (menu) DestroyMenu(menu);
+        return;
     }
 
     const AppSettings& s = currentSettings_;
     AppLanguage lang = s.language;
     auto add = [](HMENU m, UINT id, const std::wstring& text, bool checked = false, bool enabled = true) {
         AppendMenuW(m, MF_STRING | (checked ? MF_CHECKED : 0) | (enabled ? 0 : MF_GRAYED), id, text.c_str());
-    };
-    auto sub = [](HMENU m, HMENU child, const wchar_t* text) {
-        AppendMenuW(m, MF_POPUP, reinterpret_cast<UINT_PTR>(child), text);
     };
     auto sep = [](HMENU m) { AppendMenuW(m, MF_SEPARATOR, 0, nullptr); };
     auto fmt = [](const wchar_t* pattern, const std::wstring& arg) {
@@ -254,7 +236,7 @@ void TaskbarBandWindow::ShowContextMenu(int screenX, int screenY) {
         return std::wstring(buf);
     };
 
-    // 1) Status header: next prayer + time left. Bold default item; opens the flyout.
+    // 1) Status header (default item) + active audio stop
     if (hasState_) {
         TimeHM nextHm{lastState_.nextPrayerDateTime.hour, lastState_.nextPrayerDateTime.minute};
         std::wstring header = std::wstring(Tr(lang, StrId::BadgeNext)) + L": " +
@@ -269,9 +251,14 @@ void TaskbarBandWindow::ShowContextMenu(int screenX, int screenY) {
         add(menu, kCmdStopSound, Tr(lang, StrId::StopSoundMenu));
     }
     sep(menu);
-    add(menu, kCmdOpenImsakiye, Tr(lang, StrId::OpenImsakiye));
 
-    // 2) Notifications: temporary mute + test
+    // 2) Core daily actions
+    add(menu, kCmdOpenImsakiye, Tr(lang, StrId::OpenImsakiye));
+    add(menu, kCmdChangeLocation, fmt(Tr(lang, StrId::MenuChangeLocation), s.cityName));
+    add(menu, kCmdRefresh, Tr(lang, StrId::RefreshNow));
+    sep(menu);
+
+    // 3) Single-level Notifications submenu
     LocalDateTime now = ScheduleService::GetCurrentLocalDateTime();
     int nowMin = static_cast<int>(now.ToEpochSeconds() / 60);
     bool muted = s.notifyMuteUntilMin > nowMin;
@@ -287,44 +274,14 @@ void TaskbarBandWindow::ShowContextMenu(int screenX, int screenY) {
     add(notifSub, kCmdMuteToday, Tr(lang, StrId::MenuMuteToday));
     sep(notifSub);
     add(notifSub, kCmdTestNotif, Tr(lang, StrId::BtnTestNotif));
-    add(notifSub, kCmdNotifSettings, Tr(lang, StrId::SettingsEllipsis));
-    sub(menu, notifSub, Tr(lang, StrId::MenuNotifications));
+    AppendMenuW(menu, MF_POPUP, reinterpret_cast<UINT_PTR>(notifSub), Tr(lang, StrId::MenuNotifications));
 
-    // 3) Appearance
-    for (int i = 0; i <= 8; ++i) {
-        auto st = static_cast<TaskbarDisplayStyle>(i);
-        add(styleSub, static_cast<UINT>(kCmdStyleBase + i), GetStyleFriendlyNameLocalized(st, lang), s.displayStyle == st);
-    }
-    for (int i = 0; i <= 3; ++i) {
-        auto fd = static_cast<FlyoutDesignStyle>(i);
-        add(flyoutSub, static_cast<UINT>(kCmdFlyoutBase + i), GetFlyoutDesignFriendlyName(fd, lang), s.flyoutDesign == fd);
-    }
-    add(themeSub, kCmdThemeBase + 0, Tr(lang, StrId::ThemeSystem), s.themeMode == AppThemeMode::System);
-    add(themeSub, kCmdThemeBase + 1, Tr(lang, StrId::ThemeDark), s.themeMode == AppThemeMode::Dark);
-    add(themeSub, kCmdThemeBase + 2, Tr(lang, StrId::ThemeLight), s.themeMode == AppThemeMode::Light);
-    sub(lookSub, styleSub, Tr(lang, StrId::TaskbarStyleMenu));
-    sub(lookSub, flyoutSub, Tr(lang, StrId::FlyoutDesignMenu));
-    sub(lookSub, themeSub, Tr(lang, StrId::MenuTheme));
-    sep(lookSub);
-    // At least one of pill / tray must stay visible, so the last visible one is disabled.
-    add(lookSub, kCmdTogglePill, Tr(lang, StrId::ShowInTaskbarMenu), s.showTaskbarPill, s.showTrayIcon);
-    add(lookSub, kCmdToggleTray, Tr(lang, StrId::ShowInTrayMenu), s.showTrayIcon, s.showTaskbarPill);
-    add(lookSub, kCmdToggleSeconds, Tr(lang, StrId::MenuShowSeconds), s.showSeconds);
-    sub(menu, lookSub, Tr(lang, StrId::MenuAppearance));
-
-    // 4) Location + data
-    sep(menu);
-    add(menu, kCmdChangeLocation, fmt(Tr(lang, StrId::MenuChangeLocation), s.cityName));
-    add(menu, kCmdRefresh, Tr(lang, StrId::RefreshNow));
-
-    // 5) Pro, help, settings, exit
-    sep(menu);
-    bool isPaidPro = isPaidProFn_ ? isPaidProFn_() : false;
-    add(menu, kCmdOpenPro, Tr(lang, isPaidPro ? StrId::MenuManageLicense : StrId::MenuUpgradePro));
-    add(helpSub, kCmdRateStore, Tr(lang, StrId::BtnRateStore));
-    add(helpSub, kCmdAbout, Tr(lang, StrId::MenuAbout));
-    sub(menu, helpSub, Tr(lang, StrId::MenuHelp));
+    // 4) Settings (all appearance & style controls live here with live preview), Pro, Exit
     add(menu, kCmdOpenSettings, Tr(lang, StrId::SettingsEllipsis));
+    bool isPaidPro = isPaidProFn_ ? isPaidProFn_() : false;
+    if (!isPaidPro) {
+        add(menu, kCmdOpenPro, Tr(lang, StrId::MenuUpgradePro));
+    }
     sep(menu);
     add(menu, kCmdExit, Tr(lang, StrId::ExitApp));
 
@@ -345,10 +302,6 @@ void TaskbarBandWindow::ShowContextMenu(int screenX, int screenY) {
         if (onOpenImsakiye_) onOpenImsakiye_();
     } else if (cmd == kCmdOpenPro) {
         if (onOpenPro_) onOpenPro_();
-    } else if (cmd == kCmdToggleTray) {
-        if (onToggleTrayIcon_) onToggleTrayIcon_(!s.showTrayIcon);
-    } else if (cmd == kCmdTogglePill) {
-        if (onToggleTaskbarPill_) onToggleTaskbarPill_(!s.showTaskbarPill);
     } else if (cmd == kCmdRefresh) {
         if (onRefresh_) onRefresh_();
     } else if (cmd == kCmdOpenSettings) {
@@ -364,26 +317,12 @@ void TaskbarBandWindow::ShowContextMenu(int screenX, int screenY) {
         mutate([](AppSettings& a) { a.notifyMuteUntilMin = 0; });
     } else if (cmd == kCmdTestNotif) {
         if (onTestNotification_) onTestNotification_();
-    } else if (cmd == kCmdNotifSettings) {
-        if (onOpenSettingsTab_) onOpenSettingsTab_(2);
     } else if (cmd == kCmdChangeLocation) {
         if (onOpenSettingsTab_) onOpenSettingsTab_(1);
-    } else if (cmd == kCmdToggleSeconds) {
-        mutate([](AppSettings& a) { a.showSeconds = !a.showSeconds; });
-    } else if (cmd >= kCmdThemeBase && cmd <= kCmdThemeBase + 2) {
-        mutate([cmd](AppSettings& a) { a.themeMode = static_cast<AppThemeMode>(cmd - kCmdThemeBase); });
-    } else if (cmd == kCmdRateStore) {
-        ShellExecuteW(hwnd_, L"open", commercial::kMicrosoftStoreReviewUri, nullptr, nullptr, SW_SHOWNORMAL);
-    } else if (cmd == kCmdAbout) {
-        MessageBoxW(nullptr, fmt(Tr(lang, StrId::AboutBody), commercial::kAppVersionW).c_str(), L"PrayerBar",
-                    MB_OK | MB_ICONINFORMATION | MB_SETFOREGROUND | (IsRtlLanguage(lang) ? (MB_RTLREADING | MB_RIGHT) : 0));
-    } else if (cmd >= kCmdStyleBase && cmd < kCmdStyleBase + 20) {
-        if (onQuickStyle_) onQuickStyle_(static_cast<TaskbarDisplayStyle>(cmd - kCmdStyleBase));
-    } else if (cmd >= kCmdFlyoutBase && cmd < kCmdFlyoutBase + 10) {
-        if (onQuickFlyoutDesign_) onQuickFlyoutDesign_(static_cast<FlyoutDesignStyle>(cmd - kCmdFlyoutBase));
     }
 
-    for (HMENU d : all) DestroyMenu(d);
+    DestroyMenu(notifSub);
+    DestroyMenu(menu);
 }
 
 void CALLBACK TaskbarBandWindow::WinEventStatic(

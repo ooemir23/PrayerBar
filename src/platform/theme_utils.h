@@ -36,6 +36,7 @@ HFONT CreateWin11Font(int pixelHeight, int weight, bool display = false);
 
 void ApplyWindowDwmStyle(HWND hwnd, bool isDark, int cornerPref = 2, int backdropType = 2);
 UINT GetDpiForWindowCompat(HWND hwnd);
+UINT GetDpiForMonitorCompat(HMONITOR mon);
 
 bool IsStartupEnabled();
 bool SetStartupEnabled(bool enable, std::wstring& outNote);

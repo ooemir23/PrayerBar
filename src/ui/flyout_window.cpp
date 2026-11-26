@@ -1,6 +1,7 @@
 #include "flyout_window.h"
 #include "../core/prayer_tracking.h"
 #include "gdiplus_flat.h"
+#include "theme_palette.h"
 #include "../core/formatter.h"
 #include "../core/i18n.h"
 #include "../core/prayer_calc.h"
@@ -63,10 +64,12 @@ struct Palette {
     bool isLight = false;
     uint32_t bgSurf = 0;
     uint32_t borderCol = 0;
+    uint32_t outerBorder = 0;
     uint32_t cardBg = 0;
     uint32_t cardAlt = 0;
     uint32_t heroBg = 0;
     uint32_t heroBorder = 0;
+    uint32_t heroValue = 0;
     uint32_t textPrimary = 0;
     uint32_t textSecondary = 0;
     uint32_t accent = 0;
@@ -74,28 +77,33 @@ struct Palette {
     uint32_t amberBg = 0;
     uint32_t amberBorder = 0;
     uint32_t rowActiveBg = 0;
+    uint32_t rowActiveText = 0;
     uint32_t chipBg = 0;
     uint32_t btnHoverBg = 0;
 };
 
-Palette MakePalette(bool isLight, uint32_t accent) {
+Palette MakePalette(bool isLight, bool useSystemAccent) {
+    auto u = theme::GetUiPalette(!isLight, useSystemAccent);
     Palette p;
     p.isLight = isLight;
-    p.accent = accent;
-    p.bgSurf = isLight ? 0xFFF3F3F3u : 0xFF202020u;
-    p.borderCol = isLight ? 0x1E000000u : 0x22FFFFFFu;
-    p.cardBg = isLight ? 0xFFFFFFFFu : 0xFF2B2B2Bu;
-    p.cardAlt = isLight ? 0xFFF9F9FBu : 0xFF262628u;
-    p.heroBg = isLight ? WithAlpha(0x18u, accent) : WithAlpha(0x28u, accent);
-    p.heroBorder = WithAlpha(0x66u, accent);
-    p.textPrimary = isLight ? 0xFF1A1A1Au : 0xFFF5F7FAu;
-    p.textSecondary = isLight ? 0xFF5D6472u : 0xFFA6AEBCu;
-    p.gold = isLight ? 0xFFB86600u : 0xFFFFCE5Eu;
-    p.amberBg = isLight ? 0x22D97706u : 0x2AF59E0Bu;
-    p.amberBorder = isLight ? 0x66D97706u : 0x77FBBF24u;
-    p.rowActiveBg = WithAlpha(isLight ? 0x1Au : 0x2Eu, accent);
-    p.chipBg = isLight ? 0x0F000000u : 0x16FFFFFFu;
-    p.btnHoverBg = isLight ? 0x1C000000u : 0x26FFFFFFu;
+    p.accent = u.accent;
+    p.bgSurf = u.bgWindow;
+    p.borderCol = u.border;
+    p.outerBorder = u.borderAccentSoft;
+    p.cardBg = u.bgCard;
+    p.cardAlt = u.bgCardAlt;
+    p.heroBg = u.bgHighlight;
+    p.heroBorder = u.borderAccent;
+    p.heroValue = isLight ? u.accent : u.gold;
+    p.textPrimary = u.textPrimary;
+    p.textSecondary = u.textSecondary;
+    p.gold = u.gold;
+    p.amberBg = u.amberBg;
+    p.amberBorder = u.amberBorder;
+    p.rowActiveBg = u.bgHighlight;
+    p.rowActiveText = isLight ? u.accent : u.gold;
+    p.chipBg = u.chipBg;
+    p.btnHoverBg = u.bgBtnHover;
     return p;
 }
 
@@ -126,7 +134,7 @@ void DrawQiblaCompass(
     float s) {
 
     void* ringPen = nullptr;
-    gdip::GdipCreatePen1(pal.borderCol, 1.4f * s, gdip::kUnitPixel, &ringPen);
+    gdip::GdipCreatePen1(WithAlpha(0x88u, pal.accent), 1.6f * s, gdip::kUnitPixel, &ringPen);
     if (ringPen) {
         gdip::GdipDrawEllipse(g, ringPen, cx - radius, cy - radius, radius * 2.0f, radius * 2.0f);
         gdip::GdipDeletePen(ringPen);
@@ -134,7 +142,7 @@ void DrawQiblaCompass(
 
     // N / E / S / W işaretleri
     const wchar_t* north = GetCompassDirectionLocalized(0.0, lang);
-    gdip::DrawTextBox(g, north, uiFamily, 8.0f * s, true, pal.textSecondary,
+    gdip::DrawTextBox(g, north, uiFamily, 8.2f * s, true, pal.textSecondary,
                       cx - 10.0f * s, cy - radius - 1.0f * s, 20.0f * s, 11.0f * s,
                       gdip::kStringAlignmentCenter, gdip::kStringAlignmentNear);
 
@@ -153,7 +161,7 @@ void DrawQiblaCompass(
     }
 
     void* arrowPen = nullptr;
-    gdip::GdipCreatePen1(pal.accent, 2.4f * s, gdip::kUnitPixel, &arrowPen);
+    gdip::GdipCreatePen1(pal.gold, 2.5f * s, gdip::kUnitPixel, &arrowPen);
     if (arrowPen) {
         gdip::GdipDrawLine(g, arrowPen, cx, cy, tipX, tipY);
         gdip::GdipDeletePen(arrowPen);
@@ -162,12 +170,12 @@ void DrawQiblaCompass(
     void* dotBrush = nullptr;
     gdip::GdipCreateSolidFill(pal.gold, &dotBrush);
     if (dotBrush) {
-        float d = 4.5f * s;
+        float d = 5.0f * s;
         gdip::GdipFillEllipse(g, dotBrush, tipX - d * 0.5f, tipY - d * 0.5f, d, d);
         gdip::GdipDeleteBrush(dotBrush);
     }
     void* centerBrush = nullptr;
-    gdip::GdipCreateSolidFill(pal.textPrimary, &centerBrush);
+    gdip::GdipCreateSolidFill(pal.accent, &centerBrush);
     if (centerBrush) {
         float d = 4.0f * s;
         gdip::GdipFillEllipse(g, centerBrush, cx - d * 0.5f, cy - d * 0.5f, d, d);
@@ -194,6 +202,17 @@ void DrawKerahatChip(
     gdip::DrawTextBox(g, label, uiFamily, 10.0f * s, true, pal.gold,
                       x + 8.0f * s, y, w - 16.0f * s, h,
                       gdip::kStringAlignmentCenter, gdip::kStringAlignmentCenter);
+}
+
+void DrawResizeGrip(void* g, float s, uint32_t col) {
+    void* br = nullptr;
+    if (gdip::GdipCreateSolidFill(col, &br) == 0 && br) {
+        float d = std::max(1.8f, 2.0f * s);
+        gdip::GdipFillEllipse(g, br, 5.0f * s, 5.0f * s, d, d);
+        gdip::GdipFillEllipse(g, br, 9.0f * s, 5.0f * s, d, d);
+        gdip::GdipFillEllipse(g, br, 5.0f * s, 9.0f * s, d, d);
+        gdip::GdipDeleteBrush(br);
+    }
 }
 
 struct FlyoutButtonsOut {
@@ -223,11 +242,10 @@ void RenderFlyoutSurface(
     FlyoutButtonsOut& outBtns) {
 
     gdip::GdipSetSmoothingMode(g, gdip::kSmoothingModeAntiAlias);
-    gdip::GdipSetTextRenderingHint(g, gdip::kTextRenderingHintAntiAliasGridFit);
+    gdip::GdipSetTextRenderingHint(g, gdip::kTextRenderingHintAntiAlias);
     gdip::GdipSetCompositingQuality(g, gdip::kCompositingQualityHighQuality);
 
-    uint32_t accentCol = GetWindowsAccentColorArgb(!isLight, settings.useSystemAccentColor);
-    Palette pal = MakePalette(isLight, accentCol);
+    Palette pal = MakePalette(isLight, settings.useSystemAccentColor);
     AppLanguage lang = settings.language;
 
     gdip::GdipGraphicsClear(g, pal.bgSurf);
@@ -240,7 +258,8 @@ void RenderFlyoutSurface(
     void* displayFamily = gdip::CreateBestUiFontFamily(true);
     void* iconFamily = gdip::CreateFluentIconFontFamily();
 
-    gdip::StrokeRoundedRect(g, 0.5f, 0.5f, w - 1.0f, h - 1.0f, 9.0f * s, pal.borderCol, 1.0f);
+    gdip::StrokeRoundedRect(g, 0.6f, 0.6f, w - 1.2f, h - 1.2f, 10.0f * s, pal.outerBorder, std::max(1.0f, 1.2f * s));
+    DrawResizeGrip(g, s, WithAlpha(0x88u, pal.textSecondary));
 
     const float footerH = (22.0f + static_cast<float>(FlyoutExtraFooterDip(settings))) * s;
     const bool tracking = settings.prayerTracking;
@@ -303,16 +322,19 @@ void RenderFlyoutSurface(
     drawHdrBtn(outBtns.refreshRc, refreshBusy ? L"\uE895" : L"\uE72C", refreshBusy ? L"…" : L"↻", refreshId, pal.textPrimary);
     drawHdrBtn(outBtns.settingsRc, L"\uE713", L"⚙", settingsId, pal.textPrimary);
 
-    // Başlık (Şehir + Tarih)
-    float headerTextW = (audioPlaying ? btnStopX : btnImsX) - pad - 6.0f * s;
+    // Başlık (Marka ikonu + Şehir + Tarih)
+    float logoSz = 26.0f * s;
+    theme::DrawBrandLogoTile(g, pad, 9.0f * s, logoSz);
+    float headerX = pad + logoSz + 8.0f * s;
+    float headerTextW = (audioPlaying ? btnStopX : btnImsX) - headerX - 6.0f * s;
     std::wstring cityTitle = settings.cityName + L", " + settings.countryName;
-    gdip::DrawTextBox(g, cityTitle, displayFamily, 13.5f * s, true, pal.textPrimary,
-                      pad, 8.0f * s, std::max(60.0f, headerTextW), 18.0f * s,
+    gdip::DrawTextBox(g, cityTitle, displayFamily, 13.2f * s, true, pal.textPrimary,
+                      headerX, 8.0f * s, std::max(60.0f, headerTextW), 18.0f * s,
                       gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
 
     std::wstring subText = FormatGregorianSubtext(now, state, lang);
-    gdip::DrawTextBox(g, subText, uiFamily, 10.2f * s, false, pal.textSecondary,
-                      pad, 25.5f * s, std::max(60.0f, headerTextW), 15.0f * s,
+    gdip::DrawTextBox(g, subText, uiFamily, 10.0f * s, false, pal.accent,
+                      headerX, 25.5f * s, std::max(60.0f, headerTextW), 15.0f * s,
                       gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
 
     bool showKerahat = settings.showKerahatIndicator && state.kerahatStatus != KerahatStatus::None;
@@ -334,7 +356,7 @@ void RenderFlyoutSurface(
         gdip::DrawTextBox(g, nextUpper, uiFamily, 9.8f * s, true, pal.accent,
                           pad, heroY, contentW, 14.0f * s,
                           gdip::kStringAlignmentCenter, gdip::kStringAlignmentCenter);
-        gdip::DrawTextBox(g, heroRemain, displayFamily, 22.0f * s, true, pal.textPrimary,
+        gdip::DrawTextBox(g, heroRemain, displayFamily, 22.0f * s, true, pal.heroValue,
                           pad, heroY + 13.0f * s, contentW, 28.0f * s,
                           gdip::kStringAlignmentCenter, gdip::kStringAlignmentCenter);
 
@@ -354,7 +376,9 @@ void RenderFlyoutSurface(
             bool isPassed = (tm < nowHm && !isCurrent && !isNext);
 
             if (isNext) {
-                gdip::FillRoundedRect(g, pad, rowY, contentW, rowH - 2.0f * s, 4.0f * s, pal.rowActiveBg);
+                gdip::FillRoundedRect(g, pad, rowY, contentW, rowH - 2.0f * s, 5.0f * s, pal.rowActiveBg);
+                gdip::StrokeRoundedRect(g, pad, rowY, contentW, rowH - 2.0f * s, 5.0f * s, pal.accent, 1.1f);
+                gdip::FillRoundedRect(g, pad + 3.0f * s, rowY + 5.0f * s, 3.0f * s, rowH - 12.0f * s, 1.5f * s, pal.gold);
             } else if (i > 0) {
                 void* linePen = nullptr;
                 gdip::GdipCreatePen1(pal.borderCol, 1.0f, gdip::kUnitPixel, &linePen);
@@ -368,19 +392,19 @@ void RenderFlyoutSurface(
             gdip::GdipCreateSolidFill(PrayerDotArgb(kind, isPassed), &dotBrush);
             if (dotBrush) {
                 float dSz = 5.5f * s;
-                gdip::GdipFillEllipse(g, dotBrush, pad + 6.0f * s, rowY + (rowH - dSz) * 0.5f, dSz, dSz);
+                gdip::GdipFillEllipse(g, dotBrush, pad + 11.0f * s, rowY + (rowH - dSz) * 0.5f, dSz, dSz);
                 gdip::GdipDeleteBrush(dotBrush);
             }
-            trackRow(kind, pad, rowY, contentW, rowH, pad + 8.75f * s, rowY + rowH * 0.5f);
+            trackRow(kind, pad, rowY, contentW, rowH, pad + 13.75f * s, rowY + rowH * 0.5f);
 
             std::wstring pName = GetEffectivePrayerName(kind, settings);
             if (isFriday && kind == PrayerKind::Ogle) {
                 pName += L" · ";
                 pName += Tr(lang, StrId::BadgeJumuah);
             }
-            uint32_t col = isNext ? pal.accent : (isPassed ? pal.textSecondary : pal.textPrimary);
+            uint32_t col = isNext ? pal.rowActiveText : (isPassed ? pal.textSecondary : pal.textPrimary);
             gdip::DrawTextBox(g, pName, uiFamily, 11.5f * s, isNext, col,
-                              pad + 18.0f * s, rowY, contentW * 0.60f, rowH,
+                              pad + 24.0f * s, rowY, contentW * 0.60f, rowH,
                               gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
             gdip::DrawTextBox(g, tm.FormatHHMM(), uiFamily, 11.5f * s, isNext || isCurrent, col,
                               pad + contentW - 60.0f * s, rowY, 52.0f * s, rowH,
@@ -422,7 +446,7 @@ void RenderFlyoutSurface(
         gdip::DrawTextBox(g, nextUpper, uiFamily, 9.8f * s, true, pal.accent,
                           textX, heroY + 8.0f * s, textW, 14.0f * s,
                           gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
-        gdip::DrawTextBox(g, heroRemain, displayFamily, 19.0f * s, true, pal.textPrimary,
+        gdip::DrawTextBox(g, heroRemain, displayFamily, 19.0f * s, true, pal.heroValue,
                           textX, heroY + 23.0f * s, textW, 25.0f * s,
                           gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
         gdip::DrawTextBox(g, nextHm.FormatHHMM() + L" · " + qibla, uiFamily, 9.8f * s, false, pal.textSecondary,
@@ -453,20 +477,23 @@ void RenderFlyoutSurface(
             bool isPassed = (tm < nowHm && !isCurrent && !isNext);
 
             gdip::FillRoundedRect(g, cx, cy, cardW, cardH, 7.0f * s, isNext ? pal.rowActiveBg : pal.cardBg);
-            gdip::StrokeRoundedRect(g, cx, cy, cardW, cardH, 7.0f * s, isNext ? pal.accent : pal.borderCol, isNext ? 1.3f : 1.0f);
+            gdip::StrokeRoundedRect(g, cx, cy, cardW, cardH, 7.0f * s, isNext ? pal.accent : pal.borderCol, isNext ? 1.4f : 1.0f);
+            if (isNext) {
+                gdip::FillRoundedRect(g, cx + 4.0f * s, cy + 8.0f * s, 3.0f * s, cardH - 16.0f * s, 1.5f * s, pal.gold);
+            }
 
             void* dotBrush = nullptr;
             gdip::GdipCreateSolidFill(PrayerDotArgb(kind, isPassed), &dotBrush);
             if (dotBrush) {
                 float dSz = 6.5f * s;
-                gdip::GdipFillEllipse(g, dotBrush, cx + 10.0f * s, cy + 12.0f * s, dSz, dSz);
+                gdip::GdipFillEllipse(g, dotBrush, cx + 12.0f * s, cy + 12.0f * s, dSz, dSz);
                 gdip::GdipDeleteBrush(dotBrush);
             }
-            trackRow(kind, cx, cy, cardW, cardH, cx + 13.25f * s, cy + 15.25f * s);
+            trackRow(kind, cx, cy, cardW, cardH, cx + 15.25f * s, cy + 15.25f * s);
 
-            uint32_t textCol = isPassed ? pal.textSecondary : pal.textPrimary;
+            uint32_t textCol = isNext ? pal.rowActiveText : (isPassed ? pal.textSecondary : pal.textPrimary);
             gdip::DrawTextBox(g, GetEffectivePrayerName(kind, settings), uiFamily, 11.2f * s, isNext, textCol,
-                              cx + 21.0f * s, cy + 7.0f * s, cardW - 30.0f * s, 16.0f * s,
+                              cx + 25.0f * s, cy + 7.0f * s, cardW - 34.0f * s, 16.0f * s,
                               gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
 
             if (isNext || isCurrent || (isFriday && kind == PrayerKind::Ogle)) {
@@ -501,7 +528,7 @@ void RenderFlyoutSurface(
         gdip::DrawTextBox(g, nextUpper, uiFamily, 10.0f * s, true, pal.accent,
                           pad + 10.0f * s, heroY + 7.0f * s, leftW, 15.0f * s,
                           gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
-        gdip::DrawTextBox(g, heroRemain, displayFamily, 20.0f * s, true, pal.textPrimary,
+        gdip::DrawTextBox(g, heroRemain, displayFamily, 20.0f * s, true, pal.heroValue,
                           pad + 10.0f * s, heroY + 23.0f * s, leftW, 28.0f * s,
                           gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
         gdip::DrawTextBox(g, std::wstring(Tr(lang, StrId::PrayerTimeHeader)) + L": " + nextHm.FormatHHMM(),
@@ -558,27 +585,28 @@ void RenderFlyoutSurface(
             bool isPassed = (tm < nowHm && !isCurrent && !isNext);
 
             gdip::FillRoundedRect(g, pad, listY, contentW, rowH, 6.0f * s, isNext ? pal.rowActiveBg : pal.cardBg);
+            gdip::StrokeRoundedRect(g, pad, listY, contentW, rowH, 6.0f * s, isNext ? pal.accent : pal.borderCol, isNext ? 1.4f : 1.0f);
             if (isNext) {
-                gdip::StrokeRoundedRect(g, pad, listY, contentW, rowH, 6.0f * s, pal.accent, 1.0f);
+                gdip::FillRoundedRect(g, pad + 3.5f * s, listY + 5.0f * s, 3.0f * s, rowH - 10.0f * s, 1.5f * s, pal.gold);
             }
 
             void* dotBrush = nullptr;
             gdip::GdipCreateSolidFill(PrayerDotArgb(kind, isPassed), &dotBrush);
             if (dotBrush) {
                 float dSz = 6.5f * s;
-                gdip::GdipFillEllipse(g, dotBrush, pad + 9.0f * s, listY + (rowH - dSz) * 0.5f, dSz, dSz);
+                gdip::GdipFillEllipse(g, dotBrush, pad + 13.0f * s, listY + (rowH - dSz) * 0.5f, dSz, dSz);
                 gdip::GdipDeleteBrush(dotBrush);
             }
-            trackRow(kind, pad, listY, contentW, rowH, pad + 12.25f * s, listY + rowH * 0.5f);
+            trackRow(kind, pad, listY, contentW, rowH, pad + 16.25f * s, listY + rowH * 0.5f);
 
-            uint32_t textCol = isPassed ? pal.textSecondary : pal.textPrimary;
+            uint32_t textCol = isNext ? pal.rowActiveText : (isPassed ? pal.textSecondary : pal.textPrimary);
             std::wstring pName = GetEffectivePrayerName(kind, settings);
             if (isFriday && kind == PrayerKind::Ogle) {
                 pName += L" · ";
                 pName += Tr(lang, StrId::BadgeJumuah);
             }
             gdip::DrawTextBox(g, pName, uiFamily, 11.5f * s, isNext, textCol,
-                              pad + 22.0f * s, listY, 125.0f * s, rowH,
+                              pad + 27.0f * s, listY, 125.0f * s, rowH,
                               gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
 
             int diffMin = tm.TotalMinutes() - nowMin;
@@ -614,7 +642,7 @@ void RenderFlyoutSurface(
                           pad + contentW * 0.50f, heroY + 6.0f * s, contentW * 0.50f - 10.0f * s, 15.0f * s,
                           gdip::kStringAlignmentFar, gdip::kStringAlignmentCenter);
 
-        gdip::DrawTextBox(g, heroRemain, displayFamily, 20.0f * s, true, pal.textPrimary,
+        gdip::DrawTextBox(g, heroRemain, displayFamily, 20.0f * s, true, pal.heroValue,
                           pad + 10.0f * s, heroY + 23.0f * s, contentW * 0.72f, 26.0f * s,
                           gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
         gdip::DrawTextBox(g, nextHm.FormatHHMM(), displayFamily, 15.0f * s, true, pal.gold,
@@ -649,22 +677,24 @@ void RenderFlyoutSurface(
 
             uint32_t rBg = isNext ? pal.rowActiveBg : pal.cardBg;
             gdip::FillRoundedRect(g, pad, rowY, contentW, rowH, 6.0f * s, rBg);
+            gdip::StrokeRoundedRect(g, pad, rowY, contentW, rowH, 6.0f * s,
+                                    isNext ? pal.accent : pal.borderCol, isNext ? 1.4f : 1.0f);
             if (isNext) {
-                gdip::StrokeRoundedRect(g, pad, rowY, contentW, rowH, 6.0f * s, pal.accent, 1.0f);
+                gdip::FillRoundedRect(g, pad + 3.5f * s, rowY + 5.0f * s, 3.0f * s, rowH - 10.0f * s, 1.5f * s, pal.gold);
             }
 
             void* dotBrush = nullptr;
             gdip::GdipCreateSolidFill(PrayerDotArgb(kind, isPassed), &dotBrush);
             if (dotBrush) {
                 float dSz = 6.5f * s;
-                gdip::GdipFillEllipse(g, dotBrush, pad + 9.0f * s, rowY + (rowH - dSz) * 0.5f, dSz, dSz);
+                gdip::GdipFillEllipse(g, dotBrush, pad + 13.0f * s, rowY + (rowH - dSz) * 0.5f, dSz, dSz);
                 gdip::GdipDeleteBrush(dotBrush);
             }
-            trackRow(kind, pad, rowY, contentW, rowH, pad + 12.25f * s, rowY + rowH * 0.5f);
+            trackRow(kind, pad, rowY, contentW, rowH, pad + 16.25f * s, rowY + rowH * 0.5f);
 
-            uint32_t rTextCol = isPassed ? pal.textSecondary : pal.textPrimary;
+            uint32_t rTextCol = isNext ? pal.rowActiveText : (isPassed ? pal.textSecondary : pal.textPrimary);
             gdip::DrawTextBox(g, GetEffectivePrayerName(kind, settings), uiFamily, 12.0f * s, isNext, rTextCol,
-                              pad + 22.0f * s, rowY, 108.0f * s, rowH,
+                              pad + 27.0f * s, rowY, 108.0f * s, rowH,
                               gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
 
             if (isNext || isCurrent || (isFriday && kind == PrayerKind::Ogle)) {
@@ -728,13 +758,15 @@ FlyoutWindow::FlyoutWindow(
     std::function<void()> onOpenSettings,
     std::function<void()> onOpenImsakiye,
     std::function<void(bool)> onVisibilityChanged,
-    std::function<void()> onForceRefresh)
+    std::function<void()> onForceRefresh,
+    std::function<void()> onSettingsMutated)
     : settingsStore_(settingsStore),
       scheduleService_(scheduleService),
       onOpenSettings_(std::move(onOpenSettings)),
       onOpenImsakiye_(std::move(onOpenImsakiye)),
       onVisibilityChanged_(std::move(onVisibilityChanged)),
-      onForceRefresh_(std::move(onForceRefresh)) {
+      onForceRefresh_(std::move(onForceRefresh)),
+      onSettingsMutated_(std::move(onSettingsMutated)) {
 
     HINSTANCE hInst = GetModuleHandleW(nullptr);
     WNDCLASSEXW wc{};
@@ -757,6 +789,8 @@ void FlyoutWindow::ShowRightDocked(RECT anchorRect) {
     }
 
     closing_ = false;
+    resizing_ = false;
+    resizeEdge_ = ResizeEdge::None;
     hovered_ = HoverTarget::None;
     trackingLeave_ = false;
 
@@ -764,12 +798,27 @@ void FlyoutWindow::ShowRightDocked(RECT anchorRect) {
     const AppSettings& settings = settings_;
     autoOptimizeMemory_ = settings.autoOptimizeMemory;
     openedDesign_ = settings.flyoutDesign;
+    openedScalePercent_ = std::clamp(settings.flyoutScalePercent, 80, 200);
 
     HWND taskbarHwnd = FindWindowW(L"Shell_TrayWnd", nullptr);
-    UINT dpi = taskbarHwnd ? GetDpiForWindowCompat(taskbarHwnd) : 96;
-    scale_ = dpi >= 96 ? static_cast<double>(dpi) / 96.0 : 1.0;
+    HMONITOR mon = taskbarHwnd
+        ? MonitorFromWindow(taskbarHwnd, MONITOR_DEFAULTTONEAREST)
+        : MonitorFromPoint({anchorRect.right, anchorRect.bottom}, MONITOR_DEFAULTTONEAREST);
+    MONITORINFO mi{};
+    mi.cbSize = sizeof(mi);
+    if (!GetMonitorInfoW(mon, &mi)) {
+        SystemParametersInfoW(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
+    }
+
+    UINT dpi = GetDpiForMonitorCompat(mon);
+    dpiScale_ = dpi >= 96 ? static_cast<double>(dpi) / 96.0 : 1.0;
 
     FlyoutDipSize dip = GetFlyoutDipSize(openedDesign_, settings);
+    double effScale = dpiScale_ * (static_cast<double>(openedScalePercent_) / 100.0);
+    double workW = static_cast<double>(std::max<LONG>(320, mi.rcWork.right - mi.rcWork.left));
+    double workH = static_cast<double>(std::max<LONG>(320, mi.rcWork.bottom - mi.rcWork.top));
+    scale_ = std::clamp(effScale, 0.75, std::min((workW * 0.88) / dip.width, (workH * 0.88) / dip.height));
+
     int winW = static_cast<int>(std::llround(dip.width * scale_));
     int winH = static_cast<int>(std::llround(dip.height * scale_));
 
@@ -797,6 +846,10 @@ void FlyoutWindow::CloseNow() {
     if (!hwnd_) return;
     if (closing_) return;
     closing_ = true;
+    if (resizing_) {
+        ReleaseCapture();
+        resizing_ = false;
+    }
     KillTimer(hwnd_, kTimerCountdownId);
     HWND h = hwnd_;
     hwnd_ = nullptr;
@@ -814,9 +867,23 @@ void FlyoutWindow::RefreshView() {
     settings_ = settingsStore_.Load();
     const AppSettings& settings = settings_;
     autoOptimizeMemory_ = settings.autoOptimizeMemory;
-    if (settings.flyoutDesign != openedDesign_ || FlyoutExtraFooterDip(settings) != oldExtra) {
+    int targetPct = std::clamp(settings.flyoutScalePercent, 80, 200);
+    if (settings.flyoutDesign != openedDesign_ || FlyoutExtraFooterDip(settings) != oldExtra || targetPct != openedScalePercent_) {
         openedDesign_ = settings.flyoutDesign;
+        openedScalePercent_ = targetPct;
+        HMONITOR mon = MonitorFromWindow(hwnd_, MONITOR_DEFAULTTONEAREST);
+        MONITORINFO mi{};
+        mi.cbSize = sizeof(mi);
+        if (!GetMonitorInfoW(mon, &mi)) {
+            SystemParametersInfoW(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
+        }
+        UINT dpi = GetDpiForMonitorCompat(mon);
+        dpiScale_ = dpi >= 96 ? static_cast<double>(dpi) / 96.0 : 1.0;
         FlyoutDipSize dip = GetFlyoutDipSize(openedDesign_, settings);
+        double effScale = dpiScale_ * (static_cast<double>(openedScalePercent_) / 100.0);
+        double workW = static_cast<double>(std::max<LONG>(320, mi.rcWork.right - mi.rcWork.left));
+        double workH = static_cast<double>(std::max<LONG>(320, mi.rcWork.bottom - mi.rcWork.top));
+        scale_ = std::clamp(effScale, 0.75, std::min((workW * 0.88) / dip.width, (workH * 0.88) / dip.height));
         int winW = static_cast<int>(std::llround(dip.width * scale_));
         int winH = static_cast<int>(std::llround(dip.height * scale_));
         PositionRightDocked({}, winW, winH);
@@ -824,6 +891,55 @@ void FlyoutWindow::RefreshView() {
     bool isLight = IsAppLight(settings.themeMode);
     ApplyWindowDwmStyle(hwnd_, !isLight, 2, 3);
     InvalidateRect(hwnd_, nullptr, FALSE);
+}
+
+void FlyoutWindow::ApplyScalePercent(int newPercent, bool saveNow) {
+    if (!hwnd_) return;
+    newPercent = std::clamp(newPercent, 80, 200);
+    HMONITOR mon = MonitorFromWindow(hwnd_, MONITOR_DEFAULTTONEAREST);
+    MONITORINFO mi{};
+    mi.cbSize = sizeof(mi);
+    if (!GetMonitorInfoW(mon, &mi)) {
+        SystemParametersInfoW(SPI_GETWORKAREA, 0, &mi.rcWork, 0);
+    }
+    UINT dpi = GetDpiForMonitorCompat(mon);
+    dpiScale_ = dpi >= 96 ? static_cast<double>(dpi) / 96.0 : 1.0;
+
+    FlyoutDipSize dip = GetFlyoutDipSize(openedDesign_, settings_);
+    double effScale = dpiScale_ * (static_cast<double>(newPercent) / 100.0);
+    double workW = static_cast<double>(std::max<LONG>(320, mi.rcWork.right - mi.rcWork.left));
+    double workH = static_cast<double>(std::max<LONG>(320, mi.rcWork.bottom - mi.rcWork.top));
+    double clampedScale = std::clamp(effScale, 0.75, std::min((workW * 0.88) / dip.width, (workH * 0.88) / dip.height));
+
+    scale_ = clampedScale;
+    openedScalePercent_ = newPercent;
+    settings_.flyoutScalePercent = newPercent;
+
+    int winW = static_cast<int>(std::llround(dip.width * scale_));
+    int winH = static_cast<int>(std::llround(dip.height * scale_));
+
+    RECT cur{};
+    GetWindowRect(hwnd_, &cur);
+    RECT anchor = resizing_ ? resizeStartWinRc_ : cur;
+    int x = std::max<int>(mi.rcWork.left + 8, anchor.right - winW);
+    int y = std::max<int>(mi.rcWork.top + 8, anchor.bottom - winH);
+    SetWindowPos(hwnd_, HWND_TOPMOST, x, y, winW, winH, SWP_NOACTIVATE);
+    InvalidateRect(hwnd_, nullptr, FALSE);
+
+    if (saveNow) {
+        settingsStore_.Save(settings_);
+        if (onSettingsMutated_) onSettingsMutated_();
+    }
+}
+
+FlyoutWindow::ResizeEdge FlyoutWindow::HitTestResizeEdge(int x, int y) const {
+    if (!hwnd_) return ResizeEdge::None;
+    int edge = static_cast<int>(std::llround(6.0 * scale_));
+    int corner = static_cast<int>(std::llround(15.0 * scale_));
+    if (x <= corner && y <= corner) return ResizeEdge::TopLeft;
+    if (x <= edge) return ResizeEdge::Left;
+    if (y <= edge) return ResizeEdge::Top;
+    return ResizeEdge::None;
 }
 
 void FlyoutWindow::PositionRightDocked(RECT anchorRect, int winW, int winH) {
@@ -960,7 +1076,64 @@ LRESULT FlyoutWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
             return 0;
 
+        case WM_SETCURSOR: {
+            if (LOWORD(lParam) == HTCLIENT) {
+                POINT pt{};
+                GetCursorPos(&pt);
+                ScreenToClient(hWnd, &pt);
+                ResizeEdge edge = resizing_ ? resizeEdge_ : HitTestResizeEdge(pt.x, pt.y);
+                if (edge == ResizeEdge::TopLeft) {
+                    SetCursor(LoadCursorW(nullptr, IDC_SIZENWSE));
+                    return TRUE;
+                } else if (edge == ResizeEdge::Left) {
+                    SetCursor(LoadCursorW(nullptr, IDC_SIZEWE));
+                    return TRUE;
+                } else if (edge == ResizeEdge::Top) {
+                    SetCursor(LoadCursorW(nullptr, IDC_SIZENS));
+                    return TRUE;
+                }
+            }
+            break;
+        }
+
+        case WM_LBUTTONDOWN: {
+            int x = static_cast<short>(LOWORD(lParam));
+            int y = static_cast<short>(HIWORD(lParam));
+            ResizeEdge edge = HitTestResizeEdge(x, y);
+            if (edge != ResizeEdge::None) {
+                resizing_ = true;
+                resizeEdge_ = edge;
+                GetCursorPos(&resizeStartScreen_);
+                GetWindowRect(hWnd, &resizeStartWinRc_);
+                resizeStartPercent_ = openedScalePercent_;
+                SetCapture(hWnd);
+                return 0;
+            }
+            break;
+        }
+
         case WM_MOUSEMOVE: {
+            if (resizing_) {
+                POINT cur{};
+                GetCursorPos(&cur);
+                int dx = cur.x - resizeStartScreen_.x;
+                int dy = cur.y - resizeStartScreen_.y;
+                double origW = static_cast<double>(std::max<LONG>(100, resizeStartWinRc_.right - resizeStartWinRc_.left));
+                double origH = static_cast<double>(std::max<LONG>(100, resizeStartWinRc_.bottom - resizeStartWinRc_.top));
+                double ratio = 1.0;
+                if (resizeEdge_ == ResizeEdge::Left) {
+                    ratio = (origW - static_cast<double>(dx)) / origW;
+                } else if (resizeEdge_ == ResizeEdge::Top) {
+                    ratio = (origH - static_cast<double>(dy)) / origH;
+                } else {
+                    double rw = (origW - static_cast<double>(dx)) / origW;
+                    double rh = (origH - static_cast<double>(dy)) / origH;
+                    ratio = (rw + rh) * 0.5;
+                }
+                int nextPct = static_cast<int>(std::llround(static_cast<double>(resizeStartPercent_) * ratio));
+                ApplyScalePercent(nextPct, false);
+                return 0;
+            }
             if (!trackingLeave_) {
                 TRACKMOUSEEVENT tme{sizeof(tme), TME_LEAVE, hWnd, 0};
                 TrackMouseEvent(&tme);
@@ -981,6 +1154,14 @@ LRESULT FlyoutWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             return 0;
 
         case WM_LBUTTONUP: {
+            if (resizing_) {
+                ReleaseCapture();
+                resizing_ = false;
+                resizeEdge_ = ResizeEdge::None;
+                settingsStore_.Save(settings_);
+                if (onSettingsMutated_) onSettingsMutated_();
+                return 0;
+            }
             int x = static_cast<short>(LOWORD(lParam));
             int y = static_cast<short>(HIWORD(lParam));
             HoverTarget hit = HitTestButton(x, y);
@@ -1014,15 +1195,32 @@ LRESULT FlyoutWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             return 0;
         }
 
+        case WM_MOUSEWHEEL: {
+            if ((GET_KEYSTATE_WPARAM(wParam) & MK_CONTROL) != 0) {
+                int delta = GET_WHEEL_DELTA_WPARAM(wParam);
+                ApplyScalePercent(openedScalePercent_ + (delta > 0 ? 5 : -5), true);
+                return 0;
+            }
+            break;
+        }
+
         case WM_KEYDOWN:
             if (wParam == VK_ESCAPE) {
                 CloseNow();
                 return 0;
             }
+            if (wParam == VK_OEM_PLUS || wParam == VK_ADD) {
+                ApplyScalePercent(openedScalePercent_ + 5, true);
+                return 0;
+            }
+            if (wParam == VK_OEM_MINUS || wParam == VK_SUBTRACT) {
+                ApplyScalePercent(openedScalePercent_ - 5, true);
+                return 0;
+            }
             break;
 
         case WM_ACTIVATE:
-            if (LOWORD(wParam) == WA_INACTIVE && !closing_) {
+            if (LOWORD(wParam) == WA_INACTIVE && !closing_ && !resizing_) {
                 CloseNow();
             }
             return 0;
@@ -1048,9 +1246,10 @@ PillRenderResult SmokeTestFlyoutRender(
     gdip::EnsureInitialized();
     AppSettings copy = settings;
     copy.flyoutDesign = design;
+    double effScale = scale * (static_cast<double>(std::clamp(copy.flyoutScalePercent, 80, 200)) / 100.0);
     FlyoutDipSize dip = GetFlyoutDipSize(design, copy);
-    int width = static_cast<int>(std::llround(dip.width * scale));
-    int height = static_cast<int>(std::llround(dip.height * scale));
+    int width = static_cast<int>(std::llround(dip.width * effScale));
+    int height = static_cast<int>(std::llround(dip.height * effScale));
 
     HDC screenDc = GetDC(nullptr);
     if (!screenDc) return {-1, 0};
@@ -1078,7 +1277,7 @@ PillRenderResult SmokeTestFlyoutRender(
             if (st == 0 && g) {
                 FlyoutButtonsOut btns{};
                 RenderFlyoutSurface(
-                    g, width, height, static_cast<float>(scale), state.calculatedAt, state, copy, false,
+                    g, width, height, static_cast<float>(effScale), state.calculatedAt, state, copy, false,
                     0, 1, 2, 3, 4, false, btns);
                 const auto* px = static_cast<const uint32_t*>(bits);
                 int total = width * height;

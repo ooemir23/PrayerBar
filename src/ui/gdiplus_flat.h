@@ -14,7 +14,9 @@
 namespace vakit::gdip {
 
 constexpr int kSmoothingModeAntiAlias = 4;
+constexpr int kTextRenderingHintAntiAlias = 3;
 constexpr int kTextRenderingHintAntiAliasGridFit = 4;
+constexpr int kTextRenderingHintClearTypeGridFit = 5;
 constexpr int kCompositingQualityHighQuality = 2;
 constexpr int kUnitPixel = 2;
 constexpr int kFontStyleRegular = 0;
@@ -124,15 +126,12 @@ inline void* CreateRoundedRectPath(float x, float y, float w, float h, float rad
 }
 
 inline void* CreateBestUiFontFamily(bool display = false) {
+    (void)display;
     void* family = nullptr;
-    if (display) {
-        if (GdipCreateFontFamilyFromName(L"Segoe UI Variable Display", nullptr, &family) == 0 && family) return family;
-        if (GdipCreateFontFamilyFromName(L"Segoe UI Variable Text", nullptr, &family) == 0 && family) return family;
-    } else {
-        if (GdipCreateFontFamilyFromName(L"Segoe UI Variable Text", nullptr, &family) == 0 && family) return family;
-        if (GdipCreateFontFamilyFromName(L"Segoe UI Variable Display", nullptr, &family) == 0 && family) return family;
-    }
+    // Static Segoe UI scales cleanly in GDI+ without variable-font axis artifacts.
     if (GdipCreateFontFamilyFromName(L"Segoe UI", nullptr, &family) == 0 && family) return family;
+    if (GdipCreateFontFamilyFromName(L"Segoe UI Variable Text", nullptr, &family) == 0 && family) return family;
+    if (GdipCreateFontFamilyFromName(L"Segoe UI Variable Display", nullptr, &family) == 0 && family) return family;
     GdipCreateFontFamilyFromName(L"Arial", nullptr, &family);
     return family;
 }

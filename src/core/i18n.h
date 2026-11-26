@@ -259,7 +259,31 @@ enum class StrId : int {
     TrackWeek,
     HotkeyPressKeys,
     HotkeyInUse,
-    HotkeyNeedsModifier
+    HotkeyNeedsModifier,
+    TabProLicense,
+    ProBadgeFlexible,
+    ProAnnualSub,
+    ProLifetimeSub,
+    ProBulletAllFeatures,
+    ProBulletSubUpdates,
+    ProBulletCancelAnytime,
+    ProBulletAllUpdates,
+    ProBulletOneTime,
+    ProBulletBestValue,
+    ProIncludedBoth,
+    LblPillColorMode,
+    PillColorEmerald,
+    PillColorTheme,
+    PillColorMinimal,
+    LblFlyoutSize,
+    FlyoutSizeSmall,
+    FlyoutSizeNormal,
+    FlyoutSizeLarge,
+    FlyoutSizeXLarge,
+    ToastStopAdhan,
+    BalloonStopHint,
+    ChkTaskbarFrame,
+    ChkTaskbarLogo
 };
 
 AppLanguage ResolveEffectiveLanguage(AppLanguage configured);

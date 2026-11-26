@@ -43,10 +43,10 @@ Uygulamanın içindeki **"Yıllık Al"** ve **"Ömür Boyu Al"** butonlarının 
 ---
 
 ## 4. Ücretsiz (0 TL) Gizlilik Politikası Bağlantısı (Hazır ve Yayında!)
-GitHub Pages üzerinden ücretsiz, SSL sertifikalı (HTTPS) gizlilik politikası ve destek siteniz yayına alınmıştır:
-- **Privacy Policy URL (Partner Center için zorunlu):** `https://ooemir23.github.io/PrayerBar/privacy.html`
-- **Support / Website URL:** `https://ooemir23.github.io/PrayerBar/`
-- **Terms of Service URL:** `https://ooemir23.github.io/PrayerBar/terms.html`
+Vercel üzerinden SSL sertifikalı (HTTPS) gizlilik politikası ve destek siteniz yayına alınmıştır:
+- **Privacy Policy URL (Partner Center için zorunlu):** `https://prayerbar.ooemir.com/privacy`
+- **Support / Website URL:** `https://prayerbar.ooemir.com/`
+- **Terms of Service URL:** `https://prayerbar.ooemir.com/terms`
 
 ---
 
