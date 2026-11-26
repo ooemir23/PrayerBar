@@ -1,10 +1,10 @@
 {
   "IdentityName": "BomeraGdaLimitedirketi.PrayerBar",
   "Publisher": "CN=8C3658B6-BFA1-4074-AF50-3C28C1865B0C",
-  "PublisherDisplayName": "Bomera Gıda Limited Şirketi",
+  "PublisherDisplayName": "OOE CO",
   "DisplayName": "PrayerBar",
-  "Description": "Ultra-lightweight (~3 MB RAM, 0% idle CPU) Windows 11 taskbar countdown, dynamic tray badge, Monthly/Ramadan Imsakiye & customizable prayer notifications in 12 languages.",
-  "Version": "2.1.0.0",
+  "Description": "Lightweight Windows 11 taskbar prayer countdown with worldwide city search, automatic location, monthly Imsakiye, customizable notifications, and 12 languages.",
+  "Version": "2.4.1.0",
   "Commercial": {
     "DistributionChannel": "MicrosoftStoreOnly",
     "StoreProductId": "9MSQBZTPGWX6",

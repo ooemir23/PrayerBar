@@ -110,6 +110,28 @@ int TestHanafiAsrAndCountryMapping() {
     return 0;
 }
 
+int TestLocationAwareScheduleCacheKeys() {
+    AppSettings adelaide;
+    adelaide.cityId = L"custom";
+    adelaide.latitude = -34.9285;
+    adelaide.longitude = 138.6007;
+    adelaide.timeZoneId = L"Cen. Australia Standard Time";
+
+    AppSettings sydney = adelaide;
+    sydney.latitude = -33.8688;
+    sydney.longitude = 151.2093;
+    sydney.timeZoneId = L"AUS Eastern Standard Time";
+    CHECK(ScheduleService::BuildMonthKey(2026, 11, adelaide) !=
+          ScheduleService::BuildMonthKey(2026, 11, sydney));
+
+    AppSettings alternateZone = adelaide;
+    alternateZone.timeZoneId = L"AUS Eastern Standard Time";
+    CHECK(ScheduleService::BuildMonthKey(2026, 11, adelaide) !=
+          ScheduleService::BuildMonthKey(2026, 11, alternateZone));
+    ++g_passed;
+    return 0;
+}
+
 int TestDisplayFormatterStylesAndTooltip() {
     auto state = MakeSampleState(PrayerKind::Ikindi, 23, {15, 25});
     AppSettings settings;
@@ -175,9 +197,11 @@ int TestMidnightRolloverAndQiblaAndCatalog() {
         s.entrySound = NotificationSoundKind::AdhanMakkah;
         s.preNotifySound = NotificationSoundKind::WarmBell;
         s.soundVolumePercent = 65;
-        s.autoDetectLocation = false;
-        s.useCustomCoordinates = true;
+        s.cityId = L"custom";
         s.latitude = 80.0;
+        s.longitude = -179.0;
+        s.useCustomCoordinates = true;
+        s.autoDetectLocation = false;
         s.alerts.GetRule(PrayerKind::Imsak).preNotifyMinutes = 45;
         s.alerts.GetRule(PrayerKind::Ikindi).preNotifyMinutes = 10;
         s.alerts.GetRule(PrayerKind::Gunes).playSound = false;
@@ -190,12 +214,27 @@ int TestMidnightRolloverAndQiblaAndCatalog() {
         CHECK(loaded.entrySound == NotificationSoundKind::AdhanMakkah);
         CHECK(loaded.preNotifySound == NotificationSoundKind::WarmBell);
         CHECK(loaded.soundVolumePercent == 65);
-        CHECK(!loaded.autoDetectLocation);
         CHECK(loaded.latitude == 80.0);
+        CHECK(loaded.longitude == -179.0);
+        CHECK(!loaded.autoDetectLocation);
         CHECK(loaded.alerts.GetRule(PrayerKind::Imsak).preNotifyMinutes == 45);
         CHECK(loaded.alerts.GetRule(PrayerKind::Ikindi).preNotifyMinutes == 10);
         CHECK(!loaded.alerts.GetRule(PrayerKind::Gunes).playSound);
         CHECK(!loaded.alerts.GetRule(PrayerKind::Yatsi).notifyAtTime);
+
+        std::wstring legacyPath = tempDir + L"\\legacy-settings.json";
+        CHECK(WriteFileAtomicallyUtf8(
+            legacyPath,
+            R"({"cityId":"sydney","cityName":"Sydney","latitude":-33.8688,"longitude":151.2093,"useCustomCoordinates":false})"));
+        auto legacySettings = store.ImportFromFile(legacyPath);
+        CHECK(legacySettings.has_value());
+        CHECK(!legacySettings->autoDetectLocation);
+
+        std::wstring defaultPath = tempDir + L"\\default-settings.json";
+        CHECK(WriteFileAtomicallyUtf8(defaultPath, R"({"cityId":"istanbul"})"));
+        auto defaultSettings = store.ImportFromFile(defaultPath);
+        CHECK(defaultSettings.has_value());
+        CHECK(defaultSettings->autoDetectLocation);
     }
     std::error_code ec;
     std::filesystem::remove_all(tempDir, ec);
@@ -211,10 +250,12 @@ int TestMidnightRolloverAndQiblaAndCatalog() {
     CHECK(!izmir.empty() && izmir[0].id == L"izmir");
     auto urfa = SearchCities(L"sanliurfa", 20);
     CHECK(!urfa.empty() && urfa[0].id == L"sanliurfa");
-    auto adelaide = SearchCities(L"Adelaide", 20);
+    auto adelaide = SearchCities(L"adelaide", 20);
     CHECK(!adelaide.empty() && adelaide[0].id == L"adelaide");
     CHECK(adelaide[0].countryCode == L"AU");
     CHECK(adelaide[0].timeZoneId == L"Cen. Australia Standard Time");
+    CHECK(std::abs(GetTimeZoneOffsetHours({2026, 1, 1}, adelaide[0].timeZoneId) - 10.5) < 0.1);
+    CHECK(std::abs(GetTimeZoneOffsetHours({2026, 7, 1}, adelaide[0].timeZoneId) - 9.5) < 0.1);
 
     auto nearIst = FindNearestCity(41.009, 28.979, 30.0);
     CHECK(nearIst.has_value() && nearIst->id == L"istanbul");
@@ -253,7 +294,7 @@ int TestMultiLanguageHijriAndRamadan() {
     for (int li = 7; li <= 12; ++li) {
         AppLanguage lang = static_cast<AppLanguage>(li);
         int sameAsEnglish = 0;
-        for (int sid = 0; sid <= static_cast<int>(StrId::HotkeyNeedsModifier); ++sid) {
+        for (int sid = 0; sid <= static_cast<int>(StrId::ChkTaskbarLogo); ++sid) {
             if (std::wstring(Tr(lang, static_cast<StrId>(sid))) == Tr(AppLanguage::English, static_cast<StrId>(sid))) ++sameAsEnglish;
         }
         CHECK(sameAsEnglish <= 16);
@@ -321,7 +362,11 @@ int TestCustomPrayerNamesSettingsStoreExportAndLockout() {
     AppSettings s;
     s.language = AppLanguage::English;
     s.flyoutDesign = FlyoutDesignStyle::TimelineDashboard;
+    s.pillColorMode = TaskbarPillColorMode::ThemeAdaptive;
+    s.flyoutScalePercent = 145;
     s.useSystemAccentColor = false;
+    s.showTaskbarFrame = false;
+    s.showTaskbarLogo = false;
     s.autoOptimizeMemory = false;
     s.quietDuringFullscreen = false;
     s.showKerahatIndicator = false;
@@ -345,7 +390,11 @@ int TestCustomPrayerNamesSettingsStoreExportAndLockout() {
         AppSettings loaded = store.Load();
         CHECK(loaded.language == AppLanguage::English);
         CHECK(loaded.flyoutDesign == FlyoutDesignStyle::TimelineDashboard);
+        CHECK(loaded.pillColorMode == TaskbarPillColorMode::ThemeAdaptive);
+        CHECK(loaded.flyoutScalePercent == 145);
         CHECK(!loaded.useSystemAccentColor);
+        CHECK(!loaded.showTaskbarFrame);
+        CHECK(!loaded.showTaskbarLogo);
         CHECK(!loaded.autoOptimizeMemory);
         CHECK(!loaded.quietDuringFullscreen);
         CHECK(!loaded.showKerahatIndicator);
@@ -605,6 +654,7 @@ int main() {
     if (TestAll23CalculationMethodsAndOrder() != 0) return 1;
     if (TestIstanbulDiyanetWindowAndHighLatitude() != 0) return 1;
     if (TestHanafiAsrAndCountryMapping() != 0) return 1;
+    if (TestLocationAwareScheduleCacheKeys() != 0) return 1;
     if (TestDisplayFormatterStylesAndTooltip() != 0) return 1;
     if (TestMidnightRolloverAndQiblaAndCatalog() != 0) return 1;
     if (TestMultiLanguageHijriAndRamadan() != 0) return 1;

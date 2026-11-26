@@ -49,7 +49,7 @@ private:
     void ToggleFlyout(RECT anchorRect);
     void TriggerBackgroundRefresh();
     void StartAutomaticLocationDetection();
-    void ShowUserNotification(const std::wstring& title, const std::wstring& body, bool silent);
+    void ShowUserNotification(const std::wstring& title, const std::wstring& body, bool silent, bool hasAudio = false);
     void ShowActionBalloon(const std::wstring& title, const std::wstring& body, int action);
     void CheckTimeZoneChange();
     void ApplyHotkey();
@@ -71,6 +71,7 @@ private:
     std::set<std::wstring> sentNotifications_;
     bool hotkeyOk_ = true;          // false when RegisterHotKey failed (combination taken)
     int pendingBalloonAction_ = 0;  // what a click on the current tray balloon does (see kBalloon*)
+    bool balloonStopsAudio_ = false;
 };
 
 } // namespace vakit

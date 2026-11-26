@@ -161,6 +161,7 @@ const std::vector<CityLocation>& GetAllCities() {
         {L"melbourne", L"Melbourne", L"Avustralya", L"AU", -37.8136, 144.9631, L"AUS Eastern Standard Time", L"Melbourne Australia"},
         {L"brisbane", L"Brisbane", L"Avustralya", L"AU", -27.4698, 153.0251, L"E. Australia Standard Time", L"Brisbane Australia"},
         {L"perth", L"Perth", L"Avustralya", L"AU", -31.9505, 115.8605, L"W. Australia Standard Time", L"Perth Australia"},
+        {L"darwin", L"Darwin", L"Avustralya", L"AU", -12.4634, 130.8456, L"AUS Central Standard Time", L"Darwin Australia"},
         {L"canberra", L"Canberra", L"Avustralya", L"AU", -35.2809, 149.1300, L"AUS Eastern Standard Time", L"Canberra Australia"}
     };
     return kCities;
@@ -231,7 +232,6 @@ std::vector<CityLocation> SearchCities(std::wstring_view query, size_t maxResult
 std::wstring ResolveCountryCodeFromName(std::wstring_view countryName) {
     std::wstring norm = NormalizeTurkishLower(TrimWide(countryName));
     if (norm == L"turkiye" || norm == L"turkey" || norm == L"kktc") return L"TR";
-    if (norm == L"avustralya" || norm == L"australia") return L"AU";
     if (norm == L"suudi arabistan" || norm == L"saudi arabia") return L"SA";
     if (norm == L"misir" || norm == L"egypt") return L"EG";
     if (norm == L"pakistan") return L"PK";

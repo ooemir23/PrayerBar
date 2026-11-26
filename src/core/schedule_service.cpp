@@ -6,19 +6,13 @@
 #include "utf_util.h"
 #include "../platform/win_http.h"
 
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
-
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <cstdio>
 #include <thread>
-#include <utility>
+#include <windows.h>
+#include <initguid.h>
 #include <locationapi.h>
 
 namespace vakit {
@@ -70,24 +64,69 @@ DailyPrayerTimes ApplyOffsets(const DailyPrayerTimes& raw, const PrayerOffsets& 
 
 std::wstring MapIanaToWindowsTimeZone(std::string_view iana) {
     if (iana == "Europe/Istanbul" || iana == "Asia/Istanbul") return L"Turkey Standard Time";
-    if (iana == "Europe/Berlin" || iana == "Europe/Vienna" || iana == "Europe/Amsterdam") return L"W. Europe Standard Time";
-    if (iana == "Europe/Paris" || iana == "Europe/Brussels") return L"Romance Standard Time";
-    if (iana == "Europe/London" || iana == "Europe/Lisbon") return L"GMT Standard Time";
-    if (iana == "Europe/Sarajevo") return L"Central European Standard Time";
-    if (iana == "Europe/Moscow") return L"Russian Standard Time";
+    if (iana == "Europe/Berlin" || iana == "Europe/Vienna" || iana == "Europe/Amsterdam" ||
+        iana == "Europe/Rome" || iana == "Europe/Stockholm" || iana == "Europe/Copenhagen" ||
+        iana == "Europe/Oslo" || iana == "Europe/Zurich" || iana == "Europe/Madrid") return L"W. Europe Standard Time";
+    if (iana == "Europe/Paris" || iana == "Europe/Brussels" || iana == "Europe/Luxembourg") return L"Romance Standard Time";
+    if (iana == "Europe/London" || iana == "Europe/Lisbon" || iana == "Europe/Dublin") return L"GMT Standard Time";
+    if (iana == "Europe/Sarajevo" || iana == "Europe/Prague" || iana == "Europe/Warsaw" ||
+        iana == "Europe/Budapest" || iana == "Europe/Belgrade" || iana == "Europe/Zagreb") return L"Central European Standard Time";
+    if (iana == "Europe/Athens" || iana == "Europe/Helsinki" || iana == "Europe/Bucharest" ||
+        iana == "Europe/Sofia" || iana == "Europe/Kyiv" || iana == "Europe/Riga" ||
+        iana == "Europe/Tallinn" || iana == "Europe/Vilnius") return L"FLE Standard Time";
+    if (iana == "Europe/Moscow" || iana == "Europe/Minsk") return L"Russian Standard Time";
     if (iana == "Asia/Baku") return L"Azerbaijan Standard Time";
-    if (iana == "Asia/Riyadh" || iana == "Asia/Qatar" || iana == "Asia/Kuwait") return L"Arab Standard Time";
-    if (iana == "Asia/Dubai") return L"Arabian Standard Time";
+    if (iana == "Asia/Riyadh" || iana == "Asia/Qatar" || iana == "Asia/Kuwait" ||
+        iana == "Asia/Baghdad") return L"Arab Standard Time";
+    if (iana == "Asia/Dubai" || iana == "Asia/Muscat") return L"Arabian Standard Time";
     if (iana == "Asia/Amman") return L"Jordan Standard Time";
     if (iana == "Asia/Tehran") return L"Iran Standard Time";
     if (iana == "Asia/Karachi") return L"Pakistan Standard Time";
-    if (iana == "Asia/Kuala_Lumpur" || iana == "Asia/Singapore") return L"Singapore Standard Time";
-    if (iana == "Asia/Jakarta") return L"SE Asia Standard Time";
+    if (iana == "Asia/Kabul") return L"Afghanistan Standard Time";
+    if (iana == "Asia/Kolkata" || iana == "Asia/Calcutta") return L"India Standard Time";
+    if (iana == "Asia/Dhaka") return L"Bangladesh Standard Time";
+    if (iana == "Asia/Kathmandu") return L"Nepal Standard Time";
+    if (iana == "Asia/Kuala_Lumpur" || iana == "Asia/Singapore" || iana == "Asia/Manila") return L"Singapore Standard Time";
+    if (iana == "Asia/Jakarta" || iana == "Asia/Bangkok" || iana == "Asia/Ho_Chi_Minh") return L"SE Asia Standard Time";
+    if (iana == "Asia/Tashkent" || iana == "Asia/Almaty") return L"Central Asia Standard Time";
+    if (iana == "Asia/Bishkek") return L"Central Asia Standard Time";
+    if (iana == "Asia/Dushanbe") return L"West Asia Standard Time";
+    if (iana == "Asia/Yekaterinburg") return L"Ekaterinburg Standard Time";
+    if (iana == "Asia/Krasnoyarsk") return L"North Asia Standard Time";
+    if (iana == "Asia/Vladivostok") return L"Vladivostok Standard Time";
+    if (iana == "Asia/Shanghai" || iana == "Asia/Hong_Kong" || iana == "Asia/Urumqi") return L"China Standard Time";
+    if (iana == "Asia/Jerusalem") return L"Israel Standard Time";
+    if (iana == "Asia/Beirut") return L"Middle East Standard Time";
+    if (iana == "Asia/Damascus") return L"Syria Standard Time";
+    if (iana == "Asia/Seoul") return L"Korea Standard Time";
+    if (iana == "Asia/Taipei") return L"Taipei Standard Time";
     if (iana == "Africa/Cairo") return L"Egypt Standard Time";
     if (iana == "Africa/Casablanca") return L"Morocco Standard Time";
-    if (iana == "Africa/Tunis" || iana == "Africa/Algiers") return L"W. Central Africa Standard Time";
-    if (iana == "America/New_York" || iana == "America/Toronto") return L"Eastern Standard Time";
-    if (iana == "America/Chicago") return L"Central Standard Time";
+    if (iana == "Africa/Tunis" || iana == "Africa/Algiers" || iana == "Africa/Lagos") return L"W. Central Africa Standard Time";
+    if (iana == "Africa/Nairobi" || iana == "Africa/Addis_Ababa") return L"E. Africa Standard Time";
+    if (iana == "Africa/Johannesburg") return L"South Africa Standard Time";
+    if (iana == "Africa/Accra" || iana == "Africa/Abidjan") return L"Greenwich Standard Time";
+    if (iana == "Africa/Tripoli") return L"Libya Standard Time";
+    if (iana == "Africa/Khartoum") return L"Sudan Standard Time";
+    if (iana == "Africa/Windhoek") return L"Namibia Standard Time";
+    if (iana == "America/New_York" || iana == "America/Toronto" || iana == "America/Detroit") return L"Eastern Standard Time";
+    if (iana == "America/Chicago" || iana == "America/Winnipeg" || iana == "America/Mexico_City" ||
+        iana == "America/Monterrey") return L"Central Standard Time";
+    if (iana == "America/Regina") return L"Canada Central Standard Time";
+    if (iana == "America/Denver") return L"Mountain Standard Time";
+    if (iana == "America/Phoenix") return L"US Mountain Standard Time";
+    if (iana == "America/Los_Angeles" || iana == "America/Vancouver") return L"Pacific Standard Time";
+    if (iana == "America/Anchorage") return L"Alaskan Standard Time";
+    if (iana == "Pacific/Honolulu") return L"Hawaiian Standard Time";
+    if (iana == "America/Halifax") return L"Atlantic Standard Time";
+    if (iana == "America/St_Johns") return L"Newfoundland Standard Time";
+    if (iana == "America/Sao_Paulo") return L"E. South America Standard Time";
+    if (iana == "America/Argentina/Buenos_Aires") return L"Argentina Standard Time";
+    if (iana == "America/Bogota" || iana == "America/Lima" || iana == "America/Guayaquil") return L"SA Pacific Standard Time";
+    if (iana == "America/La_Paz" || iana == "America/Puerto_Rico") return L"SA Western Standard Time";
+    if (iana == "America/Caracas") return L"Venezuela Standard Time";
+    if (iana == "America/Montevideo") return L"Montevideo Standard Time";
+    if (iana == "America/Santiago") return L"Pacific SA Standard Time";
     if (iana == "Asia/Tokyo") return L"Tokyo Standard Time";
     if (iana == "Australia/Sydney" || iana == "Australia/Melbourne" ||
         iana == "Australia/Canberra" || iana == "Australia/Hobart") return L"AUS Eastern Standard Time";
@@ -96,25 +135,9 @@ std::wstring MapIanaToWindowsTimeZone(std::string_view iana) {
     if (iana == "Australia/Brisbane") return L"E. Australia Standard Time";
     if (iana == "Australia/Perth") return L"W. Australia Standard Time";
     if (iana == "Pacific/Auckland") return L"New Zealand Standard Time";
-    if (iana == "America/Los_Angeles" || iana == "America/Vancouver") return L"Pacific Standard Time";
-    if (iana == "America/Denver") return L"Mountain Standard Time";
-    if (iana == "America/Phoenix") return L"US Mountain Standard Time";
-    if (iana == "America/Winnipeg") return L"Central Standard Time";
-    if (iana == "America/Anchorage") return L"Alaskan Standard Time";
-    if (iana == "Pacific/Honolulu") return L"Hawaiian Standard Time";
-    if (iana == "America/Sao_Paulo") return L"E. South America Standard Time";
-    if (iana == "America/Argentina/Buenos_Aires") return L"Argentina Standard Time";
-    if (iana == "Asia/Kolkata") return L"India Standard Time";
-    if (iana == "Asia/Dhaka") return L"Bangladesh Standard Time";
-    if (iana == "Asia/Kathmandu") return L"Nepal Standard Time";
-    if (iana == "Asia/Shanghai" || iana == "Asia/Hong_Kong") return L"China Standard Time";
-    if (iana == "Asia/Seoul") return L"Korea Standard Time";
-    if (iana == "Asia/Taipei") return L"Taipei Standard Time";
-    if (iana == "Asia/Manila") return L"Singapore Standard Time";
-    if (iana == "Africa/Nairobi") return L"E. Africa Standard Time";
-    if (iana == "Africa/Johannesburg") return L"South Africa Standard Time";
-    if (iana == "Europe/Athens" || iana == "Europe/Helsinki" || iana == "Europe/Bucharest") return L"FLE Standard Time";
-    if (iana == "Europe/Istanbul") return L"Turkey Standard Time";
+    if (iana == "Pacific/Fiji") return L"Fiji Standard Time";
+    if (iana == "Pacific/Apia") return L"Samoa Standard Time";
+    if (iana == "Pacific/Tongatapu") return L"Tonga Standard Time";
     return L"";
 }
 
@@ -226,14 +249,20 @@ LocalDateTime ScheduleService::GetCurrentLocalDateTime() {
 }
 
 std::wstring ScheduleService::BuildMonthKey(int year, int month, const AppSettings& settings) {
-    wchar_t buf[128];
-    if (settings.useCustomCoordinates) {
-        wchar_t coordBuf[64];
-        swprintf_s(coordBuf, L"%.2f_%.2f", settings.latitude, settings.longitude);
+    wchar_t buf[256];
+    bool coordinateBased = settings.useCustomCoordinates || settings.cityId == L"custom" ||
+                           settings.cityId.rfind(L"world_", 0) == 0;
+    if (coordinateBased) {
+        wchar_t coordBuf[96];
+        swprintf_s(coordBuf, L"%.4f_%.4f", settings.latitude, settings.longitude);
         for (wchar_t* p = coordBuf; *p; ++p) {
             if (*p == L'.' || *p == L',') *p = L'p';
         }
-        swprintf_s(buf, L"%ls_%d_%d_%04d%02d", coordBuf,
+        uint32_t tzHash = 2166136261u;
+        for (wchar_t ch : settings.timeZoneId) {
+            tzHash = (tzHash ^ static_cast<uint32_t>(ch)) * 16777619u;
+        }
+        swprintf_s(buf, L"%ls_%08X_%d_%d_%04d%02d", coordBuf, tzHash,
                    static_cast<int>(settings.calculationMethod),
                    static_cast<int>(settings.asrMethod), year, month);
     } else {
@@ -559,8 +588,8 @@ std::optional<DetectedLocationResult> ScheduleService::DetectCurrentLocation() {
         double lat = windowsCoordinates ? windowsCoordinates->first : ipLatitude;
         double lon = windowsCoordinates ? windowsCoordinates->second : ipLongitude;
         auto nearest = FindNearestCity(lat, lon, 30.0);
-        std::wstring winTz = windowsCoordinates ? std::wstring() : MapIanaToWindowsTimeZone(ianaTz);
-        if (winTz.empty() && nearest) winTz = nearest->timeZoneId;
+        std::wstring winTz = nearest ? nearest->timeZoneId : MapIanaToWindowsTimeZone(ianaTz);
+        if (winTz.empty()) winTz = MapIanaToWindowsTimeZone(ianaTz);
         if (winTz.empty()) winTz = GetSystemTimeZoneId();
 
         DetectedLocationResult r;
@@ -651,8 +680,7 @@ std::vector<CityLocation> ScheduleService::SearchWorldwideCities(std::wstring_vi
         snprintf(idBuf, sizeof(idBuf), "world_%s_%d_%d", countryCode.c_str(),
                  static_cast<int>(std::llround(latitude * 10000.0)),
                  static_cast<int>(std::llround(longitude * 10000.0)));
-        std::string tz = item.GetString("timezone");
-        std::wstring timeZoneId = MapIanaToWindowsTimeZone(tz);
+        std::wstring timeZoneId = MapIanaToWindowsTimeZone(item.GetString("timezone"));
         if (timeZoneId.empty()) timeZoneId = GetSystemTimeZoneId();
 
         CityLocation city;

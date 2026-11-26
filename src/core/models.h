@@ -201,6 +201,12 @@ enum class FlyoutDesignStyle : int {
     TimelineDashboard = 3
 };
 
+enum class TaskbarPillColorMode : int {
+    Emerald = 0,
+    ThemeAdaptive = 1,
+    MinimalTransparent = 2
+};
+
 enum class KerahatStatus : int {
     None = 0,
     AfterSunrise = 1,
@@ -296,8 +302,12 @@ struct AppSettings {
     bool opaqueTaskbarBackground = false;
     FontSizePreset fontSize = FontSizePreset::Normal;
     AppThemeMode themeMode = AppThemeMode::System;
-    bool useSystemAccentColor = true;
+    bool useSystemAccentColor = false;
+    bool showTaskbarFrame = true;
+    bool showTaskbarLogo = true;
+    TaskbarPillColorMode pillColorMode = TaskbarPillColorMode::Emerald;
     FlyoutDesignStyle flyoutDesign = FlyoutDesignStyle::CompactFluent;
+    int flyoutScalePercent = 120;
 
     AppLanguage language = AppLanguage::Auto;
     std::array<std::wstring, 6> customPrayerNames{};

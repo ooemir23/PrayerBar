@@ -1,5 +1,6 @@
 #include "pro_window.h"
 #include "gdiplus_flat.h"
+#include "theme_palette.h"
 #include "../core/commercial_config.h"
 #include "../core/i18n.h"
 #include "../platform/theme_utils.h"
@@ -171,13 +172,9 @@ void ProWindow::ApplyThemeBrushes() {
     if (cardBrush_) DeleteObject(cardBrush_);
 
     isDark_ = !IsAppLight(settings_.themeMode);
-    if (isDark_) {
-        bgBrush_ = CreateSolidBrush(RGB(32, 32, 32));
-        cardBrush_ = CreateSolidBrush(RGB(43, 43, 46));
-    } else {
-        bgBrush_ = CreateSolidBrush(RGB(243, 243, 243));
-        cardBrush_ = CreateSolidBrush(RGB(255, 255, 255));
-    }
+    auto pal = theme::GetUiPalette(isDark_, settings_.useSystemAccentColor);
+    bgBrush_ = CreateSolidBrush(theme::ArgbToColorRef(pal.bgWindow));
+    cardBrush_ = CreateSolidBrush(theme::ArgbToColorRef(pal.bgCard));
     if (hwnd_) ApplyWindowDwmStyle(hwnd_, isDark_, 2, 2);
 }
 
@@ -281,15 +278,16 @@ void ProWindow::PaintCanvas(HDC hdc, int width, int height) {
     if (gdip::GdipCreateBitmapFromScan0(width, height, width * 4, gdip::kPixelFormat32bppPARGB, bits, &gdiBmp) == 0 && gdiBmp) {
         if (gdip::GdipGetImageGraphicsContext(gdiBmp, &g) == 0 && g) {
             gdip::GdipSetSmoothingMode(g, gdip::kSmoothingModeAntiAlias);
-            gdip::GdipSetTextRenderingHint(g, gdip::kTextRenderingHintAntiAliasGridFit);
+            gdip::GdipSetTextRenderingHint(g, gdip::kTextRenderingHintAntiAlias);
 
-            uint32_t bg = isDark_ ? 0xFF202020u : 0xFFF3F3F3u;
-            uint32_t cardBg = isDark_ ? 0xFF2B2B2Eu : 0xFFFFFFFFu;
-            uint32_t border = isDark_ ? 0x20FFFFFFu : 0x1A000000u;
-            uint32_t textPrim = isDark_ ? 0xFFF5F7FAu : 0xFF1A1A1Au;
-            uint32_t textSec = isDark_ ? 0xFFA8B0BCu : 0xFF5D6472u;
-            uint32_t accent = GetWindowsAccentColorArgb(isDark_, settings_.useSystemAccentColor);
-            uint32_t gold = isDark_ ? 0xFFFFCE5Eu : 0xFFB86600u;
+            auto pal = theme::GetUiPalette(isDark_, settings_.useSystemAccentColor);
+            uint32_t bg = pal.bgWindow;
+            uint32_t cardBg = pal.bgCard;
+            uint32_t border = pal.border;
+            uint32_t textPrim = pal.textPrimary;
+            uint32_t textSec = pal.textSecondary;
+            uint32_t accent = pal.accent;
+            uint32_t gold = pal.gold;
 
             gdip::GdipGraphicsClear(g, bg);
 
@@ -302,8 +300,9 @@ void ProWindow::PaintCanvas(HDC hdc, int width, int height) {
             AppLanguage lang = settings_.language;
 
             // Üst Başlık ve Durum Rozeti
+            theme::DrawBrandLogoTile(g, pad, 10.0f * s, 26.0f * s);
             gdip::DrawTextBox(g, L"PrayerBar Pro", dispFam, 18.0f * s, true, textPrim,
-                              pad, 10.0f * s, 210.0f * s, 26.0f * s,
+                              pad + 34.0f * s, 10.0f * s, 176.0f * s, 26.0f * s,
                               gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
 
             std::wstring statusStr;
@@ -311,11 +310,11 @@ void ProWindow::PaintCanvas(HDC hdc, int width, int height) {
             switch (status_.tier) {
                 case LicenseTier::ProLifetime:
                     statusStr = Tr(lang, StrId::ProStatusActiveLifetime);
-                    badgeCol = 0xFF10B981u;
+                    badgeCol = pal.success;
                     break;
                 case LicenseTier::ProAnnual:
                     statusStr = Tr(lang, StrId::ProStatusActiveAnnual);
-                    badgeCol = 0xFF10B981u;
+                    badgeCol = pal.success;
                     break;
                 case LicenseTier::Trial: {
                     wchar_t buf[128];
@@ -345,7 +344,7 @@ void ProWindow::PaintCanvas(HDC hdc, int width, int height) {
                                   gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
             } else {
                 std::wstring sub = status_.expiryIso.empty()
-                    ? L"Microsoft Store · Windows 11 · 6 Languages · 0% Idle CPU"
+                    ? L"Microsoft Store · Windows 11 · 12 Languages · 0% Idle CPU"
                     : (L"Microsoft Store · " + status_.expiryIso);
                 gdip::DrawTextBox(g, sub, uiFam, 10.8f * s, false, textSec,
                                   pad, 42.0f * s, cw, 22.0f * s,
@@ -359,8 +358,8 @@ void ProWindow::PaintCanvas(HDC hdc, int width, int height) {
             float halfW = (cw - gap) * 0.5f;
 
             // Sol kart: Yıllık Abonelik
-            gdip::FillRoundedRect(g, pad, cardY, halfW, cardH, 8.0f * s, cardBg);
-            gdip::StrokeRoundedRect(g, pad, cardY, halfW, cardH, 8.0f * s, border, 1.0f);
+            gdip::FillRoundedRect(g, pad, cardY, halfW, cardH, 10.0f * s, cardBg);
+            gdip::StrokeRoundedRect(g, pad, cardY, halfW, cardH, 10.0f * s, border, 1.1f);
             gdip::DrawTextBox(g, Tr(lang, StrId::ProPlanAnnualTitle), dispFam, 13.0f * s, true, textPrim,
                               pad + 12.0f * s, cardY + 14.0f * s, halfW - 24.0f * s, 20.0f * s,
                               gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
@@ -368,35 +367,40 @@ void ProWindow::PaintCanvas(HDC hdc, int width, int height) {
                               pad + 12.0f * s, cardY + 38.0f * s, halfW - 24.0f * s, 28.0f * s,
                               gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
 
-            // Sağ kart: Ömür Boyu (Vurgulu)
+            // Sağ kart: Ömür Boyu (Zümrüt Vurgulu)
             float rx = pad + halfW + gap;
-            gdip::FillRoundedRect(g, rx, cardY, halfW, cardH, 8.0f * s, cardBg);
-            gdip::StrokeRoundedRect(g, rx, cardY, halfW, cardH, 8.0f * s, accent, 1.5f);
-            gdip::FillRoundedRect(g, rx + 12.0f * s, cardY + 8.0f * s, halfW - 24.0f * s, 16.0f * s, 4.0f * s, WithAlpha(0x28u, accent));
+            gdip::FillRoundedRect(g, rx, cardY, halfW, cardH, 10.0f * s, pal.bgHighlight);
+            gdip::StrokeRoundedRect(g, rx, cardY, halfW, cardH, 10.0f * s, pal.borderAccent, 1.6f);
+            gdip::FillRoundedRect(g, rx + 12.0f * s, cardY + 8.0f * s, halfW - 24.0f * s, 16.0f * s, 4.0f * s, WithAlpha(0x34u, accent));
             gdip::DrawTextBox(g, Tr(lang, StrId::ProBadgePopular), uiFam, 8.8f * s, true, accent,
                               rx + 12.0f * s, cardY + 8.0f * s, halfW - 24.0f * s, 16.0f * s,
                               gdip::kStringAlignmentCenter, gdip::kStringAlignmentCenter);
             gdip::DrawTextBox(g, Tr(lang, StrId::ProPlanLifetimeTitle), dispFam, 13.0f * s, true, textPrim,
                               rx + 12.0f * s, cardY + 26.0f * s, halfW - 24.0f * s, 18.0f * s,
                               gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
-            gdip::DrawTextBox(g, Tr(lang, StrId::ProPlanLifetimePrice), dispFam, 17.0f * s, true, accent,
+            gdip::DrawTextBox(g, Tr(lang, StrId::ProPlanLifetimePrice), dispFam, 17.0f * s, true, gold,
                               rx + 12.0f * s, cardY + 46.0f * s, halfW - 24.0f * s, 26.0f * s,
                               gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
 
             // Pro Özellikler Listesi Kartı
             float featY = 198.0f * s;
             float featH = 120.0f * s;
-            gdip::FillRoundedRect(g, pad, featY, cw, featH, 8.0f * s, cardBg);
-            gdip::StrokeRoundedRect(g, pad, featY, cw, featH, 8.0f * s, border, 1.0f);
+            gdip::FillRoundedRect(g, pad, featY, cw, featH, 10.0f * s, cardBg);
+            gdip::StrokeRoundedRect(g, pad, featY, cw, featH, 10.0f * s, border, 1.1f);
             const StrId feats[5] = {StrId::ProFeat1, StrId::ProFeat2, StrId::ProFeat3, StrId::ProFeat4, StrId::ProFeat5};
             for (int i = 0; i < 5; ++i) {
-                gdip::DrawTextBox(g, Tr(lang, feats[i]), uiFam, 11.2f * s, false, textPrim,
-                                  pad + 14.0f * s, featY + 8.0f * s + i * 21.0f * s, cw - 28.0f * s, 20.0f * s,
+                std::wstring line = Tr(lang, feats[i]);
+                if (line.rfind(L"• ", 0) == 0) line = line.substr(2);
+                gdip::DrawTextBox(g, L"✓", uiFam, 11.2f * s, true, accent,
+                                  pad + 14.0f * s, featY + 8.0f * s + i * 21.0f * s, 16.0f * s, 20.0f * s,
+                                  gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
+                gdip::DrawTextBox(g, line, uiFam, 11.2f * s, false, textPrim,
+                                  pad + 32.0f * s, featY + 8.0f * s + i * 21.0f * s, cw - 46.0f * s, 20.0f * s,
                                   gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
             }
 
             if (!feedbackText_.empty()) {
-                uint32_t fbCol = feedbackIsError_ ? 0xFFF87171u : 0xFF34D399u;
+                uint32_t fbCol = feedbackIsError_ ? pal.danger : pal.success;
                 gdip::DrawTextBox(g, feedbackText_, uiFam, 10.8f * s, true, fbCol,
                                   pad, 324.0f * s, cw, 20.0f * s,
                                   gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
@@ -425,18 +429,19 @@ void ProWindow::PaintOwnerPushButton(DRAWITEMSTRUCT* dis) {
     bool pressed = (dis->itemState & ODS_SELECTED) != 0;
     bool disabled = (dis->itemState & ODS_DISABLED) != 0;
     bool accentBtn = (id == IDC_BUY_LIFETIME || id == IDC_CLOSE_BTN);
-    bool inCard = (id == IDC_BUY_ANNUAL || id == IDC_BUY_LIFETIME);
 
-    uint32_t accent = GetWindowsAccentColorArgb(isDark_, settings_.useSystemAccentColor);
-    uint32_t parentBg = inCard ? (isDark_ ? 0xFF2B2B2Eu : 0xFFFFFFFFu) : (isDark_ ? 0xFF202020u : 0xFFF3F3F3u);
+    auto pal = theme::GetUiPalette(isDark_, settings_.useSystemAccentColor);
+    uint32_t parentBg = (id == IDC_BUY_LIFETIME)
+        ? pal.bgHighlight
+        : ((id == IDC_BUY_ANNUAL) ? pal.bgCard : pal.bgWindow);
 
     uint32_t fill = accentBtn
-        ? (disabled ? 0xFF44454Au : (pressed ? WithAlpha(0xCCu, accent) : accent))
-        : (pressed ? (isDark_ ? 0xFF3F4046u : 0xFFE3E6ECu) : (isDark_ ? 0xFF34353Au : 0xFFFAFAFCu));
-    uint32_t border = accentBtn ? accent : (isDark_ ? 0x26FFFFFFu : 0x22000000u);
+        ? (disabled ? pal.bgBtnPressed : (pressed ? WithAlpha(0xCCu, pal.accent) : pal.accent))
+        : (pressed ? pal.bgBtnPressed : pal.bgBtn);
+    uint32_t border = accentBtn ? (disabled ? pal.border : pal.accent) : pal.border;
     uint32_t fg = accentBtn
-        ? (isDark_ ? 0xFF101414u : 0xFFFFFFFFu)
-        : (disabled ? (isDark_ ? 0xFF7B808Bu : 0xFF9AA0AAu) : (isDark_ ? 0xFFF2F4F8u : 0xFF1A1A1Au));
+        ? (disabled ? pal.textMuted : pal.accentTextOnFill)
+        : (disabled ? pal.textMuted : pal.textPrimary);
 
     std::wstring label = GetControlString(dis->hwndItem);
 
@@ -462,7 +467,7 @@ void ProWindow::PaintOwnerPushButton(DRAWITEMSTRUCT* dis) {
     if (gdip::GdipCreateBitmapFromScan0(w, h, w * 4, gdip::kPixelFormat32bppPARGB, bits, &gBmp) == 0 && gBmp) {
         if (gdip::GdipGetImageGraphicsContext(gBmp, &g) == 0 && g) {
             gdip::GdipSetSmoothingMode(g, gdip::kSmoothingModeAntiAlias);
-            gdip::GdipSetTextRenderingHint(g, gdip::kTextRenderingHintAntiAliasGridFit);
+            gdip::GdipSetTextRenderingHint(g, gdip::kTextRenderingHintAntiAlias);
             gdip::GdipGraphicsClear(g, parentBg);
 
             float s = static_cast<float>(scale_);

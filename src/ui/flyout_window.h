@@ -27,7 +27,8 @@ public:
         std::function<void()> onOpenSettings,
         std::function<void()> onOpenImsakiye,
         std::function<void(bool)> onVisibilityChanged,
-        std::function<void()> onForceRefresh);
+        std::function<void()> onForceRefresh,
+        std::function<void()> onSettingsMutated = nullptr);
     ~FlyoutWindow();
 
     bool IsOpen() const { return hwnd_ != nullptr && IsWindowVisible(hwnd_); }
@@ -39,13 +40,16 @@ public:
 
 private:
     enum class HoverTarget { None, StopAudio, Imsakiye, Refresh, Settings };
+    enum class ResizeEdge { None, Left, Top, TopLeft };
 
     static LRESULT CALLBACK WndProcStatic(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
     LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
     void PaintClient(HDC hdc, int width, int height);
     void PositionRightDocked(RECT anchorRect, int winW, int winH);
+    void ApplyScalePercent(int newPercent, bool saveNow);
     HoverTarget HitTestButton(int x, int y) const;
+    ResizeEdge HitTestResizeEdge(int x, int y) const;
     void UpdateButtonsHover(int x, int y);
 
     SettingsStore& settingsStore_;
@@ -54,14 +58,22 @@ private:
     std::function<void()> onOpenImsakiye_;
     std::function<void(bool)> onVisibilityChanged_;
     std::function<void()> onForceRefresh_;
+    std::function<void()> onSettingsMutated_;
 
     HWND hwnd_ = nullptr;
+    double dpiScale_ = 1.0;
     double scale_ = 1.0;
+    int openedScalePercent_ = 120;
     uint64_t lastClosedTick_ = 0;
     bool closing_ = false;
     bool trackingLeave_ = false;
     bool refreshBusy_ = false;
     bool autoOptimizeMemory_ = true;
+    bool resizing_ = false;
+    ResizeEdge resizeEdge_ = ResizeEdge::None;
+    POINT resizeStartScreen_{};
+    RECT resizeStartWinRc_{};
+    int resizeStartPercent_ = 120;
     FlyoutDesignStyle openedDesign_ = FlyoutDesignStyle::CompactFluent;
     HoverTarget hovered_ = HoverTarget::None;
 

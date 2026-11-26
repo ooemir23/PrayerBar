@@ -114,6 +114,12 @@ int AppHost::Run() {
         },
         [this]() {
             scheduleService_.ForceRefreshMonth(ScheduleService::GetCurrentLocalDateTime().date, settings_);
+        },
+        [this]() {
+            settings_ = settingsStore_.Load();
+            if (settingsWindow_ && settingsWindow_->IsOpen()) {
+                settingsWindow_->RefreshPreviewAndMemory();
+            }
         });
 
     settingsWindow_ = std::make_unique<SettingsWindow>(
@@ -124,10 +130,18 @@ int AppHost::Run() {
             settings_ = settingsStore_.Load();
             OnSettingsChanged();
         },
-        [this](const std::wstring& title, const std::wstring& body, bool silent) { ShowUserNotification(title, body, silent); },
+        [this](const std::wstring& title, const std::wstring& body, bool hasAudio) {
+            ShowUserNotification(title, body, true, hasAudio);
+        },
         [this]() { imsakiyeWindow_->OpenOrFocus(); },
         [this](bool lockedHint) { if (proWindow_) proWindow_->OpenOrFocus(lockedHint); },
-        [this]() { return hotkeyOk_; });
+        [this]() { return hotkeyOk_; },
+        [this]() {
+            RefreshTick(false);
+            if (flyoutWindow_) flyoutWindow_->RefreshView();
+            if (imsakiyeWindow_) imsakiyeWindow_->RefreshIfOpen();
+            if (proWindow_) proWindow_->RefreshThemeOrLanguage();
+        });
 
     bandWindow_->SetCallbacks(
         [this](RECT anchor) { ToggleFlyout(anchor); },
@@ -182,10 +196,18 @@ int AppHost::Run() {
             change(settings_);
             settingsStore_.Save(settings_);
             OnSettingsChanged();
+            if (settingsWindow_ && settingsWindow_->IsOpen()) {
+                settingsWindow_->RefreshPreviewAndMemory();
+            }
         },
         [this](int tab) { if (settingsWindow_) settingsWindow_->OpenOrFocus(tab); },
         [this]() {
-            ShowUserNotification(Tr(settings_.language, StrId::TestNotifTitle), Tr(settings_.language, StrId::TestNotifBody), true);
+            bool playAudio = settings_.preNotifySound != NotificationSoundKind::None;
+            if (playAudio) {
+                AudioPlayer::Play(settings_.preNotifySound, settings_.customSoundPath, settings_.soundVolumePercent);
+            }
+            ShowUserNotification(Tr(settings_.language, StrId::TestNotifTitle), Tr(settings_.language, StrId::TestNotifBody),
+                                 true, playAudio);
         });
 
     ApplyHotkey();
@@ -232,12 +254,23 @@ void AppHost::OnSettingsChanged() {
     if (proWindow_) proWindow_->RefreshThemeOrLanguage();
 }
 
-void AppHost::ShowUserNotification(const std::wstring& title, const std::wstring& body, bool silent) {
-    // Toast first (Snooze/Dismiss, Notification Center); classic tray balloon if toasts are off or unavailable.
-    if (settings_.modernToasts && ShowModernToast(title, body, silent)) return;
+void AppHost::ShowUserNotification(const std::wstring& title, const std::wstring& body, bool silent, bool hasAudio) {
+    AppLanguage lang = settings_.language;
+    std::wstring stopLabel = hasAudio ? Tr(lang, StrId::ToastStopAdhan) : L"";
+    std::function<void()> stopCb;
+    if (hasAudio) {
+        stopCb = []() { AudioPlayer::Stop(); };
+    }
+    // Toast first (Mute Adhan / Dismiss, Notification Center); classic tray balloon if toasts fail.
+    if (settings_.modernToasts && ShowModernToast(title, body, silent, stopLabel, stopCb)) {
+        balloonStopsAudio_ = false;
+        return;
+    }
     if (!trayHost_) return;
-    trayHost_->ShowNotification(title, body, silent);
+    std::wstring balloonBody = hasAudio ? (body + L"\n" + Tr(lang, StrId::BalloonStopHint)) : body;
+    trayHost_->ShowNotification(title, balloonBody, silent);
     pendingBalloonAction_ = kBalloonNone;
+    balloonStopsAudio_ = hasAudio;
     if (!settings_.showTrayIcon && hostHwnd_) SetTimer(hostHwnd_, kTimerTrayNotifCleanupId, 15000, nullptr);
 }
 
@@ -360,10 +393,10 @@ void AppHost::EvaluateNotifications(const LocalDateTime& now, const PrayerCountd
 
     auto dispatchNotif = [&](const std::wstring& title, const std::wstring& body, NotificationSoundKind sound, bool playSoundRule) {
         bool playAudio = !quietActive && playSoundRule && (sound != NotificationSoundKind::None);
-        ShowUserNotification(title, body, quietActive || playAudio || !playSoundRule);
         if (playAudio) {
             AudioPlayer::Play(sound, settings_.customSoundPath, settings_.soundVolumePercent);
         }
+        ShowUserNotification(title, body, quietActive || playAudio || !playSoundRule, playAudio);
     };
 
     for (const auto& c : candidates) {
@@ -499,13 +532,17 @@ LRESULT AppHost::HostWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 
         case TrayIconHost::kCallbackMessageId: {
             UINT mouseMsg = static_cast<UINT>(lParam & 0xFFFF);
-            if (mouseMsg == NIN_BALLOONUSERCLICK || mouseMsg == NIN_BALLOONTIMEOUT) {
-                if (mouseMsg == NIN_BALLOONUSERCLICK && pendingBalloonAction_ == kBalloonReview) {
+            if (mouseMsg == NIN_BALLOONUSERCLICK || mouseMsg == NIN_BALLOONHIDE || mouseMsg == NIN_BALLOONTIMEOUT) {
+                if ((mouseMsg == NIN_BALLOONUSERCLICK || mouseMsg == NIN_BALLOONHIDE) && balloonStopsAudio_) {
+                    AudioPlayer::Stop();
+                    balloonStopsAudio_ = false;
+                } else if (mouseMsg == NIN_BALLOONUSERCLICK && pendingBalloonAction_ == kBalloonReview) {
                     ShellExecuteW(hWnd, L"open", commercial::kMicrosoftStoreReviewUri, nullptr, nullptr, SW_SHOWNORMAL);
                 } else if (mouseMsg == NIN_BALLOONUSERCLICK && pendingBalloonAction_ == kBalloonLocation) {
                     if (settingsWindow_) settingsWindow_->OpenOrFocus(1);
                 }
                 pendingBalloonAction_ = kBalloonNone;
+                if (mouseMsg == NIN_BALLOONTIMEOUT) balloonStopsAudio_ = false;
                 return 0;
             }
             if (mouseMsg == WM_LBUTTONUP) {
@@ -537,7 +574,7 @@ LRESULT AppHost::HostWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
                 settings_.latitude = detected->latitude;
                 settings_.longitude = detected->longitude;
                 settings_.timeZoneId = detected->timeZoneId;
-                settings_.useCustomCoordinates = detected->cityId == L"custom";
+                settings_.useCustomCoordinates = false;
                 if (settings_.autoSelectMethodByCountry) {
                     settings_.calculationMethod = detected->recommendedMethod;
                 }

@@ -12,6 +12,7 @@
 #include <shlobj.h>
 
 #include <algorithm>
+#include <cmath>
 #include <filesystem>
 
 namespace vakit {
@@ -133,7 +134,12 @@ bool ParseSettingsUtf8(const std::string& raw, AppSettings& s) {
     s.longitude = std::clamp(root.GetDouble("longitude", s.longitude), -180.0, 180.0);
     readWStr("timeZoneId", s.timeZoneId);
     s.useCustomCoordinates = root.GetBool("useCustomCoordinates", s.useCustomCoordinates);
-    s.autoDetectLocation = root.GetBool("autoDetectLocation", !s.useCustomCoordinates);
+    const JsonValue* autoDetectLocation = root.Find("autoDetectLocation");
+    s.autoDetectLocation = autoDetectLocation
+        ? root.GetBool("autoDetectLocation", s.autoDetectLocation)
+        : (s.cityId == L"istanbul" && !s.useCustomCoordinates &&
+           std::abs(s.latitude - 41.0082) < 0.0001 && std::abs(s.longitude - 28.9784) < 0.0001);
+    if (s.useCustomCoordinates) s.autoDetectLocation = false;
 
     s.calculationMethod = static_cast<CalculationMethod>(root.GetInt("calculationMethod", static_cast<int>(s.calculationMethod)));
     s.asrMethod = static_cast<AsrJuristicMethod>(std::clamp(root.GetInt("asrMethod", static_cast<int>(s.asrMethod)), 0, 1));
@@ -158,7 +164,11 @@ bool ParseSettingsUtf8(const std::string& raw, AppSettings& s) {
     s.fontSize = static_cast<FontSizePreset>(std::clamp(root.GetInt("fontSize", static_cast<int>(s.fontSize)), 0, 2));
     s.themeMode = static_cast<AppThemeMode>(std::clamp(root.GetInt("themeMode", static_cast<int>(s.themeMode)), 0, 2));
     s.useSystemAccentColor = root.GetBool("useSystemAccentColor", s.useSystemAccentColor);
+    s.showTaskbarFrame = root.GetBool("showTaskbarFrame", s.showTaskbarFrame);
+    s.showTaskbarLogo = root.GetBool("showTaskbarLogo", s.showTaskbarLogo);
+    s.pillColorMode = static_cast<TaskbarPillColorMode>(std::clamp(root.GetInt("pillColorMode", static_cast<int>(s.pillColorMode)), 0, 2));
     s.flyoutDesign = static_cast<FlyoutDesignStyle>(std::clamp(root.GetInt("flyoutDesign", static_cast<int>(s.flyoutDesign)), 0, 3));
+    s.flyoutScalePercent = std::clamp(root.GetInt("flyoutScalePercent", s.flyoutScalePercent), 80, 200);
     s.language = static_cast<AppLanguage>(std::clamp(root.GetInt("language", static_cast<int>(s.language)), 0, 12));
 
     if (const JsonValue* namesObj = root.Find("customPrayerNames"); namesObj && namesObj->type == JsonValue::Type::Object) {
@@ -262,7 +272,11 @@ std::string SerializeSettingsUtf8(const AppSettings& s) {
     root.Set("fontSize", JsonValue::MakeInt(static_cast<int>(s.fontSize)));
     root.Set("themeMode", JsonValue::MakeInt(static_cast<int>(s.themeMode)));
     root.Set("useSystemAccentColor", JsonValue::MakeBool(s.useSystemAccentColor));
+    root.Set("showTaskbarFrame", JsonValue::MakeBool(s.showTaskbarFrame));
+    root.Set("showTaskbarLogo", JsonValue::MakeBool(s.showTaskbarLogo));
+    root.Set("pillColorMode", JsonValue::MakeInt(static_cast<int>(s.pillColorMode)));
     root.Set("flyoutDesign", JsonValue::MakeInt(static_cast<int>(s.flyoutDesign)));
+    root.Set("flyoutScalePercent", JsonValue::MakeInt(s.flyoutScalePercent));
     root.Set("language", JsonValue::MakeInt(static_cast<int>(s.language)));
 
     JsonValue namesObj = JsonValue::MakeObject();
