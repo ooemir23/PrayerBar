@@ -2645,6 +2645,31 @@ LRESULT SettingsWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
             RebuildUiAfterChange();
             return 0;
 
+        case kMsgCitySearchResults: {
+            auto* result = reinterpret_cast<CitySearchResults*>(lParam);
+            if (!result) return 0;
+            if (result->query == GetEditText(citySearchEdit_)) {
+                for (auto& city : result->cities) {
+                    bool duplicate = std::any_of(visibleCities_.begin(), visibleCities_.end(), [&](const CityLocation& existing) {
+                        return std::abs(existing.latitude - city.latitude) < 0.02 &&
+                               std::abs(existing.longitude - city.longitude) < 0.02;
+                    });
+                    if (!duplicate) visibleCities_.push_back(std::move(city));
+                }
+
+                SendMessageW(cityList_, LB_RESETCONTENT, 0, 0);
+                int selIdx = -1;
+                for (size_t i = 0; i < visibleCities_.size(); ++i) {
+                    std::wstring label = visibleCities_[i].DisplayLabel();
+                    SendMessageW(cityList_, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(label.c_str()));
+                    if (visibleCities_[i].id == settings_.cityId) selIdx = static_cast<int>(i);
+                }
+                if (selIdx >= 0) SendMessageW(cityList_, LB_SETCURSEL, selIdx, 0);
+            }
+            delete result;
+            return 0;
+        }
+
         case kMsgLocDetected: {
             auto* detected = reinterpret_cast<DetectedLocationResult*>(lParam);
             if (static_cast<unsigned int>(wParam) != locationRequestGeneration_) {
@@ -2683,37 +2708,8 @@ LRESULT SettingsWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
             SetWindowTextW(lonEdit_, lonBuf);
             RefreshCityList(GetEditText(citySearchEdit_));
             isLoading_ = false;
-
-            std::wstring statusMsg = detected->cityName + L", " + detected->countryName + L" (" + detected->sourceLabel + L") · " +
-                                     GetMethodFriendlyName(settings_.calculationMethod);
-            SetWindowTextW(autoLocStatus_, statusMsg.c_str());
             delete detected;
             SaveAndNotify();
-            return 0;
-        }
-
-        case kMsgCitySearchResults: {
-            auto* result = reinterpret_cast<CitySearchResults*>(lParam);
-            if (!result) return 0;
-            if (result->query == GetEditText(citySearchEdit_)) {
-                for (auto& city : result->cities) {
-                    bool duplicate = std::any_of(visibleCities_.begin(), visibleCities_.end(), [&](const CityLocation& existing) {
-                        return std::abs(existing.latitude - city.latitude) < 0.02 &&
-                               std::abs(existing.longitude - city.longitude) < 0.02;
-                    });
-                    if (!duplicate) visibleCities_.push_back(std::move(city));
-                }
-
-                SendMessageW(cityList_, LB_RESETCONTENT, 0, 0);
-                int selIdx = -1;
-                for (size_t i = 0; i < visibleCities_.size(); ++i) {
-                    std::wstring label = visibleCities_[i].DisplayLabel();
-                    SendMessageW(cityList_, LB_ADDSTRING, 0, reinterpret_cast<LPARAM>(label.c_str()));
-                    if (visibleCities_[i].id == settings_.cityId) selIdx = static_cast<int>(i);
-                }
-                if (selIdx >= 0) SendMessageW(cityList_, LB_SETCURSEL, selIdx, 0);
-            }
-            delete result;
             return 0;
         }
 

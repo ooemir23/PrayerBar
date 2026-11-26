@@ -232,6 +232,7 @@ std::vector<CityLocation> SearchCities(std::wstring_view query, size_t maxResult
 std::wstring ResolveCountryCodeFromName(std::wstring_view countryName) {
     std::wstring norm = NormalizeTurkishLower(TrimWide(countryName));
     if (norm == L"turkiye" || norm == L"turkey" || norm == L"kktc") return L"TR";
+    if (norm == L"avustralya" || norm == L"australia") return L"AU";
     if (norm == L"suudi arabistan" || norm == L"saudi arabia") return L"SA";
     if (norm == L"misir" || norm == L"egypt") return L"EG";
     if (norm == L"pakistan") return L"PK";
