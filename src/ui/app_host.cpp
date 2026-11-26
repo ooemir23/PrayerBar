@@ -7,6 +7,7 @@
 #include "../platform/audio_player.h"
 #include "../platform/theme_utils.h"
 #include "../platform/toast.h"
+#include "../platform/widget_provider.h"
 #include "../core/prayer_calc.h"
 
 #include <shellapi.h>
@@ -45,6 +46,7 @@ AppHost::AppHost(SettingsStore& settingsStore, ScheduleService& scheduleService)
 }
 
 AppHost::~AppHost() {
+    UnregisterWidgetProvider();
     AudioPlayer::Stop();
     settingsWindow_.reset();
     proWindow_.reset();
@@ -221,6 +223,10 @@ int AppHost::Run() {
     SetTimer(hostHwnd_, kTimerAutoMemId, 600000, nullptr);
 
     if (IsPackagedApp()) {
+        RegisterWidgetProvider(
+            [this]() { return FormatWidgetDataJson(scheduleService_.ComputeState(ScheduleService::GetCurrentLocalDateTime(), settings_), settings_); },
+            [h = hostHwnd_]() { PostMessageW(h, kMsgShowFlyout, 0, 0); });
+
         HWND host = hostHwnd_;
         std::thread([host]() {
             auto snap = QueryMicrosoftStoreLicenseSync();
@@ -345,6 +351,7 @@ void AppHost::RefreshTick(bool checkNotifications) {
     PrayerCountdownState state = scheduleService_.ComputeState(now, settings_);
     if (bandWindow_) bandWindow_->Update(state, settings_);
     if (trayHost_) trayHost_->Update(state, settings_);
+    PushWidgetUpdate();
     if (checkNotifications) {
         EvaluateNotifications(now, state);
     }

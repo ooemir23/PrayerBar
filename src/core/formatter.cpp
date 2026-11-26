@@ -329,3 +329,41 @@ const wchar_t* GetStyleFriendlyName(TaskbarDisplayStyle style) {
 }
 
 } // namespace vakit
+
+namespace vakit {
+
+std::wstring FormatWidgetDataJson(const PrayerCountdownState& state, const AppSettings& settings) {
+    auto q = [](const std::wstring& s) {
+        std::wstring out = L"\"";
+        for (wchar_t c : s) {
+            if (c == L'"' || c == L'\\') { out += L'\\'; out += c; }
+            else if (c < 0x20) out += L' ';
+            else out += c;
+        }
+        return out + L"\"";
+    };
+    TimeHM next{state.nextPrayerDateTime.hour, state.nextPrayerDateTime.minute};
+    AppLanguage lang = settings.language;
+    // Same hijri source as the flyout header: Diyanet text in Turkish, computed otherwise.
+    std::wstring hijri = (ResolveEffectiveLanguage(lang) == AppLanguage::Turkish && !state.today.hijriDateText.empty())
+        ? state.today.hijriDateText : FormatHijriDateLocalized(state.today.date, lang);
+    std::wstring json = L"{\"heading\":" + q(FormatUntilPrayerLine(state.nextPrayer, settings)) +
+                        L",\"remain\":" + q(FormatRemainingLong(state.remainingSeconds, false, lang)) +
+                        L",\"next\":" + q(GetEffectivePrayerName(state.nextPrayer, settings)) +
+                        L",\"time\":" + q(next.FormatHHMM()) +
+                        L",\"city\":" + q(settings.cityName) +
+                        L",\"hijri\":" + q(hijri) + L",\"times\":[";
+    int nowMin = state.calculatedAt.hour * 60 + state.calculatedAt.minute;
+    for (PrayerKind k : kOrderedPrayerKinds) {
+        if (k != PrayerKind::Imsak) json += L',';
+        TimeHM t = state.today.GetTime(k);
+        int diff = t.TotalMinutes() - nowMin;  // minutes from now; negative = already passed today
+        std::wstring rel = (diff < 0 ? L"-" : L"+") + FormatRemainingCompact(static_cast<int64_t>(diff < 0 ? -diff : diff) * 60, false, lang);
+        json += L"{\"n\":" + q(GetEffectivePrayerName(k, settings)) + L",\"t\":" + q(t.FormatHHMM()) + L",\"d\":" + q(rel) +
+                L",\"cur\":" + (k == state.nextPrayer ? L"true" : L"false") +
+                L",\"past\":" + (diff < 0 && k != state.nextPrayer ? L"true" : L"false") + L'}';
+    }
+    return json + L"]}";
+}
+
+} // namespace vakit

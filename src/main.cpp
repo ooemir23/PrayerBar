@@ -265,6 +265,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     std::wstring flyoutPreviewDir;
     int langOverride = 0;
     int openSettingsTab = -1;  // --settings [tab]: open settings (in the running instance if any)
+    bool comLaunch = false;    // started by COM for the Widgets board: run normally, never pop the flyout
     if (argv) {
         for (int i = 1; i < argc; ++i) {
             if (_wcsicmp(argv[i], L"--diag-smoke") == 0) {
@@ -275,6 +276,8 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
                 flyoutPreviewDir = argv[++i];
             } else if (_wcsicmp(argv[i], L"--lang") == 0 && (i + 1) < argc) {
                 langOverride = std::clamp(_wtoi(argv[++i]), 0, 12);
+            } else if (_wcsicmp(argv[i], L"-RegisterProcessAsComServer") == 0) {
+                comLaunch = true;
             } else if (_wcsicmp(argv[i], L"--settings") == 0) {
                 openSettingsTab = ((i + 1) < argc && iswdigit(argv[i + 1][0])) ? std::clamp(_wtoi(argv[++i]), 0, 5) : 0;
             }
@@ -308,7 +311,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
         if (existing) {
             if (openSettingsTab >= 0) {
                 PostMessageW(existing, vakit::AppHost::kMsgShowSettings, static_cast<WPARAM>(openSettingsTab), 0);
-            } else {
+            } else if (!comLaunch) {
                 PostMessageW(existing, vakit::AppHost::kMsgShowFlyout, 0, 0);
             }
         }

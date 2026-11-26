@@ -26,5 +26,7 @@ std::pair<std::wstring, std::wstring> FormatTrayText(const PrayerCountdownState&
 std::pair<std::wstring, std::wstring> FormatTrayText(const PrayerCountdownState& state, const AppSettings& settings);
 std::wstring FormatTrayTooltip(const PrayerCountdownState& state, const AppSettings& settings);
 const wchar_t* GetStyleFriendlyName(TaskbarDisplayStyle style);
+// Adaptive Card data for the Windows Widgets board (see platform/widget_provider.cpp template).
+std::wstring FormatWidgetDataJson(const PrayerCountdownState& state, const AppSettings& settings);
 
 } // namespace vakit

@@ -48,6 +48,8 @@ try {
     New-Item -ItemType Directory -Force -Path $stagingDir | Out-Null
 
     Copy-Item -Path $buildExe -Destination (Join-Path $stagingDir "PrayerBar.exe") -Force
+    # Metadata for the IWidgetProvider marshaling proxy declared in AppxManifest (see windows.activatableClass.proxyStub).
+    Copy-Item -Path (Join-Path $repoRoot "packaging\msix\Microsoft.Windows.Widgets.winmd") -Destination $stagingDir -Force
 
     $assetsDest = Join-Path $stagingDir "Assets"
     New-Item -ItemType Directory -Force -Path $assetsDest | Out-Null

@@ -4,7 +4,9 @@
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
   xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
-  IgnorableNamespaces="uap rescap desktop">
+  xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+  xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
+  IgnorableNamespaces="uap rescap desktop uap3 com">
 
   <Identity
     Name="{{IDENTITY_NAME}}"
@@ -20,6 +22,8 @@
 
   <Dependencies>
     <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" />
+    <!-- Windows App SDK runtime: hosts the Widgets board API (WidgetManager). Store installs it automatically. -->
+    <PackageDependency Name="Microsoft.WindowsAppRuntime.1.8" MinVersion="8000.0.0.0" Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US" />
   </Dependencies>
 
   <Resources>
@@ -63,6 +67,47 @@
             Enabled="false"
             DisplayName="PrayerBar" />
         </desktop:Extension>
+        <!-- Widgets board (Win+W). ClassId must match CLSID_PrayerBarWidgetProvider in src/platform/widget_provider.cpp. -->
+        <com:Extension Category="windows.comServer">
+          <com:ComServer>
+            <com:ExeServer Executable="PrayerBar.exe" Arguments="-RegisterProcessAsComServer" DisplayName="PrayerBar Widget Provider">
+              <com:Class Id="34DBA178-5C11-46B6-869C-2A61F63F353D" DisplayName="PrayerBar Widget Provider" />
+            </com:ExeServer>
+          </com:ComServer>
+        </com:Extension>
+        <uap3:Extension Category="windows.appExtension">
+          <uap3:AppExtension Name="com.microsoft.windows.widgets" DisplayName="PrayerBar" Id="PrayerBarWidgets">
+            <uap3:Properties>
+              <WidgetProvider>
+                <ProviderIcons>
+                  <Icon Path="Assets\Square44x44Logo.png" />
+                </ProviderIcons>
+                <Activation>
+                  <CreateInstance ClassId="34DBA178-5C11-46B6-869C-2A61F63F353D" />
+                </Activation>
+                <Definitions>
+                  <Definition Id="PrayerBar_NextPrayer" DisplayName="PrayerBar" Description="Next prayer time and countdown" AllowMultiple="false" IsCustomizable="false">
+                    <Capabilities>
+                      <Capability><Size Name="small" /></Capability>
+                      <Capability><Size Name="medium" /></Capability>
+                      <Capability><Size Name="large" /></Capability>
+                    </Capabilities>
+                    <ThemeResources>
+                      <Icons>
+                        <Icon Path="Assets\Square44x44Logo.png" />
+                      </Icons>
+                      <Screenshots>
+                        <Screenshot Path="Assets\Wide310x150Logo.png" DisplayAltText="PrayerBar widget" />
+                      </Screenshots>
+                      <DarkMode />
+                      <LightMode />
+                    </ThemeResources>
+                  </Definition>
+                </Definitions>
+              </WidgetProvider>
+            </uap3:Properties>
+          </uap3:AppExtension>
+        </uap3:Extension>
       </Extensions>
     </Application>
   </Applications>
@@ -71,4 +116,15 @@
     <Capability Name="internetClient" />
     <rescap:Capability Name="runFullTrust" />
   </Capabilities>
+
+  <Extensions>
+    <!-- Cross-process marshaling for IWidgetProvider: the Windows App SDK framework omits it (only Windows' own Widgets
+         package declares it), so without this the board connects but never reaches CreateWidget. -->
+    <Extension Category="windows.activatableClass.proxyStub">
+      <ProxyStub ClassId="00000355-0000-0000-C000-000000000046">
+        <Path>Microsoft.Windows.Widgets.winmd</Path>
+        <Interface Name="Microsoft.Windows.Widgets.Providers.IWidgetProvider" InterfaceId="5C5774CC-72A0-452D-B9ED-075C0DD25EED" />
+      </ProxyStub>
+    </Extension>
+  </Extensions>
 </Package>

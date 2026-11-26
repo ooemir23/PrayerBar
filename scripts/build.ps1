@@ -54,6 +54,7 @@ $appSourcesRel = @(
     "src\platform\win_http.cpp",
     "src\platform\win_store.cpp",
     "src\platform\toast.cpp",
+    "src\platform\widget_provider.cpp",
     "src\platform\audio_player.cpp",
     "src\platform\theme_utils.cpp",
     "src\platform\taskbar_geom.cpp",
