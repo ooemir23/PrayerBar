@@ -378,6 +378,7 @@ void AppHost::EvaluateNotifications(const LocalDateTime& now, const PrayerCountd
 
     // User muted notifications from the menu: skip everything (alerts, Jumu'ah, rating ask) until the window ends.
     if (settings_.notifyMuteUntilMin > static_cast<int>(now.ToEpochSeconds() / 60)) return;
+    if (!settings_.notificationsEnabled) return;  // master switch in Settings > Notifications
 
     bool quietActive = settings_.quietDuringFullscreen && IsQuietOrFullscreenModeActive();
 
@@ -462,22 +463,44 @@ void AppHost::EvaluateNotifications(const LocalDateTime& now, const PrayerCountd
         }
     }
 
+    static constexpr StrId kHolidayNames[] = {
+        StrId::HolHijriNewYear, StrId::HolHijriNewYear, StrId::HolAshura, StrId::HolMawlid, StrId::HolRaghaib,
+        StrId::HolMiraj, StrId::HolBarat, StrId::HolRamadanStart, StrId::HolQadr, StrId::HolEidFitr,
+        StrId::HolArafah, StrId::HolEidAdha};
+
+    // Eid prayer: heads-up 12 h before it (prayer ~45 min after sunrise, as announced by Diyanet) with the time.
+    // shortcut: tabular Hijri date can be a day off from local sighting; 1 h catch-up window if the PC was asleep.
+    HolidayEve eve = settings_.holidayReminders ? FindHolidayStartingTomorrow(today) : HolidayEve{};
+    bool isEid = eve.id == HolidayId::EidFitr || eve.id == HolidayId::EidAdha;
+    if (isEid) {
+        int prayerMin = scheduleService_.GetDaySchedule(tomorrow, settings_).gunes.TotalMinutes() + 45;
+        TimeHM prayerHm{prayerMin / 60, prayerMin % 60};
+        int64_t remSec = LocalDateTime::FromDateTime(tomorrow, prayerHm).ToEpochSeconds() - nowSec;
+        if (remSec <= 12 * 3600 && remSec > 11 * 3600) {
+            wchar_t keyBuf[32];
+            swprintf_s(keyBuf, L"%04d%02d%02d_eidprayer", today.year, today.month, today.day);
+            if (sentNotifications_.insert(keyBuf).second) {
+                AppLanguage lang = settings_.language;
+                wchar_t body[256];
+                swprintf_s(body, Tr(lang, StrId::EidPrayerBody), Tr(lang, kHolidayNames[static_cast<int>(eve.id)]),
+                           prayerHm.FormatHHMM().c_str(), settings_.cityName.c_str());
+                dispatchNotif(Tr(lang, StrId::EidPrayerTitle), body, settings_.preNotifySound, true);
+            }
+        }
+    }
+
     // Islamic holidays: one reminder at 20:00 on the evening before (kandil nights are that same evening).
+    // Eid has its own reminder above, so skip the generic one for it.
     int nowMinOfDay = now.hour * 60 + now.minute;
-    if (settings_.holidayReminders && nowMinOfDay >= 20 * 60 && nowMinOfDay < 20 * 60 + 2) {
-        HolidayEve eve = FindHolidayStartingTomorrow(today);
+    if (settings_.holidayReminders && !isEid && nowMinOfDay >= 20 * 60 && nowMinOfDay < 20 * 60 + 2) {
         if (eve.id != HolidayId::None) {
             wchar_t keyBuf[32];
             swprintf_s(keyBuf, L"%04d%02d%02d_holiday", today.year, today.month, today.day);
             if (sentNotifications_.insert(keyBuf).second) {
-                static constexpr StrId kNames[] = {
-                    StrId::HolHijriNewYear, StrId::HolHijriNewYear, StrId::HolAshura, StrId::HolMawlid, StrId::HolRaghaib,
-                    StrId::HolMiraj, StrId::HolBarat, StrId::HolRamadanStart, StrId::HolQadr, StrId::HolEidFitr,
-                    StrId::HolArafah, StrId::HolEidAdha};
                 AppLanguage lang = settings_.language;
                 wchar_t body[256];
                 swprintf_s(body, Tr(lang, eve.isNight ? StrId::HolidayTonight : StrId::HolidayTomorrow),
-                           Tr(lang, kNames[static_cast<int>(eve.id)]));
+                           Tr(lang, kHolidayNames[static_cast<int>(eve.id)]));
                 dispatchNotif(Tr(lang, StrId::HolidayTitle), body, settings_.preNotifySound, true);
             }
         }

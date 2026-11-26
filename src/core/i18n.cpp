@@ -604,10 +604,16 @@ constexpr LangRow kUiStrings[] = {
     // ChkTaskbarFrame
     {L"Görev çubuğu çerçevesini göster", L"Show taskbar frame", L"إظهار إطار شريط المهام", L"Taskleistenrahmen anzeigen", L"Afficher le cadre de la barre", L"Tampilkan bingkai bilah tugas", L"ٹاسک بار فریم دکھائیں", L"টাস্কবার ফ্রেম দেখান", L"Tunjukkan bingkai bar tugas", L"نمایش قاب نوار وظیفه", L"Показывать рамку на панели", L"Mostrar marco en la barra"},
     // ChkTaskbarLogo
-    {L"Görev çubuğunda logo göster", L"Show logo in taskbar", L"إظهار الشعار في شريط المهام", L"Logo in Taskleiste anzeigen", L"Afficher le logo dans la barre", L"Tampilkan logo di bilah tugas", L"ٹاسک بار میں لوگو دکھائیں", L"টাস্কবারে লোগো দেখান", L"Tunjukkan logo di bar tugas", L"نمایش لوگو در نوار وظیفه", L"Показывать логотип на панели", L"Mostrar logotipo en la barra"}
+    {L"Görev çubuğunda logo göster", L"Show logo in taskbar", L"إظهار الشعار في شريط المهام", L"Logo in Taskleiste anzeigen", L"Afficher le logo dans la barre", L"Tampilkan logo di bilah tugas", L"ٹاسک بار میں لوگو دکھائیں", L"টাস্কবারে লোগো দেখান", L"Tunjukkan logo di bar tugas", L"نمایش لوگو در نوار وظیفه", L"Показывать логотип на панели", L"Mostrar logotipo en la barra"},
+    // ChkNotifyAll
+    {L"Tüm bildirimler", L"All notifications", L"كل الإشعارات", L"Alle Benachrichtigungen", L"Toutes les notifications", L"Semua notifikasi", L"تمام اطلاعات", L"সব বিজ্ঞপ্তি", L"Semua pemberitahuan", L"همه اعلان‌ها", L"Все уведомления", L"Todas las notificaciones"},
+    // EidPrayerTitle
+    {L"Bayram namazı hatırlatması", L"Eid prayer reminder", L"تذكير بصلاة العيد", L"Erinnerung: Festgebet", L"Rappel de la prière de l'Aïd", L"Pengingat salat Id", L"نمازِ عید کی یاد دہانی", L"ঈদের নামাজের রিমাইন্ডার", L"Peringatan solat sunat Hari Raya", L"یادآوری نماز عید", L"Напоминание о праздничном намазе", L"Recordatorio de la oración del Eid"},
+    // EidPrayerBody
+    {L"Yarın %ls namazı yaklaşık saat %ls (%ls).", L"Tomorrow's %ls prayer is at about %ls (%ls).", L"صلاة %ls غدًا نحو الساعة %ls (%ls).", L"Morgen: %ls-Gebet um ca. %ls Uhr (%ls).", L"Demain, prière de %ls vers %ls (%ls).", L"Besok salat %ls sekitar pukul %ls (%ls).", L"کل %ls کی نماز تقریباً %ls بجے (%ls)۔", L"আগামীকাল %ls-এর নামাজ প্রায় %ls টায় (%ls)।", L"Esok solat %ls sekitar pukul %ls (%ls).", L"فردا نماز %ls حدود ساعت %ls (%ls).", L"Завтра намаз %ls примерно в %ls (%ls).", L"Mañana, oración de %ls hacia las %ls (%ls)."}
 };
 
-static_assert(sizeof(kUiStrings) / sizeof(kUiStrings[0]) == static_cast<size_t>(StrId::ChkTaskbarLogo) + 1, "kUiStrings mismatch");
+static_assert(sizeof(kUiStrings) / sizeof(kUiStrings[0]) == static_cast<size_t>(StrId::EidPrayerBody) + 1, "kUiStrings mismatch");
 
 constexpr std::array<LangRow, 6> kPrayerNames = {{
     {L"İmsak",  L"Fajr",    L"الفجر",   L"Fadschr",  L"Fajr",    L"Subuh", L"فجر", L"ফজর", L"Subuh", L"صبح", L"Фаджр", L"Fajr"},

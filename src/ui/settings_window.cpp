@@ -121,6 +121,7 @@ enum CtrlId : WORD {
     IDC_TOAST_CHK = 448,
     IDC_HOTKEY_CHK = 449,
     IDC_HOTKEY_BTN = 450,
+    IDC_NOTIFY_ALL_CHK = 451,
 
     // Tab 4 (Dil & Sistem)
     IDC_LANG_COMBO = 500,
@@ -783,7 +784,8 @@ void SettingsWindow::CreateControls() {
     }
 
     // ==================== TAB 2: BİLDİRİM & SES ====================
-    makeLabel(2, kL, 128, 420, 24, Tr(lang, StrId::SectionPrayerAlerts), true);
+    makeLabel(2, kL, 128, 360, 24, Tr(lang, StrId::SectionPrayerAlerts), true);
+    notifyAllChk_ = makeChk(2, IDC_NOTIFY_ALL_CHK, kL + 400, 126, 284, 26, Tr(lang, StrId::ChkNotifyAll), true);
     makeLabel(2, kL, 156, 130, 20, Tr(lang, StrId::ColPrayer), false, true);
     makeLabel(2, kL + 140, 156, 128, 20, Tr(lang, StrId::ColAtTime), false, true);
     makeLabel(2, kL + 280, 156, 232, 20, Tr(lang, StrId::ColPreRemind), false, true);
@@ -1065,6 +1067,7 @@ void SettingsWindow::PopulateAllValues() {
     SetFluentCheck(IDC_RAMADAN_CHK, ramadanChk_, settings_.ramadanIftarSahurMode);
     SetFluentCheck(IDC_FRIDAY_CHK, fridayChk_, settings_.fridayReminder);
     SetFluentCheck(IDC_HOLIDAY_CHK, holidayChk_, settings_.holidayReminders);
+    SetFluentCheck(IDC_NOTIFY_ALL_CHK, notifyAllChk_, settings_.notificationsEnabled);
     SetFluentCheck(IDC_EXTRA_TIMES_CHK, extraTimesChk_, settings_.showExtraTimes);
     SetFluentCheck(IDC_TRAVEL_CHK, travelChk_, settings_.travelMode);
     SetFluentCheck(IDC_TRACKING_CHK, trackingChk_, settings_.prayerTracking);
@@ -2318,6 +2321,7 @@ void SettingsWindow::HandleCommand(WORD id, WORD code, HWND ctrl) {
     struct FeatureToggle { WORD id; bool AppSettings::*field; };
     static constexpr FeatureToggle kFeatureToggles[] = {
         {IDC_HOLIDAY_CHK, &AppSettings::holidayReminders},
+        {IDC_NOTIFY_ALL_CHK, &AppSettings::notificationsEnabled},
         {IDC_EXTRA_TIMES_CHK, &AppSettings::showExtraTimes},
         {IDC_TRAVEL_CHK, &AppSettings::travelMode},
         {IDC_TRACKING_CHK, &AppSettings::prayerTracking},

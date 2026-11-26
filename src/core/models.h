@@ -324,6 +324,7 @@ struct AppSettings {
     bool ramadanIftarSahurMode = true;
     bool fridayReminder = true;
     bool reviewPrompted = false;
+    bool notificationsEnabled = true;  // master switch: off silences every notification without touching the per-prayer rules
     int notifyMuteUntilMin = 0;  // local epoch minutes; notifications stay silent until then
     int fajrSound = -1;          // NotificationSoundKind for Imsak; -1 = same as entrySound
     bool holidayReminders = true;

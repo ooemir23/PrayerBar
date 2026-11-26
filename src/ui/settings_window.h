@@ -179,6 +179,7 @@ private:
 
     // Tab 2 (Bildirim & Ses)
     HWND alertAtTimeChk_[6]{};
+    HWND notifyAllChk_ = nullptr;
     HWND alertPreCombo_[6]{};
     HWND alertSoundChk_[6]{};
     HWND entrySoundCombo_ = nullptr;

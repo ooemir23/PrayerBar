@@ -283,7 +283,10 @@ enum class StrId : int {
     ToastStopAdhan,
     BalloonStopHint,
     ChkTaskbarFrame,
-    ChkTaskbarLogo
+    ChkTaskbarLogo,
+    ChkNotifyAll,
+    EidPrayerTitle,
+    EidPrayerBody  // %ls = holiday name, %ls = prayer time, %ls = city
 };
 
 AppLanguage ResolveEffectiveLanguage(AppLanguage configured);

@@ -201,6 +201,7 @@ bool ParseSettingsUtf8(const std::string& raw, AppSettings& s) {
     s.notifyMuteUntilMin = std::max(0, root.GetInt("notifyMuteUntilMin", 0));
     s.fajrSound = std::clamp(root.GetInt("fajrSound", s.fajrSound), -1, 5);
     s.holidayReminders = root.GetBool("holidayReminders", s.holidayReminders);
+    s.notificationsEnabled = root.GetBool("notificationsEnabled", s.notificationsEnabled);
     s.showExtraTimes = root.GetBool("showExtraTimes", s.showExtraTimes);
     s.travelMode = root.GetBool("travelMode", s.travelMode);
     s.prayerTracking = root.GetBool("prayerTracking", s.prayerTracking);
@@ -302,6 +303,7 @@ std::string SerializeSettingsUtf8(const AppSettings& s) {
     root.Set("notifyMuteUntilMin", JsonValue::MakeInt(s.notifyMuteUntilMin));
     root.Set("fajrSound", JsonValue::MakeInt(s.fajrSound));
     root.Set("holidayReminders", JsonValue::MakeBool(s.holidayReminders));
+    root.Set("notificationsEnabled", JsonValue::MakeBool(s.notificationsEnabled));
     root.Set("showExtraTimes", JsonValue::MakeBool(s.showExtraTimes));
     root.Set("travelMode", JsonValue::MakeBool(s.travelMode));
     root.Set("prayerTracking", JsonValue::MakeBool(s.prayerTracking));
