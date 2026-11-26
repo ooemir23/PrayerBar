@@ -77,6 +77,7 @@ enum CtrlId : WORD {
     IDC_THEME_COMBO = 232,
     IDC_TASKBAR_FRAME_CHK = 237,
     IDC_TASKBAR_LOGO_CHK = 238,
+    IDC_TRAY_MIN99_CHK = 239,
 
     // Tab 1 (Konum & Vakitler)
     IDC_DETECT_LOC_BTN = 300,
@@ -542,6 +543,34 @@ void SettingsWindow::SetFluentCheck(WORD id, HWND h, bool checked) {
     }
 }
 
+void SettingsWindow::ApplyNotificationControlsUi() {
+    const bool masterOn = settings_.notificationsEnabled;
+    if (notifyAllChk_) {
+        SetFluentCheck(IDC_NOTIFY_ALL_CHK, notifyAllChk_, masterOn);
+    }
+    for (int i = 0; i < 6; ++i) {
+        const auto& rule = settings_.alerts.GetRule(static_cast<PrayerKind>(i));
+        if (alertAtTimeChk_[i]) {
+            SetFluentCheck(static_cast<WORD>(IDC_ALERT_TIME_BASE + i), alertAtTimeChk_[i], masterOn && rule.notifyAtTime);
+        }
+        if (alertPreCombo_[i]) {
+            EnableWindow(alertPreCombo_[i], masterOn ? TRUE : FALSE);
+        }
+        if (alertSoundChk_[i]) {
+            SetFluentCheck(static_cast<WORD>(IDC_ALERT_SOUND_BASE + i), alertSoundChk_[i], masterOn && rule.playSound);
+        }
+    }
+}
+
+void SettingsWindow::SyncNotificationControls() {
+    if (!hwnd_) return;
+    settings_ = settingsStore_.Load();
+    bool prev = isLoading_;
+    isLoading_ = true;
+    ApplyNotificationControlsUi();
+    isLoading_ = prev;
+}
+
 bool SettingsWindow::GetFluentCheck(WORD id) const {
     auto it = checkStates_.find(id);
     return it != checkStates_.end() && it->second;
@@ -737,6 +766,7 @@ void SettingsWindow::CreateControls() {
 
     makeLabel(0, kL, 678, 192, 24, Tr(lang, StrId::LblUrgentColor));
     urgentCombo_ = makeCombo(0, IDC_URGENT_COMBO, kR, 675, kRW, 170);
+    trayMin99Chk_ = makeChk(0, IDC_TRAY_MIN99_CHK, kL, 710, 684, 24, Tr(lang, StrId::ChkTrayMin99));
 
     // ==================== TAB 1: KONUM & VAKİTLER ====================
     detectLocBtn_ = makeBtn(1, IDC_DETECT_LOC_BTN, kL, 128, 196, 30, Tr(lang, StrId::BtnDetectLocation));
@@ -965,10 +995,12 @@ void SettingsWindow::PopulateAllValues() {
     SetFluentCheck(IDC_ACCENT_CHK, accentChk_, settings_.useSystemAccentColor);
     SetFluentCheck(IDC_TASKBAR_FRAME_CHK, taskbarFrameChk_, settings_.showTaskbarFrame);
     SetFluentCheck(IDC_TASKBAR_LOGO_CHK, taskbarLogoChk_, settings_.showTaskbarLogo);
+    SetFluentCheck(IDC_TRAY_MIN99_CHK, trayMin99Chk_, settings_.trayShowMinutesUpTo99);
 
     fillCombo(trayCombo_, {
         {static_cast<int>(TrayIconStyle::TwoLineMini),   Tr(lang, StrId::TrayTwoLine)},
         {static_cast<int>(TrayIconStyle::MinutesRing),   Tr(lang, StrId::TrayRing)},
+        {static_cast<int>(TrayIconStyle::LargeDigits),   Tr(lang, StrId::TrayLargeDigits)},
         {static_cast<int>(TrayIconStyle::CrescentBadge), Tr(lang, StrId::TrayCrescent)}
     });
     int effectiveTrayStyle = (settings_.trayStyle == TrayIconStyle::Hidden) ? 0 : static_cast<int>(settings_.trayStyle);
@@ -1033,11 +1065,10 @@ void SettingsWindow::PopulateAllValues() {
 
     for (int i = 0; i < 6; ++i) {
         const auto& rule = settings_.alerts.GetRule(static_cast<PrayerKind>(i));
-        SetFluentCheck(static_cast<WORD>(IDC_ALERT_TIME_BASE + i), alertAtTimeChk_[i], rule.notifyAtTime);
         fillCombo(alertPreCombo_[i], preItems);
         SetComboSelectionByData(alertPreCombo_[i], rule.preNotifyMinutes);
-        SetFluentCheck(static_cast<WORD>(IDC_ALERT_SOUND_BASE + i), alertSoundChk_[i], rule.playSound);
     }
+    ApplyNotificationControlsUi();
 
     std::vector<std::pair<int, std::wstring>> soundItems = {
         {static_cast<int>(NotificationSoundKind::None),        Tr(lang, StrId::SoundNone)},
@@ -1067,7 +1098,6 @@ void SettingsWindow::PopulateAllValues() {
     SetFluentCheck(IDC_RAMADAN_CHK, ramadanChk_, settings_.ramadanIftarSahurMode);
     SetFluentCheck(IDC_FRIDAY_CHK, fridayChk_, settings_.fridayReminder);
     SetFluentCheck(IDC_HOLIDAY_CHK, holidayChk_, settings_.holidayReminders);
-    SetFluentCheck(IDC_NOTIFY_ALL_CHK, notifyAllChk_, settings_.notificationsEnabled);
     SetFluentCheck(IDC_EXTRA_TIMES_CHK, extraTimesChk_, settings_.showExtraTimes);
     SetFluentCheck(IDC_TRAVEL_CHK, travelChk_, settings_.travelMode);
     SetFluentCheck(IDC_TRACKING_CHK, trackingChk_, settings_.prayerTracking);
@@ -1523,6 +1553,10 @@ void SettingsWindow::PaintBackgroundAndCards(HDC hdc, int width, int height) {
             theme::DrawBrandLogoTile(g, 16.0f * s, 14.0f * s, 32.0f * s);
             gdip::DrawTextBox(g, L"PrayerBar", dispFam, 18.5f * s, true, pal.textPrimary,
                               56.0f * s, 14.0f * s, 148.0f * s, 32.0f * s,
+                              gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
+            gdip::DrawTextBox(g, std::wstring(L"v") + commercial::kAppVersionW, dispFam, 11.5f * s, false, pal.textMuted,
+                              16.0f * s, static_cast<float>(height) - 34.0f * s,
+                              (static_cast<float>(kSidebarW) - 32.0f) * s, 20.0f * s,
                               gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
 
             // Sekme 4 ile Sekme 5 (Pro & Lisans) arasında yatay ayırıcı + alt çizgi
@@ -2114,7 +2148,7 @@ void SettingsWindow::HandleCommand(WORD id, WORD code, HWND ctrl) {
 
     if ((id == IDC_SHOW_PILL_CHK || id == IDC_OPAQUE_CHK || id == IDC_SHOW_TRAY_CHK ||
          id == IDC_SHOW_BAR_CHK || id == IDC_SHOW_SEC_CHK || id == IDC_ACCENT_CHK ||
-         id == IDC_TASKBAR_FRAME_CHK || id == IDC_TASKBAR_LOGO_CHK) && code == BN_CLICKED) {
+         id == IDC_TASKBAR_FRAME_CHK || id == IDC_TASKBAR_LOGO_CHK || id == IDC_TRAY_MIN99_CHK) && code == BN_CLICKED) {
         bool nextVal = !GetFluentCheck(id);
         if (id == IDC_SHOW_PILL_CHK && !nextVal && !settings_.showTrayIcon) return;
         if (id == IDC_SHOW_TRAY_CHK && !nextVal && !settings_.showTaskbarPill) return;
@@ -2128,6 +2162,7 @@ void SettingsWindow::HandleCommand(WORD id, WORD code, HWND ctrl) {
         settings_.useSystemAccentColor = GetFluentCheck(IDC_ACCENT_CHK);
         settings_.showTaskbarFrame = GetFluentCheck(IDC_TASKBAR_FRAME_CHK);
         settings_.showTaskbarLogo = GetFluentCheck(IDC_TASKBAR_LOGO_CHK);
+        settings_.trayShowMinutesUpTo99 = GetFluentCheck(IDC_TRAY_MIN99_CHK);
         SaveAndNotify();
         if (id == IDC_ACCENT_CHK) {
             PostMessageW(hwnd_, kMsgRebuildUi, 0, 0);
@@ -2284,12 +2319,28 @@ void SettingsWindow::HandleCommand(WORD id, WORD code, HWND ctrl) {
     }
 
     // Tab 2 & 3
-    if (id >= IDC_ALERT_TIME_BASE && id < IDC_ALERT_TIME_BASE + 6 && code == BN_CLICKED) {
-        int idx = id - IDC_ALERT_TIME_BASE;
-        bool nextVal = !GetFluentCheck(id);
-        SetFluentCheck(id, ctrl, nextVal);
-        settings_.alerts.GetRule(static_cast<PrayerKind>(idx)).notifyAtTime = nextVal;
+    if (id == IDC_NOTIFY_ALL_CHK && code == BN_CLICKED) {
+        bool nextVal = !GetFluentCheck(IDC_NOTIFY_ALL_CHK);
+        settings_.SetAllNotificationsEnabled(nextVal);
+        ApplyNotificationControlsUi();
         SaveAndNotify();
+        return;
+    }
+    auto toggleAlertRuleFlag = [&](int idx, bool PrayerAlertRule::*field) {
+        bool nextVal = !GetFluentCheck(id);
+        if (nextVal && !settings_.notificationsEnabled) {
+            settings_.SetAllNotificationsEnabled(false);
+            settings_.notificationsEnabled = true;
+            settings_.alerts.GetRule(static_cast<PrayerKind>(idx)).*field = true;
+            ApplyNotificationControlsUi();
+        } else {
+            SetFluentCheck(id, ctrl, nextVal);
+            settings_.alerts.GetRule(static_cast<PrayerKind>(idx)).*field = nextVal;
+        }
+        SaveAndNotify();
+    };
+    if (id >= IDC_ALERT_TIME_BASE && id < IDC_ALERT_TIME_BASE + 6 && code == BN_CLICKED) {
+        toggleAlertRuleFlag(id - IDC_ALERT_TIME_BASE, &PrayerAlertRule::notifyAtTime);
         return;
     }
     if (id >= IDC_ALERT_PRE_BASE && id < IDC_ALERT_PRE_BASE + 6 && code == CBN_SELCHANGE) {
@@ -2300,11 +2351,7 @@ void SettingsWindow::HandleCommand(WORD id, WORD code, HWND ctrl) {
         return;
     }
     if (id >= IDC_ALERT_SOUND_BASE && id < IDC_ALERT_SOUND_BASE + 6 && code == BN_CLICKED) {
-        int idx = id - IDC_ALERT_SOUND_BASE;
-        bool nextVal = !GetFluentCheck(id);
-        SetFluentCheck(id, ctrl, nextVal);
-        settings_.alerts.GetRule(static_cast<PrayerKind>(idx)).playSound = nextVal;
-        SaveAndNotify();
+        toggleAlertRuleFlag(id - IDC_ALERT_SOUND_BASE, &PrayerAlertRule::playSound);
         return;
     }
     if ((id == IDC_ENTRY_SOUND_COMBO || id == IDC_PRE_SOUND_COMBO || id == IDC_FAJR_SOUND_COMBO) && code == CBN_SELCHANGE) {
@@ -2321,7 +2368,6 @@ void SettingsWindow::HandleCommand(WORD id, WORD code, HWND ctrl) {
     struct FeatureToggle { WORD id; bool AppSettings::*field; };
     static constexpr FeatureToggle kFeatureToggles[] = {
         {IDC_HOLIDAY_CHK, &AppSettings::holidayReminders},
-        {IDC_NOTIFY_ALL_CHK, &AppSettings::notificationsEnabled},
         {IDC_EXTRA_TIMES_CHK, &AppSettings::showExtraTimes},
         {IDC_TRAVEL_CHK, &AppSettings::travelMode},
         {IDC_TRACKING_CHK, &AppSettings::prayerTracking},

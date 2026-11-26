@@ -44,6 +44,8 @@ private:
     LRESULT HostWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
     void RefreshTick(bool checkNotifications);
+    void RefreshBandOnly(bool raiseZOrder);
+    void SyncWatchdogInterval();
     void ScheduleNextTickTimer();
     void EvaluateNotifications(const LocalDateTime& now, const PrayerCountdownState& state);
     void ToggleFlyout(RECT anchorRect);
@@ -72,6 +74,9 @@ private:
     bool hotkeyOk_ = true;          // false when RegisterHotKey failed (combination taken)
     int pendingBalloonAction_ = 0;  // what a click on the current tray balloon does (see kBalloon*)
     bool balloonStopsAudio_ = false;
+    PrayerCountdownState lastState_{};
+    bool hasLastState_ = false;
+    UINT watchdogIntervalMs_ = 15000;
 };
 
 } // namespace vakit

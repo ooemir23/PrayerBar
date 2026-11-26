@@ -32,14 +32,24 @@ public:
 
 private:
     DailyPrayerTimes GetOrCalculateDay(DateYMD date, const AppSettings& settings, bool triggerSync);
+    bool TryGetCachedDay(const std::wstring& monthKey, DateYMD date, DailyPrayerTimes& outDay);
     bool TryLoadMonth(const std::wstring& monthKey, std::map<DateYMD, DailyPrayerTimes>& outMap);
     void TriggerBackgroundFetch(const std::wstring& monthKey, int year, int month, const AppSettings& settings);
     static std::optional<std::vector<DailyPrayerTimes>> FetchAladhanMonth(
         int year, int month, double lat, double lon, CalculationMethod method, AsrJuristicMethod asrMethod);
 
+    struct ComputedDayEntry {
+        std::wstring monthKey;
+        DateYMD date{};
+        PrayerOffsets offsets{};
+        DailyPrayerTimes times{};
+    };
+
     std::wstring cacheDir_;
     std::mutex mutex_;
     std::map<std::wstring, std::map<DateYMD, DailyPrayerTimes>> memoryMonths_;
+    std::set<std::wstring> missingDiskMonths_;
+    std::vector<ComputedDayEntry> computedDays_;
     std::set<std::wstring> inFlightKeys_;
     std::function<void()> onRefreshed_;
 };

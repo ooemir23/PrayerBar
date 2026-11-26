@@ -59,6 +59,7 @@ $appSourcesRel = @(
     "src\platform\theme_utils.cpp",
     "src\platform\taskbar_geom.cpp",
     "src\ui\taskbar_renderer.cpp",
+    "src\ui\context_menu.cpp",
     "src\ui\taskbar_band.cpp",
     "src\ui\tray_icon.cpp",
     "src\ui\flyout_window.cpp",

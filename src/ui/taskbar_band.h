@@ -11,9 +11,12 @@
 #include <windows.h>
 
 #include <functional>
+#include <memory>
 #include <string>
 
 namespace vakit {
+
+class ContextMenuPopup;
 
 class TaskbarBandWindow {
 public:
@@ -46,13 +49,14 @@ public:
         std::function<void()> onTestNotification);
 
     void SetFlyoutOpenState(bool isOpen, const PrayerCountdownState* latestState, const AppSettings& settings);
-    void Update(const PrayerCountdownState& state, const AppSettings& settings, bool forceRedraw = false);
+    void Update(const PrayerCountdownState& state, const AppSettings& settings, bool forceRedraw = false, bool raiseZOrder = true);
     void ShowContextMenu(int screenX, int screenY);
 
 private:
     static LRESULT CALLBACK WndProcStatic(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
     static void CALLBACK WinEventStatic(HWINEVENTHOOK hook, DWORD eventType, HWND hwnd, LONG idObject, LONG idChild, DWORD dwEventThread, DWORD dwmsEventTime);
     LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+    void RehookTaskbarLocationEvent();
 
     HWND hwnd_ = nullptr;
     HWND cachedTaskbarHwnd_ = nullptr;
@@ -64,6 +68,8 @@ private:
     bool isTrackingLeave_ = false;
     bool isFlyoutOpen_ = false;
     std::wstring lastRenderSignature_;
+    std::wstring lastMeasureSig_;
+    int cachedMeasuredWidth_ = 0;
     RECT currentRect_{};
     AppSettings currentSettings_{};
     PrayerCountdownState lastState_{};
@@ -85,6 +91,7 @@ private:
     std::function<void(const std::function<void(AppSettings&)>&)> onMutateSettings_;
     std::function<void(int)> onOpenSettingsTab_;
     std::function<void()> onTestNotification_;
+    std::unique_ptr<ContextMenuPopup> contextMenu_;
 };
 
 } // namespace vakit

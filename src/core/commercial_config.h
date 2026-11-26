@@ -2,8 +2,8 @@
 
 namespace vakit::commercial {
 
-inline constexpr const wchar_t* kAppVersionW = L"2.4.2.0";
-inline constexpr int kTrialDays = 14;
+inline constexpr const wchar_t* kAppVersionW = L"2.4.3.0";
+inline constexpr int kTrialDays = 5;
 
 // Yalnızca Microsoft Store dağıtım ve uygulama içi satın alma (IAP) yapılandırması
 // Partner Center'da uygulama ve iki eklenti (pro_annual, pro_lifetime) oluşturulduğunda

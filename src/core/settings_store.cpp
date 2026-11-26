@@ -152,7 +152,8 @@ bool ParseSettingsUtf8(const std::string& raw, AppSettings& s) {
         s.showTrayIcon = true; // Kullanıcının erişimden kilitlenmesini önle
     }
     s.displayStyle = static_cast<TaskbarDisplayStyle>(std::clamp(root.GetInt("displayStyle", static_cast<int>(s.displayStyle)), 0, 8));
-    s.trayStyle = static_cast<TrayIconStyle>(std::clamp(root.GetInt("trayStyle", static_cast<int>(s.trayStyle)), 0, 3));
+    s.trayStyle = static_cast<TrayIconStyle>(std::clamp(root.GetInt("trayStyle", static_cast<int>(s.trayStyle)), 0, 4));
+    s.trayShowMinutesUpTo99 = root.GetBool("trayShowMinutesUpTo99", s.trayShowMinutesUpTo99);
     readWStr("customTemplate", s.customTemplate);
     s.showProgressBar = root.GetBool("showProgressBar", s.showProgressBar);
     s.highlightUrgentMinutes = std::clamp(root.GetInt("highlightUrgentMinutes", s.highlightUrgentMinutes), 0, 60);
@@ -262,6 +263,7 @@ std::string SerializeSettingsUtf8(const AppSettings& s) {
     root.Set("showTrayIcon", JsonValue::MakeBool(s.showTrayIcon));
     root.Set("displayStyle", JsonValue::MakeInt(static_cast<int>(s.displayStyle)));
     root.Set("trayStyle", JsonValue::MakeInt(static_cast<int>(s.trayStyle)));
+    root.Set("trayShowMinutesUpTo99", JsonValue::MakeBool(s.trayShowMinutesUpTo99));
     root.Set("customTemplate", JsonValue::MakeString(WideToUtf8(s.customTemplate)));
     root.Set("showProgressBar", JsonValue::MakeBool(s.showProgressBar));
     root.Set("highlightUrgentMinutes", JsonValue::MakeInt(s.highlightUrgentMinutes));

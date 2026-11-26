@@ -1,4 +1,5 @@
 #include "taskbar_band.h"
+#include "context_menu.h"
 #include "taskbar_renderer.h"
 #include "../core/commercial_config.h"
 #include "../core/formatter.h"
@@ -18,18 +19,6 @@ namespace vakit {
 namespace {
 
 constexpr wchar_t kBandClassName[] = L"PrayerBarTaskbarBand";
-constexpr int kCmdToggleFlyout = 1001;
-constexpr int kCmdRefresh = 1002;
-constexpr int kCmdOpenSettings = 1003;
-constexpr int kCmdExit = 1004;
-constexpr int kCmdStopSound = 1005;
-constexpr int kCmdOpenImsakiye = 1006;
-constexpr int kCmdOpenPro = 1009;
-constexpr int kCmdMute1h = 1010;
-constexpr int kCmdMuteToday = 1011;
-constexpr int kCmdUnmute = 1012;
-constexpr int kCmdTestNotif = 1013;
-constexpr int kCmdChangeLocation = 1015;
 
 TaskbarBandWindow* g_bandInstance = nullptr;
 
@@ -57,6 +46,7 @@ TaskbarBandWindow::TaskbarBandWindow() {
         nullptr, nullptr, hInst, this);
 
     cachedTaskbarHwnd_ = FindWindowW(L"Shell_TrayWnd", nullptr);
+    contextMenu_ = std::make_unique<ContextMenuPopup>();
 
     hookForeground_ = SetWinEventHook(
         EVENT_SYSTEM_FOREGROUND,
@@ -66,16 +56,30 @@ TaskbarBandWindow::TaskbarBandWindow() {
         0, 0,
         WINEVENT_OUTOFCONTEXT);
 
-    hookLocation_ = SetWinEventHook(
-        EVENT_OBJECT_LOCATIONCHANGE,
-        EVENT_OBJECT_LOCATIONCHANGE,
-        nullptr,
-        WinEventStatic,
-        0, 0,
-        WINEVENT_OUTOFCONTEXT);
+    RehookTaskbarLocationEvent();
+}
+
+void TaskbarBandWindow::RehookTaskbarLocationEvent() {
+    if (hookLocation_) {
+        UnhookWinEvent(hookLocation_);
+        hookLocation_ = nullptr;
+    }
+    cachedTaskbarHwnd_ = FindWindowW(L"Shell_TrayWnd", nullptr);
+    DWORD tbPid = 0;
+    DWORD tbTid = cachedTaskbarHwnd_ ? GetWindowThreadProcessId(cachedTaskbarHwnd_, &tbPid) : 0;
+    if (tbPid != 0 && tbTid != 0) {
+        hookLocation_ = SetWinEventHook(
+            EVENT_OBJECT_LOCATIONCHANGE,
+            EVENT_OBJECT_LOCATIONCHANGE,
+            nullptr,
+            WinEventStatic,
+            tbPid, tbTid,
+            WINEVENT_OUTOFCONTEXT);
+    }
 }
 
 TaskbarBandWindow::~TaskbarBandWindow() {
+    contextMenu_.reset();
     if (hookForeground_) {
         UnhookWinEvent(hookForeground_);
         hookForeground_ = nullptr;
@@ -134,7 +138,7 @@ void TaskbarBandWindow::SetFlyoutOpenState(bool isOpen, const PrayerCountdownSta
     }
 }
 
-void TaskbarBandWindow::Update(const PrayerCountdownState& state, const AppSettings& settings, bool forceRedraw) {
+void TaskbarBandWindow::Update(const PrayerCountdownState& state, const AppSettings& settings, bool forceRedraw, bool raiseZOrder) {
     if (!hwnd_) return;
     currentSettings_ = settings;
     lastState_ = state;
@@ -149,7 +153,19 @@ void TaskbarBandWindow::Update(const PrayerCountdownState& state, const AppSetti
 
     double scale = GetTaskbarScale();
     FormattedTaskbarDisplay display = FormatTaskbar(state, settings);
-    int desiredWidth = MeasureDesiredPillWidth(display, settings, scale);
+    wchar_t measBuf[256];
+    swprintf_s(measBuf, L"%ls|%ls|%d|%d|%d|%d|%d|%lld",
+               display.line1.c_str(), display.line2.c_str(),
+               display.hasLine2 ? 1 : 0, display.showPhaseIcon ? 1 : 0,
+               display.showDot ? 1 : 0, settings.showTaskbarLogo ? 1 : 0,
+               static_cast<int>(settings.fontSize),
+               static_cast<long long>(std::llround(scale * 100.0)));
+    std::wstring measSig(measBuf);
+    if (forceRedraw || cachedMeasuredWidth_ <= 0 || measSig != lastMeasureSig_) {
+        lastMeasureSig_ = std::move(measSig);
+        cachedMeasuredWidth_ = MeasureDesiredPillWidth(display, settings, scale);
+    }
+    int desiredWidth = cachedMeasuredWidth_;
     TaskbarPlacement placement = ComputeTaskbarPlacement(desiredWidth, settings, hwnd_);
 
     if (!placement.shouldShow) {
@@ -175,6 +191,8 @@ void TaskbarBandWindow::Update(const PrayerCountdownState& state, const AppSetti
                settings.showTaskbarFrame ? 1 : 0, settings.showTaskbarLogo ? 1 : 0);
     std::wstring sig(sigBuf);
 
+    bool wasVisible = (IsWindowVisible(hwnd_) != FALSE);
+    RECT prevRect = currentRect_;
     currentRect_ = {placement.x, placement.y, placement.x + placement.width, placement.y + placement.height};
 
     if (forceRedraw || sig != lastRenderSignature_) {
@@ -194,14 +212,20 @@ void TaskbarBandWindow::Update(const PrayerCountdownState& state, const AppSetti
             useOpaque);
     }
 
-    SetWindowPos(
-        hwnd_,
-        HWND_TOPMOST,
-        placement.x,
-        placement.y,
-        placement.width,
-        placement.height,
-        SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    if (forceRedraw || raiseZOrder || !wasVisible || !EqualRect(&prevRect, &currentRect_)) {
+        SetWindowPos(
+            hwnd_,
+            HWND_TOPMOST,
+            placement.x,
+            placement.y,
+            placement.width,
+            placement.height,
+            SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    }
+
+    if (contextMenu_ && contextMenu_->IsOpen()) {
+        contextMenu_->EnsureOnTop();
+    }
 }
 
 void TaskbarBandWindow::SetMenuActionCallbacks(
@@ -214,115 +238,78 @@ void TaskbarBandWindow::SetMenuActionCallbacks(
 }
 
 void TaskbarBandWindow::ShowContextMenu(int screenX, int screenY) {
-    ApplyWin11AppDarkMode(currentSettings_.themeMode);
-
-    HMENU menu = CreatePopupMenu();
-    HMENU notifSub = CreatePopupMenu();
-    if (!menu || !notifSub) {
-        if (notifSub) DestroyMenu(notifSub);
-        if (menu) DestroyMenu(menu);
+    if (!contextMenu_) {
+        contextMenu_ = std::make_unique<ContextMenuPopup>();
+    }
+    if (contextMenu_->IsOpen()) {
+        contextMenu_->CloseNow();
         return;
     }
-
-    const AppSettings& s = currentSettings_;
-    AppLanguage lang = s.language;
-    auto add = [](HMENU m, UINT id, const std::wstring& text, bool checked = false, bool enabled = true) {
-        AppendMenuW(m, MF_STRING | (checked ? MF_CHECKED : 0) | (enabled ? 0 : MF_GRAYED), id, text.c_str());
-    };
-    auto sep = [](HMENU m) { AppendMenuW(m, MF_SEPARATOR, 0, nullptr); };
-    auto fmt = [](const wchar_t* pattern, const std::wstring& arg) {
-        wchar_t buf[512];
-        swprintf_s(buf, pattern, arg.c_str());
-        return std::wstring(buf);
-    };
-
-    // 1) Status header (default item) + active audio stop
-    if (hasState_) {
-        TimeHM nextHm{lastState_.nextPrayerDateTime.hour, lastState_.nextPrayerDateTime.minute};
-        std::wstring header = std::wstring(Tr(lang, StrId::BadgeNext)) + L": " +
-                              GetEffectivePrayerName(lastState_.nextPrayer, s) + L"  " + nextHm.FormatHHMM() +
-                              L"  ·  " + FormatRemainingLong(lastState_.remainingSeconds, false, lang);
-        add(menu, kCmdToggleFlyout, header);
-    } else {
-        add(menu, kCmdToggleFlyout, Tr(lang, StrId::ToggleFlyout));
+    if ((GetTickCount64() - contextMenu_->LastClosedTick()) < 200) {
+        return;
     }
-    SetMenuDefaultItem(menu, kCmdToggleFlyout, FALSE);
-    if (AudioPlayer::IsPlaying()) {
-        add(menu, kCmdStopSound, Tr(lang, StrId::StopSoundMenu));
-    }
-    sep(menu);
-
-    // 2) Core daily actions
-    add(menu, kCmdOpenImsakiye, Tr(lang, StrId::OpenImsakiye));
-    add(menu, kCmdChangeLocation, fmt(Tr(lang, StrId::MenuChangeLocation), s.cityName));
-    add(menu, kCmdRefresh, Tr(lang, StrId::RefreshNow));
-    sep(menu);
-
-    // 3) Single-level Notifications submenu
-    LocalDateTime now = ScheduleService::GetCurrentLocalDateTime();
-    int nowMin = static_cast<int>(now.ToEpochSeconds() / 60);
-    bool muted = s.notifyMuteUntilMin > nowMin;
-    if (muted) {
-        int64_t untilSec = static_cast<int64_t>(s.notifyMuteUntilMin) * 60;
-        int dayMin = static_cast<int>((untilSec / 60) % (24 * 60));
-        TimeHM untilHm{dayMin / 60, dayMin % 60};
-        add(notifSub, 0, fmt(Tr(lang, StrId::MenuMutedUntil), untilHm.FormatHHMM()), true, false);
-        add(notifSub, kCmdUnmute, Tr(lang, StrId::MenuUnmute));
-        sep(notifSub);
-    }
-    add(notifSub, kCmdMute1h, Tr(lang, StrId::MenuMute1h));
-    add(notifSub, kCmdMuteToday, Tr(lang, StrId::MenuMuteToday));
-    sep(notifSub);
-    add(notifSub, kCmdTestNotif, Tr(lang, StrId::BtnTestNotif));
-    AppendMenuW(menu, MF_POPUP, reinterpret_cast<UINT_PTR>(notifSub), Tr(lang, StrId::MenuNotifications));
-
-    // 4) Settings (all appearance & style controls live here with live preview), Pro, Exit
-    add(menu, kCmdOpenSettings, Tr(lang, StrId::SettingsEllipsis));
-    bool isPaidPro = isPaidProFn_ ? isPaidProFn_() : false;
-    if (!isPaidPro) {
-        add(menu, kCmdOpenPro, Tr(lang, StrId::MenuUpgradePro));
-    }
-    sep(menu);
-    add(menu, kCmdExit, Tr(lang, StrId::ExitApp));
-
-    SetForegroundWindow(hwnd_);
-    UINT align = TPM_RETURNCMD | TPM_NONOTIFY | TPM_RIGHTBUTTON | TPM_BOTTOMALIGN |
-                 (IsRtlLanguage(lang) ? TPM_LAYOUTRTL : 0);
-    int cmd = TrackPopupMenuEx(menu, align, screenX, screenY, hwnd_, nullptr);
 
     auto mutate = [this](const std::function<void(AppSettings&)>& f) {
         if (onMutateSettings_) onMutateSettings_(f);
     };
 
-    if (cmd == kCmdStopSound) {
-        AudioPlayer::Stop();
-    } else if (cmd == kCmdToggleFlyout) {
+    ContextMenuCallbacks cb;
+    cb.onToggleFlyout = [this]() {
         if (onLeftClick_) onLeftClick_(currentRect_);
-    } else if (cmd == kCmdOpenImsakiye) {
+    };
+    cb.onStopSound = []() {
+        AudioPlayer::Stop();
+    };
+    cb.onOpenImsakiye = [this]() {
         if (onOpenImsakiye_) onOpenImsakiye_();
-    } else if (cmd == kCmdOpenPro) {
-        if (onOpenPro_) onOpenPro_();
-    } else if (cmd == kCmdRefresh) {
+    };
+    cb.onChangeLocation = [this]() {
+        if (onOpenSettingsTab_) onOpenSettingsTab_(1);
+    };
+    cb.onRefresh = [this]() {
         if (onRefresh_) onRefresh_();
-    } else if (cmd == kCmdOpenSettings) {
-        if (onOpenSettings_) onOpenSettings_();
-    } else if (cmd == kCmdExit) {
-        if (onExit_) onExit_();
-    } else if (cmd == kCmdMute1h) {
+    };
+    cb.onToggleAllNotifications = [mutate](bool enabled) {
+        mutate([enabled](AppSettings& a) { a.SetAllNotificationsEnabled(enabled); });
+    };
+    cb.onMute1h = [mutate]() {
+        LocalDateTime now = ScheduleService::GetCurrentLocalDateTime();
+        int nowMin = static_cast<int>(now.ToEpochSeconds() / 60);
         mutate([nowMin](AppSettings& a) { a.notifyMuteUntilMin = nowMin + 60; });
-    } else if (cmd == kCmdMuteToday) {
+    };
+    cb.onMuteToday = [mutate]() {
+        LocalDateTime now = ScheduleService::GetCurrentLocalDateTime();
+        int nowMin = static_cast<int>(now.ToEpochSeconds() / 60);
         int minsLeftToday = 24 * 60 - (now.hour * 60 + now.minute);
         mutate([nowMin, minsLeftToday](AppSettings& a) { a.notifyMuteUntilMin = nowMin + minsLeftToday; });
-    } else if (cmd == kCmdUnmute) {
+    };
+    cb.onUnmute = [mutate]() {
         mutate([](AppSettings& a) { a.notifyMuteUntilMin = 0; });
-    } else if (cmd == kCmdTestNotif) {
+    };
+    cb.onTestNotification = [this]() {
         if (onTestNotification_) onTestNotification_();
-    } else if (cmd == kCmdChangeLocation) {
-        if (onOpenSettingsTab_) onOpenSettingsTab_(1);
-    }
+    };
+    cb.onOpenSettings = [this]() {
+        if (onOpenSettings_) onOpenSettings_();
+    };
+    cb.onOpenPro = [this]() {
+        if (onOpenPro_) onOpenPro_();
+    };
+    cb.onExit = [this]() {
+        if (onExit_) onExit_();
+    };
 
-    DestroyMenu(notifSub);
-    DestroyMenu(menu);
+    const bool bandVisible = hwnd_ && IsWindowVisible(hwnd_);
+    const bool isPaidPro = isPaidProFn_ ? isPaidProFn_() : false;
+    contextMenu_->Show(
+        screenX,
+        screenY,
+        currentRect_,
+        bandVisible,
+        currentSettings_,
+        hasState_ ? &lastState_ : nullptr,
+        isPaidPro,
+        std::move(cb));
 }
 
 void CALLBACK TaskbarBandWindow::WinEventStatic(
@@ -360,8 +347,9 @@ LRESULT CALLBACK TaskbarBandWindow::WndProcStatic(HWND hWnd, UINT msg, WPARAM wP
 
 LRESULT TaskbarBandWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (taskbarCreatedMsg_ != 0 && msg == taskbarCreatedMsg_) {
-        cachedTaskbarHwnd_ = FindWindowW(L"Shell_TrayWnd", nullptr);
+        RehookTaskbarLocationEvent();
         lastRenderSignature_.clear();
+        lastMeasureSig_.clear();
         if (onVisualInvalidated_) onVisualInvalidated_();
         return 0;
     }

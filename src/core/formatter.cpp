@@ -288,13 +288,14 @@ std::pair<std::wstring, std::wstring> FormatTrayText(const PrayerCountdownState&
     std::wstring top = GetEffectivePrayerShortCode(state.nextPrayer, settings);
     TimeUnits u = UnitsForLang(settings.language);
     int totalMinutes = std::max(0, static_cast<int>((state.remainingSeconds + 59) / 60));
+    int minLimit = settings.trayShowMinutesUpTo99 ? 100 : 60;
     std::wstring bottom;
     if (totalMinutes == 0) {
         bottom = L"<1";
-    } else if (totalMinutes < 60) {
+    } else if (totalMinutes < minLimit) {
         bottom = std::to_wstring(totalMinutes);
     } else {
-        bottom = std::to_wstring(totalMinutes / 60) + u.trayHrSuffix;
+        bottom = std::to_wstring((totalMinutes + 30) / 60) + u.trayHrSuffix;
     }
     return {top, bottom};
 }

@@ -350,6 +350,8 @@ std::vector<DailyPrayerTimes> ScheduleService::GetMonthSchedule(int year, int mo
 
 void ScheduleService::TrimMemoryCache(DateYMD keepDate) {
     std::lock_guard<std::mutex> lk(mutex_);
+    missingDiskMonths_.clear();
+    computedDays_.clear();
     if (memoryMonths_.size() <= 4) return;
 
     auto makeYmSuffix = [](int y, int m) -> std::wstring {
@@ -380,41 +382,15 @@ void ScheduleService::TrimMemoryCache(DateYMD keepDate) {
     }
 }
 
-DailyPrayerTimes ScheduleService::GetOrCalculateDay(DateYMD date, const AppSettings& settings, bool triggerSync) {
-    std::wstring monthKey = BuildMonthKey(date.year, date.month, settings);
-    std::map<DateYMD, DailyPrayerTimes> monthMap;
-    if (TryLoadMonth(monthKey, monthMap)) {
-        auto it = monthMap.find(date);
-        if (it != monthMap.end()) {
-            return ApplyOffsets(it->second, settings.offsets);
-        }
-    }
+namespace {
 
-    if (triggerSync) {
-        TriggerBackgroundFetch(monthKey, date.year, date.month, settings);
-    }
-
-    return CalculatePrayerTimes(
-        date,
-        settings.latitude,
-        settings.longitude,
-        settings.timeZoneId,
-        settings.calculationMethod,
-        settings.offsets,
-        settings.asrMethod);
+bool OffsetsEqual(const PrayerOffsets& a, const PrayerOffsets& b) {
+    return a.imsak == b.imsak && a.gunes == b.gunes && a.ogle == b.ogle &&
+           a.ikindi == b.ikindi && a.aksam == b.aksam && a.yatsi == b.yatsi;
 }
 
-bool ScheduleService::TryLoadMonth(const std::wstring& monthKey, std::map<DateYMD, DailyPrayerTimes>& outMap) {
-    {
-        std::lock_guard<std::mutex> lk(mutex_);
-        auto it = memoryMonths_.find(monthKey);
-        if (it != memoryMonths_.end()) {
-            outMap = it->second;
-            return true;
-        }
-    }
-
-    std::wstring path = cacheDir_ + L"\\schedule_" + monthKey + L".json";
+bool ParseMonthFromDisk(const std::wstring& cacheDir, const std::wstring& monthKey, std::map<DateYMD, DailyPrayerTimes>& loaded) {
+    std::wstring path = cacheDir + L"\\schedule_" + monthKey + L".json";
     std::string raw;
     if (!ReadFileUtf8(path, raw)) return false;
 
@@ -423,7 +399,6 @@ bool ScheduleService::TryLoadMonth(const std::wstring& monthKey, std::map<DateYM
     const JsonValue* daysArr = parsed->Find("days");
     if (!daysArr || daysArr->type != JsonValue::Type::Array || daysArr->arrVal.empty()) return false;
 
-    std::map<DateYMD, DailyPrayerTimes> loaded;
     for (const auto& item : daysArr->arrVal) {
         if (item.type != JsonValue::Type::Object) continue;
         DailyPrayerTimes d;
@@ -438,8 +413,110 @@ bool ScheduleService::TryLoadMonth(const std::wstring& monthKey, std::map<DateYM
         d.source = Utf8ToWide(item.GetString("source", "Aladhan"));
         loaded[d.date] = std::move(d);
     }
+    return !loaded.empty();
+}
 
-    if (loaded.empty()) return false;
+} // namespace
+
+DailyPrayerTimes ScheduleService::GetOrCalculateDay(DateYMD date, const AppSettings& settings, bool triggerSync) {
+    std::wstring monthKey = BuildMonthKey(date.year, date.month, settings);
+    DailyPrayerTimes cachedDay{};
+    if (TryGetCachedDay(monthKey, date, cachedDay)) {
+        return ApplyOffsets(cachedDay, settings.offsets);
+    }
+
+    if (triggerSync) {
+        TriggerBackgroundFetch(monthKey, date.year, date.month, settings);
+    }
+
+    {
+        std::lock_guard<std::mutex> lk(mutex_);
+        for (const auto& entry : computedDays_) {
+            if (entry.date == date && entry.monthKey == monthKey && OffsetsEqual(entry.offsets, settings.offsets)) {
+                return entry.times;
+            }
+        }
+    }
+
+    DailyPrayerTimes calculated = CalculatePrayerTimes(
+        date,
+        settings.latitude,
+        settings.longitude,
+        settings.timeZoneId,
+        settings.calculationMethod,
+        settings.offsets,
+        settings.asrMethod);
+
+    {
+        std::lock_guard<std::mutex> lk(mutex_);
+        if (computedDays_.size() >= 16) {
+            computedDays_.erase(computedDays_.begin());
+        }
+        computedDays_.push_back({std::move(monthKey), date, settings.offsets, calculated});
+    }
+    return calculated;
+}
+
+bool ScheduleService::TryGetCachedDay(const std::wstring& monthKey, DateYMD date, DailyPrayerTimes& outDay) {
+    {
+        std::lock_guard<std::mutex> lk(mutex_);
+        auto it = memoryMonths_.find(monthKey);
+        if (it != memoryMonths_.end()) {
+            auto dayIt = it->second.find(date);
+            if (dayIt != it->second.end()) {
+                outDay = dayIt->second;
+                return true;
+            }
+            return false;
+        }
+        if (missingDiskMonths_.count(monthKey) > 0) {
+            return false;
+        }
+    }
+
+    std::map<DateYMD, DailyPrayerTimes> loaded;
+    if (!ParseMonthFromDisk(cacheDir_, monthKey, loaded)) {
+        std::lock_guard<std::mutex> lk(mutex_);
+        missingDiskMonths_.insert(monthKey);
+        return false;
+    }
+
+    bool found = false;
+    {
+        std::lock_guard<std::mutex> lk(mutex_);
+        auto& stored = memoryMonths_[monthKey];
+        if (stored.empty()) {
+            stored = std::move(loaded);
+        }
+        auto dayIt = stored.find(date);
+        if (dayIt != stored.end()) {
+            outDay = dayIt->second;
+            found = true;
+        }
+    }
+    return found;
+}
+
+bool ScheduleService::TryLoadMonth(const std::wstring& monthKey, std::map<DateYMD, DailyPrayerTimes>& outMap) {
+    {
+        std::lock_guard<std::mutex> lk(mutex_);
+        auto it = memoryMonths_.find(monthKey);
+        if (it != memoryMonths_.end()) {
+            outMap = it->second;
+            return true;
+        }
+        if (missingDiskMonths_.count(monthKey) > 0) {
+            return false;
+        }
+    }
+
+    std::map<DateYMD, DailyPrayerTimes> loaded;
+    if (!ParseMonthFromDisk(cacheDir_, monthKey, loaded)) {
+        std::lock_guard<std::mutex> lk(mutex_);
+        missingDiskMonths_.insert(monthKey);
+        return false;
+    }
+
     {
         std::lock_guard<std::mutex> lk(mutex_);
         memoryMonths_[monthKey] = loaded;
@@ -477,6 +554,11 @@ void ScheduleService::SaveMonthToCache(const std::wstring& monthKey, const std::
     WriteFileAtomicallyUtf8(path, JsonSerialize(root, false));
 
     std::lock_guard<std::mutex> lk(mutex_);
+    missingDiskMonths_.erase(monthKey);
+    computedDays_.erase(
+        std::remove_if(computedDays_.begin(), computedDays_.end(),
+                       [&](const ComputedDayEntry& e) { return e.monthKey == monthKey; }),
+        computedDays_.end());
     memoryMonths_[monthKey] = std::move(mapCopy);
 }
 

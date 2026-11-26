@@ -48,6 +48,7 @@ public:
     void CloseNow();
     void RefreshPreviewAndMemory();
     void RefreshLicenseStatus();
+    void SyncNotificationControls();
     void ApplyDetectedLocation(const DetectedLocationResult& location);
     void RepaintAll() { if (hwnd_) RedrawWindow(hwnd_, nullptr, nullptr, RDW_INVALIDATE | RDW_ALLCHILDREN); }
 
@@ -78,6 +79,7 @@ private:
     bool IsAccentButton(WORD id) const;
 
     void SaveAndNotify();
+    void ApplyNotificationControlsUi();
     void HandleCommand(WORD id, WORD code, HWND ctrl);
     void StartAutoDetectLocation();
     void StartManualSync();
@@ -154,6 +156,7 @@ private:
     HWND taskbarFrameChk_ = nullptr;
     HWND taskbarLogoChk_ = nullptr;
     HWND trayCombo_ = nullptr;
+    HWND trayMin99Chk_ = nullptr;
     HWND fontCombo_ = nullptr;
     HWND urgentCombo_ = nullptr;
     HWND themeCombo_ = nullptr;

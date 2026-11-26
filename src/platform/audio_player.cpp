@@ -288,6 +288,8 @@ void AudioPlayer::Stop() {
         EnqueueAudioTask([]() {
             PlaySoundW(nullptr, nullptr, 0);
             CloseMciCore();
+            g_activeWavBuf.clear();
+            g_activeWavBuf.shrink_to_fit();
         });
     }
 }

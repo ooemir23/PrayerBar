@@ -11,6 +11,9 @@ constexpr wchar_t kPersonalizeKey[] = L"Software\\Microsoft\\Windows\\CurrentVer
 constexpr wchar_t kRunKey[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Run";
 constexpr wchar_t kRunValueName[] = L"PrayerBar";
 
+int g_sysLightCached = -1;
+int g_appLightCached = -1;
+
 int ReadPersonalizeDword(const wchar_t* valueName, int defVal) {
     DWORD val = 0;
     DWORD size = sizeof(val);
@@ -23,13 +26,19 @@ int ReadPersonalizeDword(const wchar_t* valueName, int defVal) {
 bool IsTaskbarLight(AppThemeMode mode) {
     if (mode == AppThemeMode::Light) return true;
     if (mode == AppThemeMode::Dark) return false;
-    return ReadPersonalizeDword(L"SystemUsesLightTheme", 0) != 0;
+    if (g_sysLightCached < 0) {
+        g_sysLightCached = ReadPersonalizeDword(L"SystemUsesLightTheme", 0) != 0 ? 1 : 0;
+    }
+    return g_sysLightCached != 0;
 }
 
 bool IsAppLight(AppThemeMode mode) {
     if (mode == AppThemeMode::Light) return true;
     if (mode == AppThemeMode::Dark) return false;
-    return ReadPersonalizeDword(L"AppsUseLightTheme", 0) != 0;
+    if (g_appLightCached < 0) {
+        g_appLightCached = ReadPersonalizeDword(L"AppsUseLightTheme", 0) != 0 ? 1 : 0;
+    }
+    return g_appLightCached != 0;
 }
 
 bool IsBatterySaverActive() {
@@ -128,6 +137,8 @@ DWORD g_accentRawCached = 0xFFFFFFFFu;  // 0xFFFFFFFF = not read yet
 
 void InvalidateAccentColorCache() {
     g_accentRawCached = 0xFFFFFFFFu;
+    g_sysLightCached = -1;
+    g_appLightCached = -1;
 }
 
 uint32_t GetWindowsAccentColorArgb(bool isDark, bool useSystemAccent) {
@@ -190,14 +201,17 @@ HFONT CreateWin11Font(int pixelHeight, int weight, bool display) {
 }
 
 bool IsPackagedApp() {
-    using GetPkgFn = LONG(WINAPI*)(UINT32*, PWSTR);
-    HMODULE k32 = GetModuleHandleW(L"kernel32.dll");
-    if (!k32) return false;
-    auto fn = reinterpret_cast<GetPkgFn>(reinterpret_cast<void*>(GetProcAddress(k32, "GetCurrentPackageFullName")));
-    if (!fn) return false;
-    UINT32 len = 0;
-    LONG rc = fn(&len, nullptr);
-    return rc != 15700L; // APPMODEL_ERROR_NO_PACKAGE
+    static const bool cached = []() {
+        using GetPkgFn = LONG(WINAPI*)(UINT32*, PWSTR);
+        HMODULE k32 = GetModuleHandleW(L"kernel32.dll");
+        if (!k32) return false;
+        auto fn = reinterpret_cast<GetPkgFn>(reinterpret_cast<void*>(GetProcAddress(k32, "GetCurrentPackageFullName")));
+        if (!fn) return false;
+        UINT32 len = 0;
+        LONG rc = fn(&len, nullptr);
+        return rc != 15700L; // APPMODEL_ERROR_NO_PACKAGE
+    }();
+    return cached;
 }
 
 UINT GetDpiForWindowCompat(HWND hwnd) {

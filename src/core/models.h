@@ -90,7 +90,8 @@ enum class TrayIconStyle : int {
     TwoLineMini = 0,
     MinutesRing = 1,
     CrescentBadge = 2,
-    Hidden = 3
+    Hidden = 3,
+    LargeDigits = 4
 };
 
 enum class CalculationMethod : int {
@@ -223,7 +224,7 @@ enum class LicenseTier : int {
 
 struct LicenseStatus {
     LicenseTier tier = LicenseTier::Trial;
-    int trialDaysRemaining = 14;
+    int trialDaysRemaining = 5;
     std::wstring maskedKey;
     std::wstring expiryIso;
 
@@ -292,6 +293,7 @@ struct AppSettings {
     bool showTrayIcon = true;
     TaskbarDisplayStyle displayStyle = TaskbarDisplayStyle::TwoLineClassic;
     TrayIconStyle trayStyle = TrayIconStyle::TwoLineMini;
+    bool trayShowMinutesUpTo99 = false;
     std::wstring customTemplate = L"{kisa}→{kalan_kisa}";
     bool showProgressBar = true;
     int highlightUrgentMinutes = 15;
@@ -324,7 +326,7 @@ struct AppSettings {
     bool ramadanIftarSahurMode = true;
     bool fridayReminder = true;
     bool reviewPrompted = false;
-    bool notificationsEnabled = true;  // master switch: off silences every notification without touching the per-prayer rules
+    bool notificationsEnabled = true;  // master switch synced with per-prayer rules
     int notifyMuteUntilMin = 0;  // local epoch minutes; notifications stay silent until then
     int fajrSound = -1;          // NotificationSoundKind for Imsak; -1 = same as entrySound
     bool holidayReminders = true;
@@ -338,6 +340,14 @@ struct AppSettings {
     int lastTzHash = 0;          // hash of the last seen Windows time zone key; 0 = not recorded yet
 
     PrayerAlertSchedule alerts{};
+
+    void SetAllNotificationsEnabled(bool enabled) {
+        notificationsEnabled = enabled;
+        for (auto& r : alerts.rules) {
+            r.notifyAtTime = enabled;
+            r.playSound = enabled;
+        }
+    }
     NotificationSoundKind entrySound = NotificationSoundKind::AdhanShort;
     NotificationSoundKind preNotifySound = NotificationSoundKind::GentleChime;
     std::wstring customSoundPath;

@@ -66,8 +66,8 @@ bool WriteBmp32(const std::wstring& bmpPath, const uint32_t* px, int W, int H) {
 }
 
 bool SaveTrayPreviewBmp(const std::wstring& bmpPath, const vakit::PrayerCountdownState& state, const vakit::AppSettings& settings) {
-    constexpr int W = 280;
-    constexpr int H = 120;
+    constexpr int W = 360;
+    constexpr int H = 112;
     HDC screenDc = GetDC(nullptr);
     if (!screenDc) return false;
     HDC memDc = CreateCompatibleDC(screenDc);
@@ -86,26 +86,32 @@ bool SaveTrayPreviewBmp(const std::wstring& bmpPath, const vakit::PrayerCountdow
         HGDIOBJ old = SelectObject(memDc, hBmp);
         auto* px = static_cast<uint32_t*>(bits);
         for (int y = 0; y < H; ++y) {
-            uint32_t bg = (y < H / 2) ? 0xFF242424u : 0xFFF3F3F3u;
+            uint32_t bg = (y < H / 2) ? 0xFF202020u : 0xFFF3F3F3u;
             for (int x = 0; x < W; ++x) px[y * W + x] = bg;
         }
         GdiFlush();
 
+        static constexpr vakit::TrayIconStyle kPreviewStyles[4] = {
+            vakit::TrayIconStyle::TwoLineMini,
+            vakit::TrayIconStyle::MinutesRing,
+            vakit::TrayIconStyle::LargeDigits,
+            vakit::TrayIconStyle::CrescentBadge
+        };
         vakit::AppSettings copy = settings;
         for (int row = 0; row < 2; ++row) {
             bool isLight = (row == 1);
-            int y32 = (row == 0 ? 14 : 74);
-            int y48 = (row == 0 ? 6 : 66);
-            for (int t = 0; t < 3; ++t) {
-                copy.trayStyle = static_cast<vakit::TrayIconStyle>(t);
-                int xBase = 14 + t * 90;
-                if (HICON h32 = vakit::CreateTrayIconHandle(state, copy, 32, isLight)) {
-                    DrawIconEx(memDc, xBase, y32, h32, 32, 32, 0, nullptr, DI_NORMAL);
-                    DestroyIcon(h32);
+            int y20 = (row == 0 ? 18 : 74);
+            int y32 = (row == 0 ? 12 : 68);
+            for (int t = 0; t < 4; ++t) {
+                copy.trayStyle = kPreviewStyles[t];
+                int xBase = 16 + t * 86;
+                if (HICON h20 = vakit::CreateTrayIconHandle(state, copy, 20, isLight)) {
+                    DrawIconEx(memDc, xBase, y20, h20, 20, 20, 0, nullptr, DI_NORMAL);
+                    DestroyIcon(h20);
                 }
-                if (HICON h48 = vakit::CreateTrayIconHandle(state, copy, 48, isLight)) {
-                    DrawIconEx(memDc, xBase + 38, y48, h48, 48, 48, 0, nullptr, DI_NORMAL);
-                    DestroyIcon(h48);
+                if (HICON h32 = vakit::CreateTrayIconHandle(state, copy, 32, isLight)) {
+                    DrawIconEx(memDc, xBase + 28, y32, h32, 32, 32, 0, nullptr, DI_NORMAL);
+                    DestroyIcon(h32);
                 }
             }
         }
@@ -158,8 +164,11 @@ int RunDiagnosticSmoke(const std::wstring& previewBmpPath, const std::wstring& f
             }
         }
 
-        for (int t = 0; t < 3; ++t) {
-            settings.trayStyle = static_cast<vakit::TrayIconStyle>(t);
+        for (vakit::TrayIconStyle st : {vakit::TrayIconStyle::TwoLineMini,
+                                        vakit::TrayIconStyle::MinutesRing,
+                                        vakit::TrayIconStyle::CrescentBadge,
+                                        vakit::TrayIconStyle::LargeDigits}) {
+            settings.trayStyle = st;
             HICON hIcon = vakit::CreateTrayIconHandle(state, settings, static_cast<int>(16 * scale), false);
             if (!hIcon) {
                 std::error_code ec;

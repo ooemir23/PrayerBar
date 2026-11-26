@@ -1,6 +1,7 @@
 #include "tray_icon.h"
 #include "taskbar_renderer.h"
 #include "../core/formatter.h"
+#include "../platform/audio_player.h"
 #include "../platform/taskbar_geom.h"
 #include "../platform/theme_utils.h"
 
@@ -44,20 +45,30 @@ void TrayIconHost::Update(const PrayerCountdownState& state, const AppSettings& 
 
     isTemporaryHidden_ = false;
     double scale = GetTaskbarScale();
-    int iconSize = std::clamp(static_cast<int>(std::llround(32.0 * scale)), 32, 64);
+    int iconSize = std::clamp(static_cast<int>(std::llround(16.0 * scale)), 16, 48);
     bool isLight = IsTaskbarLight(settings.themeMode);
     auto [top, bottom] = FormatTrayText(state, settings);
     std::wstring tooltip = FormatTrayTooltip(state, settings);
-    int progressBucket = (settings.trayStyle == TrayIconStyle::MinutesRing)
+    int progressBucket = (settings.trayStyle == TrayIconStyle::MinutesRing ||
+                          settings.trayStyle == TrayIconStyle::LargeDigits)
         ? static_cast<int>(std::llround(state.progress * 36.0))
         : 0;
+    const bool audioPlaying = AudioPlayer::IsPlaying();
+    const int nowMin = static_cast<int>(state.calculatedAt.ToEpochSeconds() / 60);
+    const bool isMuted = !settings.notificationsEnabled || (settings.notifyMuteUntilMin > nowMin);
+    const bool criticalUrgent = state.isUrgent && state.remainingSeconds <= 5 * 60;
+    const bool kerahatActive = !state.isUrgent && settings.showKerahatIndicator && state.kerahatStatus != KerahatStatus::None;
 
-    wchar_t sigBuf[256];
-    swprintf_s(sigBuf, L"%d|%d|%d|%d|%d|%ls|%ls|%d|%d|%ls",
+    wchar_t sigBuf[320];
+    swprintf_s(sigBuf, L"%d|%d|%d|%d|%d|%d|%d|%ls|%ls|%d|%d|%d|%d|%d|%d|%ls",
                shouldShow ? 1 : 0, iconSize, isLight ? 1 : 0,
                settings.useSystemAccentColor ? 1 : 0,
-               static_cast<int>(settings.trayStyle), top.c_str(), bottom.c_str(),
-               state.isUrgent ? 1 : 0, progressBucket, tooltip.c_str());
+               static_cast<int>(settings.trayStyle),
+               settings.trayShowMinutesUpTo99 ? 1 : 0,
+               static_cast<int>(state.nextPrayer), top.c_str(), bottom.c_str(),
+               state.isUrgent ? 1 : 0, criticalUrgent ? 1 : 0,
+               kerahatActive ? 1 : 0, audioPlaying ? 1 : 0, isMuted ? 1 : 0,
+               progressBucket, tooltip.c_str());
     std::wstring sig(sigBuf);
 
     if (!force && isAdded_ && sig == lastSignature_) {

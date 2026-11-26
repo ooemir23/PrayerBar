@@ -377,7 +377,7 @@ constexpr LangRow kUiStrings[] = {
     // ProWindowTitle
     {L"PrayerBar Pro — Lisans & Yükseltme", L"PrayerBar Pro — Upgrade & License", L"PrayerBar Pro — الترقية والترخيص", L"PrayerBar Pro — Upgrade & Lizenz", L"PrayerBar Pro — Mise à niveau", L"PrayerBar Pro — Upgrade & Lisensi", L"PrayerBar Pro — اپ گریڈ اور لائسنس", L"PrayerBar Pro — আপগ্রেড ও লাইসেন্স", L"PrayerBar Pro — Naik Taraf & Lesen", L"PrayerBar Pro — ارتقا و مجوز", L"PrayerBar Pro — Покупка и лицензия", L"PrayerBar Pro — Mejora y licencia"},
     // ProStatusTrial
-    {L"14 Günlük Ücretsiz Pro Deneme Aktif", L"14-Day Free Pro Trial Active", L"الفترة التجريبية المجانية (14 يوماً) مفعّلة", L"14-Tage-Pro-Testversion aktiv", L"Essai Pro gratuit de 14 jours actif", L"Uji Coba Pro 14 Hari Aktif", L"14 دن کا مفت Pro ٹرائل فعال ہے", L"১৪ দিনের বিনামূল্যে Pro ট্রায়াল চালু", L"Percubaan Pro Percuma 14 Hari Aktif", L"دوره آزمایشی رایگان ۱۴ روزه Pro فعال است", L"Активен бесплатный 14-дневный пробный Pro", L"Prueba gratuita de Pro de 14 días activa"},
+    {L"5 Günlük Ücretsiz Pro Deneme Aktif", L"5-Day Free Pro Trial Active", L"الفترة التجريبية المجانية (5 أيام) مفعّلة", L"5-Tage-Pro-Testversion aktiv", L"Essai Pro gratuit de 5 jours actif", L"Uji Coba Pro 5 Hari Aktif", L"5 دن کا مفت Pro ٹرائل فعال ہے", L"৫ দিনের বিনামূল্যে Pro ট্রায়াল চালু", L"Percubaan Pro Percuma 5 Hari Aktif", L"دوره آزمایشی رایگان ۵ روزه Pro فعال است", L"Активен бесплатный 5-дневный пробный Pro", L"Prueba gratuita de Pro de 5 días activa"},
     // ProStatusFree
     {L"Ücretsiz Temel Sürüm (Temel ibadet vakitleri daima ücretsizdir)", L"Free Edition (Core prayer times remain 100% free)", L"الإصدار المجاني (المواقيت الأساسية مجانية دائماً)", L"Kostenlose Basisversion", L"Version gratuite (Horaires toujours gratuits)", L"Edisi Gratis (Jadwal Sholat Selalu Gratis)", L"مفت ایڈیشن (بنیادی نماز اوقات ہمیشہ مفت)", L"ফ্রি সংস্করণ (মূল নামাজের সময় সবসময় বিনামূল্যে)", L"Edisi Percuma (waktu solat asas sentiasa percuma)", L"نسخه رایگان (اوقات اصلی نماز همیشه رایگان)", L"Бесплатная версия (время намаза всегда бесплатно)", L"Edición gratuita (los horarios básicos siempre gratis)"},
     // ProStatusActiveAnnual
@@ -628,10 +628,14 @@ constexpr LangRow kUiStrings[] = {
     // CdIftar
     {L"İftara kalan", L"Until Iftar", L"المتبقي للإفطار", L"Bis Iftar", L"Avant l'Iftar", L"Menuju berbuka", L"افطار میں باقی", L"ইফতারের বাকি", L"Menuju berbuka", L"تا افطار", L"До ифтара", L"Para el iftar"},
     // CdSahur
-    {L"Sahura kalan", L"Until Suhoor", L"المتبقي للسحور", L"Bis Sahur", L"Avant le Suhoor", L"Menuju sahur", L"سحری میں باقی", L"সাহরির বাকি", L"Menuju sahur", L"تا سحر", L"До сухура", L"Para el suhur"}
+    {L"Sahura kalan", L"Until Suhoor", L"المتبقي للسحور", L"Bis Sahur", L"Avant le Suhoor", L"Menuju sahur", L"سحری میں باقی", L"সাহরির বাকি", L"Menuju sahur", L"تا سحر", L"До сухура", L"Para el suhur"},
+    // TrayLargeDigits
+    {L"Büyük Rakam (Sadece Süre)", L"Large Digits (Time Only)", L"أرقام كبيرة (الوقت فقط)", L"Große Zahlen (Nur Zeit)", L"Grands chiffres (Temps seul)", L"Angka Besar (Waktu Saja)", L"بڑے ہندسے (صرف وقت)", L"বড় সংখ্যা (শুধু সময়)", L"Nombor Besar (Masa Sahaja)", L"اعداد بزرگ (فقط زمان)", L"Крупные цифры (только время)", L"Números grandes (solo tiempo)"},
+    // ChkTrayMin99
+    {L"Tepsi simgesinde 99 dakikaya kadar dakika göster", L"Show minutes up to 99 min in tray icon", L"عرض الدقائق حتى 99 دقيقة في أيقونة الشريط", L"Im Infobereich bis 99 Min. in Minuten anzeigen", L"Afficher les minutes jusqu'à 99 min dans la barre", L"Tampilkan menit hingga 99 mnt di ikon tray", L"ٹرے آئیکن میں 99 منٹ تک منٹ دکھائیں", L"ট্রে আইকনে ৯৯ মিনিট পর্যন্ত মিনিট দেখান", L"Tunjuk minit hingga 99 min di ikon dulang", L"نمایش دقیقه تا ۹۹ دقیقه در آیکون سینی", L"Показывать минуты до 99 мин в значке трея", L"Mostrar minutos hasta 99 min en el icono de bandeja"}
 };
 
-static_assert(sizeof(kUiStrings) / sizeof(kUiStrings[0]) == static_cast<size_t>(StrId::CdSahur) + 1, "kUiStrings mismatch");
+static_assert(sizeof(kUiStrings) / sizeof(kUiStrings[0]) == static_cast<size_t>(StrId::ChkTrayMin99) + 1, "kUiStrings mismatch");
 
 constexpr std::array<LangRow, 6> kPrayerNames = {{
     {L"İmsak",  L"Fajr",    L"الفجر",   L"Fadschr",  L"Fajr",    L"Subuh", L"فجر", L"ফজর", L"Subuh", L"صبح", L"Фаджр", L"Fajr"},

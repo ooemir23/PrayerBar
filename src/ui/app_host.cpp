@@ -120,6 +120,7 @@ int AppHost::Run() {
         [this]() {
             settings_ = settingsStore_.Load();
             if (settingsWindow_ && settingsWindow_->IsOpen()) {
+                settingsWindow_->SyncNotificationControls();
                 settingsWindow_->RefreshPreviewAndMemory();
             }
         });
@@ -159,7 +160,7 @@ int AppHost::Run() {
             RefreshTick(false);
         },
         []() { PostQuitMessage(0); },
-        [this]() { RefreshTick(false); });
+        [this]() { RefreshBandOnly(true); });
 
     bandWindow_->SetExtraMenuCallbacks(
         [this]() { imsakiyeWindow_->OpenOrFocus(); },
@@ -199,6 +200,7 @@ int AppHost::Run() {
             settingsStore_.Save(settings_);
             OnSettingsChanged();
             if (settingsWindow_ && settingsWindow_->IsOpen()) {
+                settingsWindow_->SyncNotificationControls();
                 settingsWindow_->RefreshPreviewAndMemory();
             }
         },
@@ -207,6 +209,7 @@ int AppHost::Run() {
             bool playAudio = settings_.preNotifySound != NotificationSoundKind::None;
             if (playAudio) {
                 AudioPlayer::Play(settings_.preNotifySound, settings_.customSoundPath, settings_.soundVolumePercent);
+                RefreshTick(false);
             }
             ShowUserNotification(Tr(settings_.language, StrId::TestNotifTitle), Tr(settings_.language, StrId::TestNotifBody),
                                  true, playAudio);
@@ -219,7 +222,8 @@ int AppHost::Run() {
         StartAutomaticLocationDetection();
     }
     ScheduleNextTickTimer();
-    SetTimer(hostHwnd_, kTimerWatchdogId, 5000, nullptr);
+    watchdogIntervalMs_ = 15000;
+    SetTimer(hostHwnd_, kTimerWatchdogId, watchdogIntervalMs_, nullptr);
     SetTimer(hostHwnd_, kTimerAutoMemId, 600000, nullptr);
 
     if (IsPackagedApp()) {
@@ -265,7 +269,11 @@ void AppHost::ShowUserNotification(const std::wstring& title, const std::wstring
     std::wstring stopLabel = hasAudio ? Tr(lang, StrId::ToastStopAdhan) : L"";
     std::function<void()> stopCb;
     if (hasAudio) {
-        stopCb = []() { AudioPlayer::Stop(); };
+        HWND h = hostHwnd_;
+        stopCb = [h]() {
+            AudioPlayer::Stop();
+            if (h) PostMessageW(h, kMsgScheduleRefreshed, 0, 0);
+        };
     }
     // Toast first (Mute Adhan / Dismiss, Notification Center); classic tray balloon if toasts fail.
     if (settings_.modernToasts && ShowModernToast(title, body, silent, stopLabel, stopCb)) {
@@ -349,11 +357,29 @@ void AppHost::StartAutomaticLocationDetection() {
 void AppHost::RefreshTick(bool checkNotifications) {
     LocalDateTime now = ScheduleService::GetCurrentLocalDateTime();
     PrayerCountdownState state = scheduleService_.ComputeState(now, settings_);
+    lastState_ = state;
+    hasLastState_ = true;
     if (bandWindow_) bandWindow_->Update(state, settings_);
     if (trayHost_) trayHost_->Update(state, settings_);
     PushWidgetUpdate();
     if (checkNotifications) {
         EvaluateNotifications(now, state);
+    }
+    SyncWatchdogInterval();
+}
+
+void AppHost::RefreshBandOnly(bool raiseZOrder) {
+    if (bandWindow_ && hasLastState_) {
+        bandWindow_->Update(lastState_, settings_, false, raiseZOrder);
+    }
+}
+
+void AppHost::SyncWatchdogInterval() {
+    if (!hostHwnd_) return;
+    UINT target = AudioPlayer::IsPlaying() ? 2000u : 15000u;
+    if (target != watchdogIntervalMs_) {
+        watchdogIntervalMs_ = target;
+        SetTimer(hostHwnd_, kTimerWatchdogId, watchdogIntervalMs_, nullptr);
     }
 }
 
@@ -403,6 +429,8 @@ void AppHost::EvaluateNotifications(const LocalDateTime& now, const PrayerCountd
         bool playAudio = !quietActive && playSoundRule && (sound != NotificationSoundKind::None);
         if (playAudio) {
             AudioPlayer::Play(sound, settings_.customSoundPath, settings_.soundVolumePercent);
+            if (trayHost_) trayHost_->Update(state, settings_, false);
+            SyncWatchdogInterval();
         }
         ShowUserNotification(title, body, quietActive || playAudio || !playSoundRule, playAudio);
     };
@@ -544,7 +572,11 @@ LRESULT AppHost::HostWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
                 ScheduleNextTickTimer();
             } else if (wParam == kTimerWatchdogId) {
                 auto state = scheduleService_.ComputeState(ScheduleService::GetCurrentLocalDateTime(), settings_);
-                if (bandWindow_) bandWindow_->Update(state, settings_, false);
+                lastState_ = state;
+                hasLastState_ = true;
+                if (bandWindow_) bandWindow_->Update(state, settings_, false, false);
+                if (trayHost_) trayHost_->Update(state, settings_, false);
+                SyncWatchdogInterval();
             } else if (wParam == kTimerAutoMemId) {
                 bool anyWindowOpen = (flyoutWindow_ && flyoutWindow_->IsOpen()) ||
                                      (settingsWindow_ && settingsWindow_->IsOpen()) ||
@@ -575,9 +607,17 @@ LRESULT AppHost::HostWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
                 if (mouseMsg == NIN_BALLOONTIMEOUT) balloonStopsAudio_ = false;
                 return 0;
             }
-            if (mouseMsg == WM_LBUTTONUP) {
-                RECT anchor = bandWindow_ ? bandWindow_->CurrentRect() : FallbackAnchorNearCursor();
-                ToggleFlyout(anchor);
+            if (mouseMsg == WM_LBUTTONUP || mouseMsg == WM_MBUTTONUP) {
+                if (AudioPlayer::IsPlaying()) {
+                    AudioPlayer::Stop();
+                    RefreshTick(false);
+                    if (flyoutWindow_) flyoutWindow_->RefreshView();
+                    return 0;
+                }
+                if (mouseMsg == WM_LBUTTONUP) {
+                    RECT anchor = bandWindow_ ? bandWindow_->CurrentRect() : FallbackAnchorNearCursor();
+                    ToggleFlyout(anchor);
+                }
             } else if (mouseMsg == WM_RBUTTONUP) {
                 POINT pt{};
                 GetCursorPos(&pt);

@@ -162,6 +162,31 @@ int TestDisplayFormatterStylesAndTooltip() {
     settings.cityName = std::wstring(100, L'A');
     settings.showSeconds = true;
     CHECK(FormatTrayTooltip(state, settings).size() <= 127);
+
+    // FormatTrayText rounding and compact badges
+    {
+        auto s0 = MakeSampleState(PrayerKind::Imsak, 0, {6, 0});
+        s0.remainingSeconds = 0;
+        CHECK(FormatTrayText(s0, settings).second == L"<1");
+
+        auto s23 = MakeSampleState(PrayerKind::Ikindi, 23, {15, 25});
+        CHECK(FormatTrayText(s23, settings).second == L"23");
+
+        auto s105 = MakeSampleState(PrayerKind::Imsak, 105, {6, 0}); // 1h 45m -> 2s
+        CHECK(FormatTrayText(s105, settings).second == L"2s");
+
+        auto s430 = MakeSampleState(PrayerKind::Imsak, 430, {6, 0}); // 7h 10m -> 7s
+        CHECK(FormatTrayText(s430, settings).second == L"7s");
+
+        // trayShowMinutesUpTo99
+        AppSettings s99 = settings;
+        s99.trayShowMinutesUpTo99 = true;
+        auto s85 = MakeSampleState(PrayerKind::Imsak, 85, {6, 0});
+        CHECK(FormatTrayText(s85, s99).second == L"85");
+        auto s99m = MakeSampleState(PrayerKind::Imsak, 99, {6, 0});
+        CHECK(FormatTrayText(s99m, s99).second == L"99");
+        CHECK(FormatTrayText(s105, s99).second == L"2s");
+    }
     ++g_passed;
     return 0;
 }
@@ -427,6 +452,46 @@ int TestCustomPrayerNamesSettingsStoreExportAndLockout() {
         CHECK(store.Save(locked));
         AppSettings unlocked = store.Load();
         CHECK(unlocked.showTrayIcon == true);
+
+        // LargeDigits + trayShowMinutesUpTo99 tray style persistence
+        AppSettings trayLg = s;
+        trayLg.trayStyle = TrayIconStyle::LargeDigits;
+        trayLg.trayShowMinutesUpTo99 = true;
+        CHECK(store.Save(trayLg));
+        AppSettings trayLgLoaded = store.Load();
+        CHECK(trayLgLoaded.trayStyle == TrayIconStyle::LargeDigits);
+        CHECK(trayLgLoaded.trayShowMinutesUpTo99 == true);
+
+        // Master notification switch syncs per-prayer toggles while keeping preNotifyMinutes
+        AppSettings notif = s;
+        for (int i = 0; i < 6; ++i) {
+            notif.alerts.GetRule(static_cast<PrayerKind>(i)).preNotifyMinutes = 60;
+        }
+        notif.SetAllNotificationsEnabled(false);
+        CHECK(!notif.notificationsEnabled);
+        for (int i = 0; i < 6; ++i) {
+            const auto& r = notif.alerts.GetRule(static_cast<PrayerKind>(i));
+            CHECK(!r.notifyAtTime);
+            CHECK(!r.playSound);
+            CHECK(r.preNotifyMinutes == 60);
+        }
+        CHECK(store.Save(notif));
+        AppSettings notifReloaded = store.Load();
+        CHECK(!notifReloaded.notificationsEnabled);
+        for (int i = 0; i < 6; ++i) {
+            const auto& r = notifReloaded.alerts.GetRule(static_cast<PrayerKind>(i));
+            CHECK(!r.notifyAtTime);
+            CHECK(!r.playSound);
+            CHECK(r.preNotifyMinutes == 60);
+        }
+        notifReloaded.SetAllNotificationsEnabled(true);
+        CHECK(notifReloaded.notificationsEnabled);
+        for (int i = 0; i < 6; ++i) {
+            const auto& r = notifReloaded.alerts.GetRule(static_cast<PrayerKind>(i));
+            CHECK(r.notifyAtTime);
+            CHECK(r.playSound);
+            CHECK(r.preNotifyMinutes == 60);
+        }
     }
     std::error_code ec;
     std::filesystem::remove_all(tempDir, ec);
@@ -485,19 +550,19 @@ int TestLicenseManagerTrialOfflineKeysAndGating() {
 
         auto st0 = lm.GetStatus(day0);
         CHECK(st0.tier == LicenseTier::Trial);
-        CHECK(st0.trialDaysRemaining == 14);
+        CHECK(st0.trialDaysRemaining == 5);
         CHECK(st0.IsPro());
 
-        auto st13 = lm.GetStatus(day0.AddDays(13));
-        CHECK(st13.tier == LicenseTier::Trial);
-        CHECK(st13.trialDaysRemaining == 1);
-        CHECK(st13.IsPro());
+        auto st4 = lm.GetStatus(day0.AddDays(4));
+        CHECK(st4.tier == LicenseTier::Trial);
+        CHECK(st4.trialDaysRemaining == 1);
+        CHECK(st4.IsPro());
 
-        auto st14 = lm.GetStatus(day0.AddDays(14));
-        CHECK(st14.tier == LicenseTier::Free);
-        CHECK(st14.trialDaysRemaining == 0);
-        CHECK(!st14.IsPro());
-        CHECK(!lm.IsProActive(day0.AddDays(14)));
+        auto st5 = lm.GetStatus(day0.AddDays(5));
+        CHECK(st5.tier == LicenseTier::Free);
+        CHECK(st5.trialDaysRemaining == 0);
+        CHECK(!st5.IsPro());
+        CHECK(!lm.IsProActive(day0.AddDays(5)));
 
         // Ethical Pro gating rules
         for (int i = 0; i <= 3; ++i) {

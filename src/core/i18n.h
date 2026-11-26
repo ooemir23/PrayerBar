@@ -295,7 +295,9 @@ enum class StrId : int {
     DaysLeftTomorrow,
     DaysLeftFmt,  // %d = days
     CdIftar,
-    CdSahur
+    CdSahur,
+    TrayLargeDigits,
+    ChkTrayMin99
 };
 
 AppLanguage ResolveEffectiveLanguage(AppLanguage configured);
