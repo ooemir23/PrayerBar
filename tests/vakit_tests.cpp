@@ -317,6 +317,18 @@ int TestMultiLanguageHijriAndRamadan() {
     CHECK(qadrEve.id == HolidayId::Qadr && qadrEve.isNight);
     CHECK(FindHolidayStartingTomorrow(ramStart.AddDays(3)).id == HolidayId::None);
 
+    // Diyanet 2026 table: Ramadan starts 19 Feb, Eid al-Fitr 20-22 Mar (arife 19 Mar), Kurban 27-30 May, Regaib night 10 Dec
+    CHECK(FindHolidayStartingTomorrow({2026, 2, 18}).id == HolidayId::RamadanStart);
+    CHECK(FindHolidayStartingTomorrow({2026, 3, 19}).id == HolidayId::EidFitr);
+    CHECK(FindHolidayStartingTomorrow({2026, 5, 26}).id == HolidayId::EidAdha);
+    HolidayEve regaib = FindHolidayStartingTomorrow({2026, 12, 10});
+    CHECK(regaib.id == HolidayId::Raghaib && regaib.isNight);
+    CHECK(FindNextOrCurrentRamadanStart({2026, 1, 5}) == DateYMD({2026, 2, 19}));
+    int eidDays = 0;
+    for (const auto& r : ListReligiousDays(2026)) if (r.id == HolidayId::EidAdha) eidDays = r.span;
+    CHECK(eidDays == 4);
+    CHECK(ListReligiousDays(2027).size() >= 10);  // tabular fallback for years without a Diyanet table
+
     // Extra times: Maghrib 18:00, next Fajr 06:00 -> 12h night, midnight 00:00, last third 02:00; Duha = sunrise + 45 min
     {
         DailyPrayerTimes d{};

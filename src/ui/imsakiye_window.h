@@ -2,6 +2,7 @@
 
 #include "../core/license_manager.h"
 #include "../core/models.h"
+#include "../core/prayer_calc.h"
 #include "../core/schedule_service.h"
 #include "../core/settings_store.h"
 
@@ -36,12 +37,14 @@ public:
     void RefreshIfOpen();
 
 private:
-    enum class BtnId { None, PrevMonth, NextMonth, Today, Ramadan, Sync, ExportCsv, ExportHtml };
+    enum class BtnId { None, PrevMonth, NextMonth, Today, Ramadan, Days, Sync, ExportCsv, ExportHtml };
 
     static LRESULT CALLBACK WndProcStatic(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
     LRESULT WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
     void LoadRows();
+    size_t RowCount() const { return daysMode_ ? days_.size() : rows_.size(); }
+    std::wstring BuildCountdownText() const;  // live footer: next prayer / iftar-sahur / next holy day
     void StartBackgroundSync();
     void ExportCsv();
     void ExportHtml();
@@ -62,6 +65,8 @@ private:
     int viewYear_ = 2026;
     int viewMonth_ = 11;
     bool ramadanMode_ = false;
+    bool daysMode_ = false;  // religious days list for viewYear_
+    std::vector<ReligiousDay> days_;
     DateYMD ramadanStart_{};
     bool syncBusy_ = false;
     std::wstring statusText_;
@@ -76,6 +81,7 @@ private:
         RECT nextRc{};
         RECT todayRc{};
         RECT ramadanRc{};
+        RECT daysRc{};
         RECT syncRc{};
         RECT csvRc{};
         RECT htmlRc{};

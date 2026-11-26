@@ -1,6 +1,7 @@
 #include "imsakiye_window.h"
 #include "gdiplus_flat.h"
 #include "theme_palette.h"
+#include "../core/formatter.h"
 #include "../core/i18n.h"
 #include "../core/prayer_calc.h"
 #include "../core/utf_util.h"
@@ -23,7 +24,7 @@ constexpr wchar_t kImsakiyeClassName[] = L"PrayerBarImsakiyeWindow";
 constexpr int kDipWidth = 740;
 constexpr int kDipHeight = 560;
 constexpr int kHeaderDipY = 86;
-constexpr int kFooterDipH = 26;
+constexpr int kFooterDipH = 36;
 constexpr int kRowDipH = 27;
 
 uint32_t WithAlpha(uint8_t alpha, uint32_t argb) {
@@ -87,6 +88,7 @@ void ImsakiyeWindow::OpenOrFocus() {
     viewYear_ = now.date.year;
     viewMonth_ = now.date.month;
     ramadanMode_ = false;
+    daysMode_ = false;
     statusText_.clear();
     scrollY_ = 0;
 
@@ -125,6 +127,7 @@ void ImsakiyeWindow::OpenOrFocus() {
     GetClientRect(hwnd_, &rc);
     UpdateScrollBar(rc.right - rc.left, rc.bottom - rc.top);
 
+    SetTimer(hwnd_, 1, 1000, nullptr);  // live countdown in the footer
     ShowWindow(hwnd_, SW_SHOW);
     SetForegroundWindow(hwnd_);
 }
@@ -156,7 +159,20 @@ void ImsakiyeWindow::RefreshIfOpen() {
 
 void ImsakiyeWindow::LoadRows() {
     rows_.clear();
-    if (ramadanMode_) {
+    days_.clear();
+    if (daysMode_) {
+        days_ = ListReligiousDays(viewYear_);
+        // First time in the list: scroll so the next upcoming day is near the top.
+        DateYMD today = ScheduleService::GetCurrentLocalDateTime().date;
+        if (scrollY_ == 0 && viewYear_ == today.year) {
+            for (size_t i = 0; i < days_.size(); ++i) {
+                if (days_[i].date.ToEpochDays() >= today.ToEpochDays()) {
+                    scrollY_ = static_cast<int>(i > 0 ? i - 1 : 0) * static_cast<int>(std::llround(kRowDipH * scale_));
+                    break;
+                }
+            }
+        }
+    } else if (ramadanMode_) {
         rows_.reserve(30);
         for (int i = 0; i < 30; ++i) {
             DateYMD d = ramadanStart_.AddDays(i);
@@ -336,7 +352,7 @@ void ImsakiyeWindow::ClampScroll(int clientH) {
     int listTop = static_cast<int>(std::llround(kHeaderDipY * scale_));
     int footerH = static_cast<int>(std::llround(kFooterDipH * scale_));
     int viewH = std::max(40, clientH - listTop - footerH);
-    int totalH = static_cast<int>(rows_.size()) * static_cast<int>(std::llround(kRowDipH * scale_));
+    int totalH = static_cast<int>(RowCount()) * static_cast<int>(std::llround(kRowDipH * scale_));
     int maxScroll = std::max(0, totalH - viewH);
     scrollY_ = std::clamp(scrollY_, 0, maxScroll);
 }
@@ -348,7 +364,7 @@ void ImsakiyeWindow::UpdateScrollBar(int, int clientH) {
     int listTop = static_cast<int>(std::llround(kHeaderDipY * scale_));
     int footerH = static_cast<int>(std::llround(kFooterDipH * scale_));
     int viewH = std::max(40, clientH - listTop - footerH);
-    int totalH = static_cast<int>(rows_.size()) * static_cast<int>(std::llround(kRowDipH * scale_));
+    int totalH = static_cast<int>(RowCount()) * static_cast<int>(std::llround(kRowDipH * scale_));
 
     SCROLLINFO si{};
     si.cbSize = sizeof(si);
@@ -366,10 +382,52 @@ ImsakiyeWindow::BtnId ImsakiyeWindow::HitTestToolbar(int x, int y) const {
     if (PtInRect(&tbRc_.nextRc, pt)) return BtnId::NextMonth;
     if (PtInRect(&tbRc_.todayRc, pt)) return BtnId::Today;
     if (PtInRect(&tbRc_.ramadanRc, pt)) return BtnId::Ramadan;
+    if (PtInRect(&tbRc_.daysRc, pt)) return BtnId::Days;
     if (PtInRect(&tbRc_.syncRc, pt)) return BtnId::Sync;
     if (PtInRect(&tbRc_.csvRc, pt)) return BtnId::ExportCsv;
     if (PtInRect(&tbRc_.htmlRc, pt)) return BtnId::ExportHtml;
     return BtnId::None;
+}
+
+std::wstring ImsakiyeWindow::BuildCountdownText() const {
+    AppLanguage lang = settings_.language;
+    LocalDateTime now = ScheduleService::GetCurrentLocalDateTime();
+    int64_t nowSec = now.ToEpochSeconds();
+    PrayerCountdownState st = scheduleService_.ComputeState(now, settings_);
+
+    if (daysMode_) {
+        static constexpr StrId kHolNames[] = {
+            StrId::HolHijriNewYear, StrId::HolHijriNewYear, StrId::HolAshura, StrId::HolMawlid, StrId::HolRaghaib,
+                    StrId::HolMiraj, StrId::HolBarat, StrId::HolRamadanStart, StrId::HolQadr, StrId::HolEidFitr,
+                    StrId::HolArafah, StrId::HolEidAdha};
+        for (int y = now.date.year; y <= now.date.year + 1; ++y) {
+            for (const auto& r : ListReligiousDays(y)) {
+                if (r.date.ToEpochDays() < now.date.ToEpochDays()) continue;
+                // Kandil nights begin at Maghrib of their date; other days at midnight.
+                TimeHM start = r.isNight ? scheduleService_.GetDaySchedule(r.date, settings_).aksam : TimeHM{0, 0};
+                int64_t target = LocalDateTime::FromDateTime(r.date, start).ToEpochSeconds();
+                if (target <= nowSec) continue;
+                std::wstring name = Tr(lang, r.isArife ? StrId::HolEidFitrEve : kHolNames[static_cast<int>(r.id)]);
+                return name + L" · " + FormatRemainingLong(target - nowSec, true, lang);
+            }
+        }
+        return L"";
+    }
+
+    if (ramadanMode_) {
+        int64_t imsakToday = LocalDateTime::FromDateTime(now.date, st.today.imsak).ToEpochSeconds();
+        int64_t iftar = LocalDateTime::FromDateTime(now.date, st.today.aksam).ToEpochSeconds();
+        if (nowSec < imsakToday) {
+            return std::wstring(Tr(lang, StrId::CdSahur)) + L" · " + FormatRemainingLong(imsakToday - nowSec, true, lang);
+        }
+        if (nowSec < iftar) {
+            return std::wstring(Tr(lang, StrId::CdIftar)) + L" · " + FormatRemainingLong(iftar - nowSec, true, lang);
+        }
+        int64_t sahur = LocalDateTime::FromDateTime(now.date.AddDays(1), st.tomorrowImsak).ToEpochSeconds();
+        return std::wstring(Tr(lang, StrId::CdSahur)) + L" · " + FormatRemainingLong(sahur - nowSec, true, lang);
+    }
+
+    return FormatUntilPrayerLine(st.nextPrayer, settings_) + L" · " + FormatRemainingLong(st.remainingSeconds, true, lang);
 }
 
 void ImsakiyeWindow::PaintClient(HDC hdc, int width, int height) {
@@ -451,6 +509,7 @@ void ImsakiyeWindow::PaintClient(HDC hdc, int width, int height) {
             drawBtn(tbRc_.todayRc, pad + 70.0f * s, 68.0f * s, BtnId::Today, Tr(lang, StrId::BtnToday));
             drawBtn(tbRc_.ramadanRc, pad + 144.0f * s, 128.0f * s, BtnId::Ramadan,
                     ramadanMode_ ? Tr(lang, StrId::BtnMonthly) : Tr(lang, StrId::BtnRamadan), ramadanMode_);
+            drawBtn(tbRc_.daysRc, pad + 278.0f * s, 104.0f * s, BtnId::Days, Tr(lang, StrId::BtnReligiousDays), daysMode_);
 
             float rightX = w - pad;
             float htmlW = 96.0f * s;
@@ -466,7 +525,9 @@ void ImsakiyeWindow::PaintClient(HDC hdc, int width, int height) {
 
             // Başlık + konum
             std::wstring periodTitle;
-            if (ramadanMode_) {
+            if (daysMode_) {
+                periodTitle = std::wstring(Tr(lang, StrId::BtnReligiousDays)) + L" " + std::to_wstring(viewYear_);
+            } else if (ramadanMode_) {
                 HijriDateYMD hRam = GregorianToHijri(ramadanStart_);
                 periodTitle = std::wstring(Tr(lang, StrId::RamadanTitlePrefix)) + L" " + std::to_wstring(hRam.year);
             } else {
@@ -495,12 +556,21 @@ void ImsakiyeWindow::PaintClient(HDC hdc, int width, int height) {
             gdip::DrawTextBox(g, Tr(lang, StrId::ColHijri), uiFam, 10.5f * s, true, accent,
                               pad + colDateW, hdrY, colHijriW, hdrH,
                               gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
-            for (int c = 0; c < 6; ++c) {
-                float cx = pad + colDateW + colHijriW + c * colPrayerW;
-                gdip::DrawTextBox(g, GetEffectivePrayerName(static_cast<PrayerKind>(c), settings_),
-                                  uiFam, 10.5f * s, true, accent,
-                                  cx, hdrY, colPrayerW, hdrH,
-                                  gdip::kStringAlignmentCenter, gdip::kStringAlignmentCenter);
+            if (daysMode_) {
+                gdip::DrawTextBox(g, Tr(lang, StrId::ColReligiousDay), uiFam, 10.5f * s, true, accent,
+                                  pad + colDateW + colHijriW, hdrY, listW - colDateW - colHijriW - 120.0f * s, hdrH,
+                                  gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
+                gdip::DrawTextBox(g, Tr(lang, StrId::ColDaysLeft), uiFam, 10.5f * s, true, accent,
+                                  pad + listW - 120.0f * s, hdrY, 112.0f * s, hdrH,
+                                  gdip::kStringAlignmentFar, gdip::kStringAlignmentCenter);
+            } else {
+                for (int c = 0; c < 6; ++c) {
+                    float cx = pad + colDateW + colHijriW + c * colPrayerW;
+                    gdip::DrawTextBox(g, GetEffectivePrayerName(static_cast<PrayerKind>(c), settings_),
+                                      uiFam, 10.5f * s, true, accent,
+                                      cx, hdrY, colPrayerW, hdrH,
+                                      gdip::kStringAlignmentCenter, gdip::kStringAlignmentCenter);
+                }
             }
 
             // Satır alanı
@@ -510,7 +580,67 @@ void ImsakiyeWindow::PaintClient(HDC hdc, int width, int height) {
             float rowH = static_cast<float>(kRowDipH) * s;
             DateYMD today = ScheduleService::GetCurrentLocalDateTime().date;
 
-            for (size_t i = 0; i < rows_.size(); ++i) {
+            if (daysMode_) {
+                static constexpr StrId kHolNames[] = {
+                    StrId::HolHijriNewYear, StrId::HolHijriNewYear, StrId::HolAshura, StrId::HolMawlid, StrId::HolRaghaib,
+                    StrId::HolMiraj, StrId::HolBarat, StrId::HolRamadanStart, StrId::HolQadr, StrId::HolEidFitr,
+                    StrId::HolArafah, StrId::HolEidAdha};
+                // The highlighted "next" row is the first upcoming one overall, not the first one on screen.
+                size_t nextIdx = days_.size();
+                for (size_t i = 0; i < days_.size(); ++i) {
+                    if (days_[i].date.ToEpochDays() >= today.ToEpochDays()) { nextIdx = i; break; }
+                }
+                for (size_t i = 0; i < days_.size(); ++i) {
+                    float ry = listTop + static_cast<float>(i) * rowH - static_cast<float>(scrollY_);
+                    if (ry + rowH < listTop || ry > listBottom) continue;
+                    const auto& r = days_[i];
+                    int64_t left = r.date.ToEpochDays() - today.ToEpochDays();
+                    bool isNext = (i == nextIdx);
+                    bool past = left < 0;
+
+                    uint32_t rBg = isNext ? todayBg : (i % 2 == 0 ? cardBg : altRowBg);
+                    gdip::FillRoundedRect(g, pad, ry + 1.0f, listW, rowH - 2.0f, 5.0f * s, rBg);
+                    gdip::StrokeRoundedRect(g, pad, ry + 1.0f, listW, rowH - 2.0f, 5.0f * s,
+                                            isNext ? pal.borderAccent : rowBorder, isNext ? 1.6f : 1.0f);
+
+                    wchar_t dBuf[96];
+                    if (r.span > 1) {
+                        DateYMD last = r.date.AddDays(r.span - 1);
+                        if (last.month == r.date.month) {
+                            swprintf_s(dBuf, L"%d–%d %ls", r.date.day, last.day, GetShortMonthName(r.date.month, lang));
+                        } else {
+                            swprintf_s(dBuf, L"%d %ls–%d %ls", r.date.day, GetShortMonthName(r.date.month, lang),
+                                       last.day, GetShortMonthName(last.month, lang));
+                        }
+                    } else {
+                        swprintf_s(dBuf, L"%02d %ls · %ls", r.date.day, GetShortMonthName(r.date.month, lang),
+                                   GetShortWeekdayName(r.date.DayOfWeek(), lang));
+                    }
+                    uint32_t baseCol = past ? textSecondary : textPrimary;
+                    gdip::DrawTextBox(g, dBuf, uiFam, 10.8f * s, isNext, isNext ? gold : baseCol,
+                                      pad + 8.0f * s, ry, colDateW - 8.0f * s, rowH,
+                                      gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
+                    // Kandil nights belong to the evening of `date`, so their Hijri day is the next one.
+                    gdip::DrawTextBox(g, FormatHijriDateLocalized(r.date.AddDays(r.isNight ? 1 : 0), lang), uiFam, 10.2f * s, false,
+                                      isNext ? gold : textSecondary,
+                                      pad + colDateW, ry, colHijriW, rowH,
+                                      gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
+                    StrId nameId = r.isArife ? StrId::HolEidFitrEve : kHolNames[static_cast<int>(r.id)];
+                    std::wstring name = Tr(lang, nameId);
+                    gdip::DrawTextBox(g, name, uiFam, 11.2f * s, !past, isNext ? gold : (past ? textSecondary : accent),
+                                      pad + colDateW + colHijriW, ry, listW - colDateW - colHijriW - 120.0f * s, rowH,
+                                      gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
+                    wchar_t lBuf[48] = L"";
+                    if (left == 0) wcscpy_s(lBuf, Tr(lang, StrId::DaysLeftToday));
+                    else if (left == 1) wcscpy_s(lBuf, Tr(lang, StrId::DaysLeftTomorrow));
+                    else if (left > 1) swprintf_s(lBuf, Tr(lang, StrId::DaysLeftFmt), static_cast<int>(left));
+                    gdip::DrawTextBox(g, lBuf, uiFam, 10.8f * s, isNext, isNext ? gold : textSecondary,
+                                      pad + listW - 120.0f * s, ry, 112.0f * s, rowH,
+                                      gdip::kStringAlignmentFar, gdip::kStringAlignmentCenter);
+                }
+            }
+
+            for (size_t i = 0; !daysMode_ && i < rows_.size(); ++i) {
                 float ry = listTop + static_cast<float>(i) * rowH - static_cast<float>(scrollY_);
                 if (ry + rowH < listTop || ry > listBottom) continue;
 
@@ -558,9 +688,15 @@ void ImsakiyeWindow::PaintClient(HDC hdc, int width, int height) {
             // Alt bilgi çubuğu
             gdip::FillRoundedRect(g, 0.0f, listBottom, w, footerH, 0.0f, bgSurf);
             const wchar_t* footerTxt = statusText_.empty() ? Tr(lang, StrId::ImsakiyeFooterHint) : statusText_.c_str();
-            gdip::DrawTextBox(g, footerTxt, uiFam, 10.0f * s, false, textSecondary,
-                              pad, listBottom + 2.0f * s, listW, footerH - 4.0f * s,
+            gdip::FillRoundedRect(g, pad, listBottom + 3.0f * s, listW, footerH - 6.0f * s, 8.0f * s, cardBg);
+            gdip::StrokeRoundedRect(g, pad, listBottom + 3.0f * s, listW, footerH - 6.0f * s, 8.0f * s, pal.borderAccentSoft, 1.0f);
+            float cdW = listW * 0.62f;
+            gdip::DrawTextBox(g, BuildCountdownText(), dispFam, 12.5f * s, true, accent,
+                              pad + 10.0f * s, listBottom + 3.0f * s, cdW - 10.0f * s, footerH - 6.0f * s,
                               gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
+            gdip::DrawTextBox(g, footerTxt, uiFam, 9.2f * s, false, textSecondary,
+                              pad + cdW, listBottom + 3.0f * s, listW - cdW - 10.0f * s, footerH - 6.0f * s,
+                              gdip::kStringAlignmentFar, gdip::kStringAlignmentCenter);
 
             if (iconFam) gdip::GdipDeleteFontFamily(iconFam);
             if (dispFam) gdip::GdipDeleteFontFamily(dispFam);
@@ -593,7 +729,7 @@ LRESULT ImsakiyeWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
         case WM_GETMINMAXINFO: {
             auto* mmi = reinterpret_cast<MINMAXINFO*>(lParam);
             if (mmi) {
-                mmi->ptMinTrackSize.x = static_cast<LONG>(std::llround(600.0 * scale_));
+                mmi->ptMinTrackSize.x = static_cast<LONG>(std::llround(700.0 * scale_));
                 mmi->ptMinTrackSize.y = static_cast<LONG>(std::llround(440.0 * scale_));
             }
             return 0;
@@ -601,6 +737,15 @@ LRESULT ImsakiyeWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
         case WM_ERASEBKGND:
             return 1;
+
+        case WM_TIMER:
+            if (wParam == 1) {
+                RECT rc{};
+                GetClientRect(hWnd, &rc);
+                rc.top = rc.bottom - static_cast<LONG>(std::llround(kFooterDipH * scale_));
+                InvalidateRect(hWnd, &rc, FALSE);
+            }
+            return 0;
 
         case WM_PAINT: {
             PAINTSTRUCT ps{};
@@ -679,20 +824,28 @@ LRESULT ImsakiyeWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
         case WM_LBUTTONUP: {
             BtnId hit = HitTestToolbar(static_cast<short>(LOWORD(lParam)), static_cast<short>(HIWORD(lParam)));
             if (hit == BtnId::PrevMonth) {
-                ramadanMode_ = false;
-                if (--viewMonth_ < 1) { viewMonth_ = 12; --viewYear_; }
+                if (daysMode_) {
+                    --viewYear_;
+                } else {
+                    ramadanMode_ = false;
+                    if (--viewMonth_ < 1) { viewMonth_ = 12; --viewYear_; }
+                }
                 scrollY_ = 0;
                 LoadRows();
                 InvalidateRect(hWnd, nullptr, FALSE);
             } else if (hit == BtnId::NextMonth) {
-                ramadanMode_ = false;
-                if (++viewMonth_ > 12) { viewMonth_ = 1; ++viewYear_; }
+                if (daysMode_) {
+                    ++viewYear_;
+                } else {
+                    ramadanMode_ = false;
+                    if (++viewMonth_ > 12) { viewMonth_ = 1; ++viewYear_; }
+                }
                 scrollY_ = 0;
                 LoadRows();
                 InvalidateRect(hWnd, nullptr, FALSE);
             } else if (hit == BtnId::Today) {
                 LocalDateTime now = ScheduleService::GetCurrentLocalDateTime();
-                ramadanMode_ = false;
+                if (!daysMode_) ramadanMode_ = false;
                 viewYear_ = now.date.year;
                 viewMonth_ = now.date.month;
                 scrollY_ = 0;
@@ -700,6 +853,7 @@ LRESULT ImsakiyeWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
                 InvalidateRect(hWnd, nullptr, FALSE);
             } else if (hit == BtnId::Ramadan) {
                 ramadanMode_ = !ramadanMode_;
+                daysMode_ = false;
                 if (ramadanMode_) {
                     LocalDateTime now = ScheduleService::GetCurrentLocalDateTime();
                     ramadanStart_ = FindNextOrCurrentRamadanStart(now.date);
@@ -707,6 +861,17 @@ LRESULT ImsakiyeWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
                 scrollY_ = 0;
                 LoadRows();
                 InvalidateRect(hWnd, nullptr, FALSE);
+            } else if (hit == BtnId::Days) {
+                daysMode_ = !daysMode_;
+                if (daysMode_) {
+                    ramadanMode_ = false;
+                    viewYear_ = ScheduleService::GetCurrentLocalDateTime().date.year;
+                }
+                scrollY_ = 0;
+                LoadRows();
+                InvalidateRect(hWnd, nullptr, FALSE);
+            } else if (daysMode_ && (hit == BtnId::Sync || hit == BtnId::ExportCsv || hit == BtnId::ExportHtml)) {
+                // Sync/export only apply to the prayer-time tables.
             } else if (hit == BtnId::Sync) {
                 StartBackgroundSync();
             } else if (hit == BtnId::ExportCsv) {

@@ -610,10 +610,28 @@ constexpr LangRow kUiStrings[] = {
     // EidPrayerTitle
     {L"Bayram namazı hatırlatması", L"Eid prayer reminder", L"تذكير بصلاة العيد", L"Erinnerung: Festgebet", L"Rappel de la prière de l'Aïd", L"Pengingat salat Id", L"نمازِ عید کی یاد دہانی", L"ঈদের নামাজের রিমাইন্ডার", L"Peringatan solat sunat Hari Raya", L"یادآوری نماز عید", L"Напоминание о праздничном намазе", L"Recordatorio de la oración del Eid"},
     // EidPrayerBody
-    {L"Yarın %ls namazı yaklaşık saat %ls (%ls).", L"Tomorrow's %ls prayer is at about %ls (%ls).", L"صلاة %ls غدًا نحو الساعة %ls (%ls).", L"Morgen: %ls-Gebet um ca. %ls Uhr (%ls).", L"Demain, prière de %ls vers %ls (%ls).", L"Besok salat %ls sekitar pukul %ls (%ls).", L"کل %ls کی نماز تقریباً %ls بجے (%ls)۔", L"আগামীকাল %ls-এর নামাজ প্রায় %ls টায় (%ls)।", L"Esok solat %ls sekitar pukul %ls (%ls).", L"فردا نماز %ls حدود ساعت %ls (%ls).", L"Завтра намаз %ls примерно в %ls (%ls).", L"Mañana, oración de %ls hacia las %ls (%ls)."}
+    {L"Yarın %ls namazı yaklaşık saat %ls (%ls).", L"Tomorrow's %ls prayer is at about %ls (%ls).", L"صلاة %ls غدًا نحو الساعة %ls (%ls).", L"Morgen: %ls-Gebet um ca. %ls Uhr (%ls).", L"Demain, prière de %ls vers %ls (%ls).", L"Besok salat %ls sekitar pukul %ls (%ls).", L"کل %ls کی نماز تقریباً %ls بجے (%ls)۔", L"আগামীকাল %ls-এর নামাজ প্রায় %ls টায় (%ls)।", L"Esok solat %ls sekitar pukul %ls (%ls).", L"فردا نماز %ls حدود ساعت %ls (%ls).", L"Завтра намаз %ls примерно в %ls (%ls).", L"Mañana, oración de %ls hacia las %ls (%ls)."},
+    // BtnReligiousDays
+    {L"Dini Günler", L"Holy days", L"المناسبات", L"Feiertage", L"Fêtes", L"Hari besar", L"اسلامی دن", L"ইসলামী দিবস", L"Hari kebesaran", L"مناسبت‌ها", L"Праздники", L"Fechas"},
+    // ColReligiousDay
+    {L"Dini gün", L"Holy day", L"المناسبة", L"Feiertag", L"Fête", L"Hari besar", L"اسلامی دن", L"দিবস", L"Hari", L"مناسبت", L"Праздник", L"Fecha"},
+    // ColDaysLeft
+    {L"Kalan", L"Remaining", L"المتبقي", L"Noch", L"Reste", L"Sisa", L"باقی", L"বাকি", L"Berbaki", L"مانده", L"Осталось", L"Faltan"},
+    // HolEidFitrEve
+    {L"Ramazan Bayramı Arifesi", L"Eve of Eid al-Fitr", L"عشية عيد الفطر", L"Vorabend des Ramadanfests", L"Veille de l'Aïd al-Fitr", L"Malam Idul Fitri", L"عید الفطر سے پہلے کا دن", L"ঈদুল ফিতরের আগের দিন", L"Malam Hari Raya Aidilfitri", L"آستانه عید فطر", L"Канун Ураза-байрама", L"Víspera del Eid al-Fitr"},
+    // DaysLeftToday
+    {L"Bugün", L"Today", L"اليوم", L"Heute", L"Aujourd'hui", L"Hari ini", L"آج", L"আজ", L"Hari ini", L"امروز", L"Сегодня", L"Hoy"},
+    // DaysLeftTomorrow
+    {L"Yarın", L"Tomorrow", L"غدًا", L"Morgen", L"Demain", L"Besok", L"کل", L"আগামীকাল", L"Esok", L"فردا", L"Завтра", L"Mañana"},
+    // DaysLeftFmt
+    {L"%d gün", L"%d days", L"%d يومًا", L"%d Tage", L"%d jours", L"%d hari", L"%d دن", L"%d দিন", L"%d hari", L"%d روز", L"%d дн.", L"%d días"},
+    // CdIftar
+    {L"İftara kalan", L"Until Iftar", L"المتبقي للإفطار", L"Bis Iftar", L"Avant l'Iftar", L"Menuju berbuka", L"افطار میں باقی", L"ইফতারের বাকি", L"Menuju berbuka", L"تا افطار", L"До ифтара", L"Para el iftar"},
+    // CdSahur
+    {L"Sahura kalan", L"Until Suhoor", L"المتبقي للسحور", L"Bis Sahur", L"Avant le Suhoor", L"Menuju sahur", L"سحری میں باقی", L"সাহরির বাকি", L"Menuju sahur", L"تا سحر", L"До сухура", L"Para el suhur"}
 };
 
-static_assert(sizeof(kUiStrings) / sizeof(kUiStrings[0]) == static_cast<size_t>(StrId::EidPrayerBody) + 1, "kUiStrings mismatch");
+static_assert(sizeof(kUiStrings) / sizeof(kUiStrings[0]) == static_cast<size_t>(StrId::CdSahur) + 1, "kUiStrings mismatch");
 
 constexpr std::array<LangRow, 6> kPrayerNames = {{
     {L"İmsak",  L"Fajr",    L"الفجر",   L"Fadschr",  L"Fajr",    L"Subuh", L"فجر", L"ফজর", L"Subuh", L"صبح", L"Фаджр", L"Fajr"},

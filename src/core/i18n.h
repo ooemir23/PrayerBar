@@ -286,7 +286,16 @@ enum class StrId : int {
     ChkTaskbarLogo,
     ChkNotifyAll,
     EidPrayerTitle,
-    EidPrayerBody  // %ls = holiday name, %ls = prayer time, %ls = city
+    EidPrayerBody,  // %ls = holiday name, %ls = prayer time, %ls = city
+    BtnReligiousDays,
+    ColReligiousDay,
+    ColDaysLeft,
+    HolEidFitrEve,
+    DaysLeftToday,
+    DaysLeftTomorrow,
+    DaysLeftFmt,  // %d = days
+    CdIftar,
+    CdSahur
 };
 
 AppLanguage ResolveEffectiveLanguage(AppLanguage configured);

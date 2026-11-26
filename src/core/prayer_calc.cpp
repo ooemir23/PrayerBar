@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <map>
 #include <cstdio>
 
 namespace vakit {
@@ -422,6 +423,13 @@ HijriDateYMD GregorianToHijri(DateYMD date) {
 }
 
 DateYMD FindNextOrCurrentRamadanStart(DateYMD refDate) {
+    for (int y = refDate.year - 1; y <= refDate.year + 1; ++y) {
+        for (const auto& r : ListReligiousDays(y)) {
+            if (r.id != HolidayId::RamadanStart) continue;
+            int64_t off = refDate.ToEpochDays() - r.date.ToEpochDays();
+            if (off < 30) return r.date;  // current Ramadan (0..29) or the next one
+        }
+    }
     HijriDateYMD h = GregorianToHijri(refDate);
     if (h.month == 9) {
         DateYMD cur = refDate;
@@ -487,22 +495,77 @@ ExtraTimes ComputeExtraTimes(const DailyPrayerTimes& today, TimeHM tomorrowImsak
     return x;
 }
 
+namespace {
+
+// Diyanet's published 2026 calendar (the tabular Hijri calendar can be a day off from it).
+// shortcut: only 2026 is hard-coded; other years use the tabular calendar. Add a year here when Diyanet publishes it.
+std::vector<ReligiousDay> Diyanet2026() {
+    auto d = [](int m, int day) { return DateYMD{2026, m, day}; };
+    return {
+        {d(1, 15), HolidayId::Miraj, true, 1, false},
+        {d(2, 2), HolidayId::Barat, true, 1, false},
+        {d(2, 19), HolidayId::RamadanStart, false, 1, false},
+        {d(3, 16), HolidayId::Qadr, true, 1, false},
+        {d(3, 19), HolidayId::EidFitr, false, 1, true},
+        {d(3, 20), HolidayId::EidFitr, false, 3, false},
+        {d(5, 26), HolidayId::Arafah, false, 1, false},
+        {d(5, 27), HolidayId::EidAdha, false, 4, false},
+        {d(6, 16), HolidayId::HijriNewYear, false, 1, false},
+        {d(6, 25), HolidayId::Ashura, false, 1, false},
+        {d(8, 24), HolidayId::Mawlid, true, 1, false},
+        {d(12, 10), HolidayId::Raghaib, true, 1, false},
+    };
+}
+
+std::vector<ReligiousDay> TabularReligiousDays(int year) {
+    struct DayType { int m, d; HolidayId id; int span; };
+    static constexpr DayType kDay[] = {
+        {1, 1, HolidayId::HijriNewYear, 1}, {1, 10, HolidayId::Ashura, 1}, {9, 1, HolidayId::RamadanStart, 1},
+        {10, 1, HolidayId::EidFitr, 3},     {12, 9, HolidayId::Arafah, 1}, {12, 10, HolidayId::EidAdha, 4},
+    };
+    struct NightType { int m, d; HolidayId id; };
+    static constexpr NightType kNight[] = {
+        {3, 12, HolidayId::Mawlid}, {7, 27, HolidayId::Miraj}, {8, 15, HolidayId::Barat}, {9, 27, HolidayId::Qadr},
+    };
+    std::vector<ReligiousDay> out;
+    for (DateYMD d{year, 1, 1}; d.year == year; d = d.AddDays(1)) {
+        HijriDateYMD h = GregorianToHijri(d);
+        for (const auto& e : kDay) {
+            if (h.month != e.m || h.day != e.d) continue;
+            if (e.id == HolidayId::EidFitr) out.push_back({d.AddDays(-1), e.id, false, 1, true});
+            out.push_back({d, e.id, false, e.span, false});
+        }
+        // Kandil nights: the evening before the Hijri day starts.
+        for (const auto& e : kNight) {
+            if (h.month == e.m && h.day == e.d) out.push_back({d.AddDays(-1), e.id, true, 1, false});
+        }
+        // Raghaib: the night before the first Friday of Rajab.
+        if (h.month == 7 && h.day <= 7 && d.DayOfWeek() == 5) out.push_back({d.AddDays(-1), HolidayId::Raghaib, true, 1, false});
+    }
+    return out;
+}
+
+} // namespace
+
+const std::vector<ReligiousDay>& ListReligiousDays(int year) {
+    static std::map<int, std::vector<ReligiousDay>> cache;
+    auto it = cache.find(year);
+    if (it != cache.end()) return it->second;
+    std::vector<ReligiousDay> v = (year == 2026) ? Diyanet2026() : TabularReligiousDays(year);
+    std::sort(v.begin(), v.end(), [](const ReligiousDay& a, const ReligiousDay& b) {
+        return a.date.ToEpochDays() < b.date.ToEpochDays();
+    });
+    return cache.emplace(year, std::move(v)).first->second;
+}
+
 HolidayEve FindHolidayStartingTomorrow(DateYMD today) {
     DateYMD tomorrow = today.AddDays(1);
-    HijriDateYMD h = GregorianToHijri(tomorrow);
-    struct Entry { int m, d; HolidayId id; bool night; };
-    static constexpr Entry kList[] = {
-        {1, 1, HolidayId::HijriNewYear, false}, {1, 10, HolidayId::Ashura, false},
-        {3, 12, HolidayId::Mawlid, true},       {7, 27, HolidayId::Miraj, true},
-        {8, 15, HolidayId::Barat, true},        {9, 1, HolidayId::RamadanStart, false},
-        {9, 27, HolidayId::Qadr, true},         {10, 1, HolidayId::EidFitr, false},
-        {12, 9, HolidayId::Arafah, false},      {12, 10, HolidayId::EidAdha, false},
-    };
-    for (const auto& e : kList) {
-        if (h.month == e.m && h.day == e.d) return {e.id, e.night};
+    for (int y : {today.year, tomorrow.year}) {
+        for (const auto& r : ListReligiousDays(y)) {
+            if (r.isArife) continue;
+            if (r.isNight ? (r.date == today) : (r.date == tomorrow)) return {r.id, r.isNight};
+        }
     }
-    // Regaib: the night before the first Friday of Rajab
-    if (h.month == 7 && h.day <= 7 && tomorrow.DayOfWeek() == 5) return {HolidayId::Raghaib, true};
     return {};
 }
 

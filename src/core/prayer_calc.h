@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "models.h"
 #include <string>
 #include <string_view>
@@ -49,8 +51,18 @@ struct HolidayEve {
     HolidayId id = HolidayId::None;
     bool isNight = false;  // kandil-type nights are observed on the evening of `today`
 };
-// Holiday whose day starts tomorrow (tabular Hijri calendar; may differ from local sighting by a day).
+// Holiday whose day starts tomorrow (Diyanet table where known, otherwise tabular Hijri calendar; may differ from local sighting by a day).
 HolidayEve FindHolidayStartingTomorrow(DateYMD today);
+
+// One religious day/night on the Gregorian calendar. Kandil-type nights carry the evening's date (as Diyanet lists them).
+struct ReligiousDay {
+    DateYMD date;
+    HolidayId id = HolidayId::None;
+    bool isNight = false;
+    int span = 1;            // Eid lasts 3 (Fitr) / 4 (Adha) days from `date`
+    bool isArife = false;    // eve of Ramadan Eid (id == EidFitr)
+};
+const std::vector<ReligiousDay>& ListReligiousDays(int gregorianYear);
 
 std::wstring FormatTurkishHijriDate(DateYMD date);
 const wchar_t* TranslateHijriMonthName(int monthNumber);
