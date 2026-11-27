@@ -1,10 +1,12 @@
 ﻿param(
     [ValidateSet("x64")]
     [string]$Arch = "x64",
-    [switch]$CreateTestCert
+    [switch]$CreateTestCert,
+    [switch]$SkipGitSyncCheck
 )
 
 $ErrorActionPreference = "Stop"
+$ProgressPreference = "SilentlyContinue"
 
 $repoRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 $configPath = Join-Path $repoRoot "packaging\store.config.json"
@@ -14,6 +16,44 @@ $releaseDir = Join-Path $repoRoot "dist\release"
 $storeMsixSrc = Join-Path $repoRoot "dist\PrayerBar_${ver}_${Arch}_Store.msix"
 $storeMsixDst = Join-Path $releaseDir "PrayerBar_${ver}_${Arch}_Store.msix"
 $portableZip = Join-Path $releaseDir "PrayerBar_${ver}_${Arch}_Portable.zip"
+
+Write-Host "=== [0/4] Verifying version & GitHub (origin/main) parity ==="
+$commercialConfigPath = Join-Path $repoRoot "src\core\commercial_config.h"
+$commercialConfigRaw = Get-Content $commercialConfigPath -Raw -Encoding UTF8
+$verMatch = [regex]::Match($commercialConfigRaw, 'kAppVersionW\s*=\s*L"([^"]+)"')
+if (-not $verMatch.Success) {
+    throw "Could not parse kAppVersionW from $commercialConfigPath"
+}
+$cppVersion = $verMatch.Groups[1].Value
+if ($cppVersion -ne $ver) {
+    throw "Version mismatch: commercial_config.h ($cppVersion) != packaging/store.config.json ($ver)"
+}
+
+if (-not $SkipGitSyncCheck) {
+    Push-Location $repoRoot
+    try {
+        $dirty = (& git status --porcelain)
+        if ($LASTEXITCODE -ne 0) { throw "git status failed." }
+        if ($dirty) {
+            throw "Refusing to package a Store release with uncommitted changes. Commit and push to origin/main first."
+        }
+        & git fetch origin main
+        if ($LASTEXITCODE -ne 0) {
+            throw "git fetch origin main failed. Connect to GitHub and sync origin/main (or pass -SkipGitSyncCheck only for local non-Store tests)."
+        }
+        $headSha = (& git rev-parse HEAD).Trim()
+        $originSha = (& git rev-parse origin/main).Trim()
+        if ($LASTEXITCODE -ne 0 -or -not $headSha -or -not $originSha) {
+            throw "Could not resolve HEAD or origin/main commit SHA."
+        }
+        if ($headSha -ne $originSha) {
+            throw "Store/GitHub parity check failed: HEAD ($headSha) != origin/main ($originSha). Sync/push origin/main before building a Store release."
+        }
+        Write-Host "Parity OK: v$ver at origin/main ($headSha)"
+    } finally {
+        Pop-Location
+    }
+}
 
 foreach ($path in @($storeMsixSrc, $storeMsixDst, $portableZip)) {
     if (Test-Path $path) {
