@@ -3,17 +3,34 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PrayerBar — Windows 10 &amp; 11 Taskbar Prayer Times</title>
-  <meta name="description" content="A quiet native Windows 10 & 11 taskbar countdown for daily prayer times. ~3 MB RAM, 0% idle CPU, 23 global methods, 12 languages, and Ramadan Imsakiye." />
+  <title>PrayerBar — Namaz Vakitleri, Ezan Hatırlatıcı ve İmsakiye | Windows Prayer Times</title>
+  <meta name="description" content="Windows 10 ve 11 görev çubuğunda canlı namaz vakitleri, ezan sesiyle bildirim, vakit öncesi hatırlatma, aylık ve Ramazan imsakiyesi, iftar/sahur sayacı ve kıble pusulası." />
   <link rel="canonical" href="https://prayerbar.ooemir.com/" />
   <link rel="icon" type="image/png" href="/favicon.png" />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://prayerbar.ooemir.com/" />
-  <meta property="og:title" content="PrayerBar — Windows 10 &amp; 11 Taskbar Prayer Times" />
-  <meta property="og:description" content="A quiet native Windows 10 & 11 taskbar countdown for daily prayer times. ~3 MB RAM, 0% idle CPU, 23 methods, 12 languages." />
+  <meta property="og:title" content="PrayerBar — Namaz Vakitleri, Ezan Hatırlatıcı ve İmsakiye | Windows Prayer Times" />
+  <meta property="og:description" content="Windows görev çubuğunda günlük namaz vakitleri, ezan hatırlatıcı, aylık ve Ramazan imsakiyesi, iftar/sahur sayacı ve kıble yönü. Reklamsız ve internetsiz çalışır." />
   <meta property="og:image" content="https://prayerbar.ooemir.com/images/og-card.png" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:image" content="https://prayerbar.ooemir.com/images/og-card.png" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "PrayerBar",
+    "operatingSystem": "Windows 10, Windows 11",
+    "applicationCategory": "LifestyleApplication",
+    "url": "https://prayerbar.ooemir.com/",
+    "downloadUrl": "https://apps.microsoft.com/detail/9MSQBZTPGWX6",
+    "description": "Windows görev çubuğunda canlı namaz vakti geri sayımı, ezan sesiyle bildirim, aylık ve Ramazan imsakiyesi, iftar/sahur sayacı ve kıble pusulası.",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
   <style>
     :root {
       --bg: #f3f3f3;
@@ -1090,6 +1107,31 @@
     .footer-links a { color: var(--ink-secondary); text-decoration: none; }
     .footer-links a:hover { color: var(--ink); text-decoration: underline; }
 
+    /* City Directory Strip */
+    .seo-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .seo-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 12px;
+      border-radius: 99px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--ink-secondary);
+      font-size: 13.5px;
+      font-weight: 500;
+      text-decoration: none;
+      transition: border-color 0.12s, background-color 0.12s, color 0.12s;
+    }
+    .seo-chip:hover {
+      background: var(--accent-tint);
+      border-color: var(--accent-border);
+      color: var(--accent);
+    }
+
     @media (max-width: 920px) {
       .playground-body { grid-template-columns: 1fr; }
       .controls-panel { border-right: 0; border-bottom: 1px solid var(--border); }
@@ -1108,6 +1150,9 @@
         <span>PrayerBar</span>
       </a>
       <nav class="nav-links" aria-label="Main">
+        <a href="/namaz-vakitleri" id="navCityHub" data-i18n="navCities">Namaz Vakitleri</a>
+        <a href="/imsakiye" data-i18n="navImsakiye">İmsakiye</a>
+        <a href="/ezan-vakti-programi" data-i18n="navProgram">Ezan Programı</a>
         <a href="#playground" data-i18n="navDemo">Canlı Önizleme</a>
         <a href="#specs" data-i18n="navSpecs">Özellikler</a>
         <a href="#pricing" data-i18n="navPricing">Fiyatlandırma</a>
@@ -1128,13 +1173,13 @@
 
   <main class="container">
     <section class="hero">
-      <h1 data-i18n="heroTitle">Namaz vakitleri, Windows görev çubuğunda.</h1>
-      <p class="hero-lead" data-i18n="heroLead">Arka planda ~3 MB bellek kullanan, reklamsız ve internetsiz çalışabilen sade Windows 10 &amp; 11 aracı. Görev çubuğuna yerleşir, vaktinde haber verir.</p>
+      <h1 data-i18n="heroTitle">Namaz vakitleri, ezan ve imsakiye — Windows görev çubuğunda.</h1>
+      <p class="hero-lead" data-i18n="heroLead">Sıradaki ezan vaktine kalan süreyi görev çubuğunuzda görün; vaktinde ve öncesinde hatırlatma alın, aylık ve Ramazan imsakiyesini takip edin. Reklamsız ve internetsiz de çalışır.</p>
       <div class="hero-cta">
         <a href="https://apps.microsoft.com/detail/9MSQBZTPGWX6" target="_blank" rel="noopener" class="btn btn-primary" data-i18n="ctaStore">Microsoft Store'dan İndir</a>
         <a href="#playground" class="btn btn-secondary" id="jumpDemoBtn" data-i18n="ctaDemo">Özellikleri Canlı Göster</a>
       </div>
-      <p class="hero-meta" data-i18n="heroMeta">Windows 10 / 11 (x64) · Çekirdek sürüm ücretsiz · 14 gün Pro deneme · Hesap gerekmez</p>
+      <p class="hero-meta" data-i18n="heroMeta">Windows 10 / 11 · Diyanet ve 23 metot · Çekirdek sürüm ücretsiz · Reklamsız · Hesap gerekmez</p>
     </section>
 
     <!-- INTERACTIVE PLAYGROUND ("Özellikleri Göster") -->
@@ -1238,7 +1283,7 @@
             </div>
 
             <div class="controls-footer-note" data-i18n="controlsNote">
-              Gerçek Windows uygulaması C++20 &amp; GDI+ ile derlenir (~3 MB RAM). Bu alan uygulama davranışını birebir gösterir.
+              Gerçek Windows uygulamasının görev çubuğu, ezan uyarıları ve imsakiye görünümünü burada canlı deneyebilirsiniz.
             </div>
           </aside>
 
@@ -1404,13 +1449,13 @@
     <!-- REAL NATIVE APP RENDERS -->
     <section class="section" id="renders">
       <div class="section-head">
-        <h2 data-i18n="rendersTitle">Doğrudan Uygulamadan Gerçek Çıktılar</h2>
-        <p data-i18n="rendersLead">Pazarlama görseli değil; PrayerBar.exe'nin kendi GDI+ çizim motorunun ürettiği gerçek pencere görüntüleri.</p>
+        <h2 data-i18n="rendersTitle">Doğrudan Uygulamadan Ekran Görüntüleri</h2>
+        <p data-i18n="rendersLead">Vakit listesi, canlı Kıble pusulası ve görev çubuğu açılır penceresinin gerçek görünümleri.</p>
       </div>
       <div class="renders-grid">
         <figure class="render-card" style="margin:0">
           <img src="/images/flyout-compact.png" alt="PrayerBar Compact Fluent Flyout" loading="lazy" />
-          <figcaption class="render-caption" data-i18n="ren1Title">Kompakt Fluent</figcaption>
+          <figcaption class="render-caption" data-i18n="ren1Title">Kompakt Görünüm</figcaption>
           <div class="render-sub" data-i18n="ren1Sub">Günlük vakit listesi, ilerleme çubuğu ve ek vakitler</div>
         </figure>
         <figure class="render-card" style="margin:0">
@@ -1429,33 +1474,33 @@
     <!-- TECHNICAL SPECS -->
     <section class="section" id="specs">
       <div class="section-head">
-        <h2 data-i18n="specsTitle">Ne Yapar, Ne Yapmaz?</h2>
-        <p data-i18n="specsLead">Electron, WebView veya arka plan servisleri yok. Doğrudan Win32 / C++20 olarak çalışır.</p>
+        <h2 data-i18n="specsTitle">Günlük Kullanımda Neler Sunar?</h2>
+        <p data-i18n="specsLead">Namaz vakitleri, ezan hatırlatıcı, aylık imsakiye ve Kıble pusulası masaüstünüze sade bir şekilde yerleşir.</p>
       </div>
       <dl class="spec-grid">
         <div class="spec-item">
-          <dt data-i18n="sp1T">Bellek ve İşlemci (~3 MB RAM, %0 CPU)</dt>
-          <dd data-i18n="sp1D">Uyku/uyanma sonrası anında güncellenir, boşta sıfır CPU harcar. Eski dizüstü bilgisayarlarda dahi fark edilmez.</dd>
+          <dt data-i18n="sp1T">Görev Çubuğunda Canlı Geri Sayım</dt>
+          <dd data-i18n="sp1D">Bilgisayarı yormadan ve pili tüketmeden arka planda sessizce çalışır; uyku sonrası vakti anında günceller.</dd>
         </div>
         <div class="spec-item">
-          <dt data-i18n="sp2T">Sadeleştirilmiş Menü &amp; Ayarlar</dt>
-          <dd data-i18n="sp2D">Karmaşık iç içe alt menüler yerine tek bakışta okunan sağ-tık menüsü ve canlı görev çubuğu önizlemeli Ayarlar penceresi.</dd>
+          <dt data-i18n="sp2T">Ezan Sesleri ve Vakit Öncesi Uyarı</dt>
+          <dd data-i18n="sp2D">6 vaktin her biri için ayrı bildirim, 5–60 dakika önce hatırlatma ve kısa/uzun ezan veya zil seçimi sunar.</dd>
         </div>
         <div class="spec-item">
-          <dt data-i18n="sp3T">23 Metod &amp; Tam Çevrimdışı Çalışma</dt>
-          <dd data-i18n="sp3D">Diyanet, MWL, ISNA, Ümmü'l-Kura, Mısır, Karaçi dahil 23 metod. İnternet kesilse bile dahili astronomik hesaplama sürer.</dd>
+          <dt data-i18n="sp3T">Diyanet ve 23 Dünya Hesaplama Metodu</dt>
+          <dd data-i18n="sp3D">Diyanet, MWL, ISNA, Ümmü'l-Kura, Mısır, Karaçi dahil 23 metot. İnternet kesilse bile vakitleri hesaplamaya devam eder.</dd>
         </div>
         <div class="spec-item">
-          <dt data-i18n="sp4T">Tam Ekran &amp; Oyun Sessiz Modu</dt>
+          <dt data-i18n="sp4T">Oyun ve Toplantı Sessiz Modu</dt>
           <dd data-i18n="sp4D">Oyun oynarken, film izlerken veya sunum yaparken ezan ve uyarı seslerini otomatik susturur.</dd>
         </div>
         <div class="spec-item">
-          <dt data-i18n="sp5T">12 Dil ve Özel Vakit İsimleri</dt>
-          <dd data-i18n="sp5D">Türkçe, İngilizce, Arapça (tam RTL), Almanca, Fransızca, Endonezce, Urduca, Bengalce, Malayca, Farsça, Rusça, İspanyolca.</dd>
+          <dt data-i18n="sp5T">Ramazan İmsakiyesi &amp; 12 Dil Desteği</dt>
+          <dd data-i18n="sp5D">Ramazan'da otomatik İftar/Sahur geri sayımına geçer; Türkçe, İngilizce, Arapça ve 9 dilde daha kullanılabilir.</dd>
         </div>
         <div class="spec-item">
-          <dt data-i18n="sp6T">Sıfır Telemetri, Sıfır Reklam</dt>
-          <dd data-i18n="sp6D">Hesap açılmaz, izleme kodu bulunmaz. Tüm tercihler yalnızca yerel %LocalAppData%\PrayerBar klasöründe tutulur.</dd>
+          <dt data-i18n="sp6T">Sıfır Reklam, Sıfır Takip</dt>
+          <dd data-i18n="sp6D">Hesap açılmaz, reklam gösterilmez. Tüm ayarlar yalnızca kendi bilgisayarınızda saklanır.</dd>
         </div>
       </dl>
     </section>
@@ -1515,21 +1560,55 @@
       </div>
       <div class="faq-list">
         <details>
-          <summary data-i18n="fq1Q">Neden sadece ~3 MB RAM harcıyor?</summary>
-          <p data-i18n="fq1A">PrayerBar içinde tarayıcı motoru (Electron / WebView2) barındırmaz. Doğrudan C++20 ve Windows Win32/GDI+ API'leri ile yazıldığı için bellek ve pil tüketimi minimumdur.</p>
+          <summary data-i18n="fq1Q">Bilgisayarı yavaşlatır mı veya çok pil tüketir mi?</summary>
+          <p data-i18n="fq1A">Hayır. Windows için doğrudan hafif bir masaüstü aracı olarak tasarlandığı için arka planda bellek ve işlemciyi neredeyse hiç kullanmaz, eski laptoplarda bile kasma yapmaz.</p>
         </details>
         <details>
           <summary data-i18n="fq2Q">İnternet bağlantısı olmadan çalışır mı?</summary>
-          <p data-i18n="fq2A">Evet. Aylık eşitlemeyi kapatsanız veya internetiniz kesilse bile dahili astronomik hesaplama motoru bulunduğunuz koordinat ve metoda göre vakitleri yerel olarak hesaplar.</p>
+          <p data-i18n="fq2A">Evet. İnternet kesilse bile bulunduğunuz şehir ve metoda göre imsak, güneş, öğle, ikindi, akşam ve yatsı vakitlerini yerel olarak hesaplamaya devam eder.</p>
         </details>
         <details>
-          <summary data-i18n="fq3Q">Oyun veya toplantı sırasında ses çıkarır mı?</summary>
+          <summary data-i18n="fq3Q">Oyun veya toplantı sırasında ezan sesi çıkarır mı?</summary>
           <p data-i18n="fq3A">Tam ekran sessiz modu açıkken oyun, video veya sunum sırasında ezan ve bildirim seslerini otomatik olarak susturur.</p>
         </details>
         <details>
           <summary data-i18n="fq4Q">Ücretsiz sürümde süre veya özellik kısıtı var mı?</summary>
           <p data-i18n="fq4A">Vakitler, geri sayım, günlük bildirimler, dahili ezanlar ve imsakiye görüntüleme süre sınırı olmadan sonsuza kadar ücretsizdir. Yalnızca ekstra temalar, özel MP3 ve dışa aktarım araçları 5 günlük deneme sonrası Pro gerektirir.</p>
         </details>
+      </div>
+    </section>
+
+    <!-- CITY DIRECTORY HUB LINKS -->
+    <section class="section" id="cities-directory">
+      <div class="section-head">
+        <h2 data-i18n="dirTitle">Şehirlere Göre Namaz Vakitleri ve İmsakiye</h2>
+        <p data-i18n="dirLead">Türkiye'deki 81 il ve dünya şehirleri için bugünkü ezan saatlerine ve 30 günlük imsakiye tablolarına doğrudan ulaşın.</p>
+      </div>
+      <div class="seo-chips" style="margin-bottom:14px">
+        <a class="seo-chip" href="/namaz-vakitleri/istanbul">İstanbul Namaz Vakitleri</a>
+        <a class="seo-chip" href="/namaz-vakitleri/ankara">Ankara Namaz Vakitleri</a>
+        <a class="seo-chip" href="/namaz-vakitleri/izmir">İzmir Namaz Vakitleri</a>
+        <a class="seo-chip" href="/namaz-vakitleri/bursa">Bursa Namaz Vakitleri</a>
+        <a class="seo-chip" href="/namaz-vakitleri/antalya">Antalya Namaz Vakitleri</a>
+        <a class="seo-chip" href="/namaz-vakitleri/adana">Adana Namaz Vakitleri</a>
+        <a class="seo-chip" href="/namaz-vakitleri/konya">Konya Namaz Vakitleri</a>
+        <a class="seo-chip" href="/namaz-vakitleri/gaziantep">Gaziantep Namaz Vakitleri</a>
+        <a class="seo-chip" href="/namaz-vakitleri/sanliurfa">Şanlıurfa Namaz Vakitleri</a>
+        <a class="seo-chip" href="/namaz-vakitleri/kocaeli">Kocaeli Namaz Vakitleri</a>
+        <a class="seo-chip" href="/imsakiye" style="font-weight:600;color:var(--accent)">81 İl İmsakiye →</a>
+        <a class="seo-chip" href="/ezan-vakti-programi" style="font-weight:600;color:var(--accent)">Bilgisayar Ezan Programı →</a>
+        <a class="seo-chip" href="/namaz-vakitleri" style="font-weight:600;color:var(--accent)">Tüm 81 İl →</a>
+      </div>
+      <div class="seo-chips">
+        <a class="seo-chip" href="/prayer-times/london">London Prayer Times</a>
+        <a class="seo-chip" href="/prayer-times/berlin">Berlin Prayer Times</a>
+        <a class="seo-chip" href="/prayer-times/paris">Paris Prayer Times</a>
+        <a class="seo-chip" href="/prayer-times/newyork">New York Prayer Times</a>
+        <a class="seo-chip" href="/prayer-times/makkah">Makkah Prayer Times</a>
+        <a class="seo-chip" href="/prayer-times/jakarta">Jakarta Prayer Times</a>
+        <a class="seo-chip" href="/prayer-times/riyadh">Riyadh Prayer Times</a>
+        <a class="seo-chip" href="/prayer-times/dubai">Dubai Prayer Times</a>
+        <a class="seo-chip" href="/prayer-times" style="font-weight:600;color:var(--accent)">All World Cities →</a>
       </div>
     </section>
 
@@ -1556,11 +1635,12 @@
 
     const T = {
       tr: {
+        navCities: "Namaz Vakitleri", navImsakiye: "İmsakiye", navProgram: "Ezan Programı",
         navDemo: "Canlı Önizleme", navSpecs: "Özellikler", navPricing: "Fiyatlandırma", navStore: "Microsoft Store",
-        heroTitle: "Namaz vakitleri, Windows görev çubuğunda.",
-        heroLead: "Arka planda ~3 MB bellek kullanan, reklamsız ve internetsiz çalışabilen sade Windows 10 & 11 aracı. Görev çubuğuna yerleşir, vaktinde haber verir.",
+        heroTitle: "Namaz vakitleri, ezan ve imsakiye — Windows görev çubuğunda.",
+        heroLead: "Sıradaki ezan vaktine kalan süreyi görev çubuğunuzda görün; vaktinde ve öncesinde hatırlatma alın, aylık ve Ramazan imsakiyesini takip edin. Reklamsız ve internetsiz de çalışır.",
         ctaStore: "Microsoft Store'dan İndir", ctaDemo: "Özellikleri Canlı Göster",
-        heroMeta: "Windows 10 / 11 (x64) · Çekirdek sürüm ücretsiz · 5 gün Pro deneme · Hesap gerekmez",
+        heroMeta: "Windows 10 / 11 · Diyanet ve 23 metot · Çekirdek sürüm ücretsiz · Reklamsız · Hesap gerekmez",
         tabTaskbar: "Görev Çubuğu", tabFlyout: "4 Açılır Pencere & Kıble", tabRamadan: "Ramazan & İmsakiye",
         tabAlerts: "Bildirim & Sessiz Mod", tabCities: "Şehir & 23 Metod",
         demoHint: "Sayaca tıkla: açılır pencere · Sağ tıkla: sade menü",
@@ -1575,7 +1655,7 @@
         lblAlerts: "Bildirimler & Oyun Modu", alDesc: "Her vakit için ayrı ön hatırlatma (5–60 dk) ve ezan seçimi. Tam ekran oyun, video veya sunumda sesi otomatik susturur.",
         optToast: "Windows bildirim kartı", optQuiet: "Oyun / Tam ekran sessiz modu",
         lblCities: "Şehir & Hesaplama Metodu", citDesc: "23 dünya hesaplama metodu, Hanefi/Standart ikindi seçimi ve internetsiz çalışma desteği.",
-        controlsNote: "Gerçek Windows uygulaması C++20 & GDI+ ile derlenir (~3 MB RAM). Bu alan uygulama davranışını birebir gösterir.",
+        controlsNote: "Gerçek Windows uygulamasının görev çubuğu, ezan uyarıları ve imsakiye görünümünü burada canlı deneyebilirsiniz.",
         gameTitle: "Tam ekran uygulama / oyun algılandı (1920×1080)", gameMuted: "Ses otomatik susturuldu",
         btnCsv: "CSV Dışa Aktar", btnHtml: "HTML Yazdır",
         colDay: "Gün", colFajr: "İmsak", colSun: "Güneş", colDhuhr: "Öğle", colAsr: "İkindi", colMaghrib: "Akşam", colIsha: "Yatsı",
@@ -1588,18 +1668,18 @@
         toastTitleTxt: "İkindi vakti girdi", toastMutedTxt: "Ezan susturuldu",
         ramBanner: "Ramazan Modu · İftara 02s 14d", stdBanner: "Kasım 2026 Takvimi",
         csvSaved: "prayerbar_2026_11.csv hazırlandı (örnek önizleme)", htmlSaved: "Yazdırılabilir HTML takvimi oluşturuldu (örnek önizleme)",
-        rendersTitle: "Doğrudan Uygulamadan Gerçek Çıktılar",
-        rendersLead: "Pazarlama görseli değil; PrayerBar.exe'nin kendi GDI+ çizim motorunun ürettiği gerçek pencere görüntüleri.",
-        ren1Title: "Kompakt Fluent", ren1Sub: "Günlük vakit listesi, ilerleme çubuğu ve ek vakitler",
+        rendersTitle: "Doğrudan Uygulamadan Ekran Görüntüleri",
+        rendersLead: "Vakit listesi, canlı Kıble pusulası ve görev çubuğu açılır penceresinin gerçek görünümleri.",
+        ren1Title: "Kompakt Görünüm", ren1Sub: "Günlük vakit listesi, ilerleme çubuğu ve ek vakitler",
         ren2Title: "2×3 Kart Izgara", ren2Sub: "Vakit yüzdesi halkası ve geniş tipografik kartlar",
         ren3Title: "Zaman Çizelgesi & Kıble", ren3Sub: "Canlı Kıble pusulası ve tüm güne göre kalan süreler",
-        specsTitle: "Ne Yapar, Ne Yapmaz?", specsLead: "Electron, WebView veya arka plan servisleri yok. Doğrudan Win32 / C++20 olarak çalışır.",
-        sp1T: "Bellek ve İşlemci (~3 MB RAM, %0 CPU)", sp1D: "Uyku/uyanma sonrası anında güncellenir, boşta sıfır CPU harcar. Eski dizüstü bilgisayarlarda dahi fark edilmez.",
-        sp2T: "Sadeleştirilmiş Menü & Ayarlar", sp2D: "Karmaşık iç içe alt menüler yerine tek bakışta okunan sağ-tık menüsü ve canlı görev çubuğu önizlemeli Ayarlar penceresi.",
-        sp3T: "23 Metod & Tam Çevrimdışı Çalışma", sp3D: "Diyanet, MWL, ISNA, Ümmü'l-Kura, Mısır, Karaçi dahil 23 metod. İnternet kesilse bile dahili astronomik hesaplama sürer.",
-        sp4T: "Tam Ekran & Oyun Sessiz Modu", sp4D: "Oyun oynarken, film izlerken veya sunum yaparken ezan ve uyarı seslerini otomatik susturur.",
-        sp5T: "12 Dil ve Özel Vakit İsimleri", sp5D: "Türkçe, İngilizce, Arapça (tam RTL), Almanca, Fransızca, Endonezce, Urduca, Bengalce, Malayca, Farsça, Rusça, İspanyolca.",
-        sp6T: "Sıfır Telemetri, Sıfır Reklam", sp6D: "Hesap açılmaz, izleme kodu bulunmaz. Tüm tercihler yalnızca yerel %LocalAppData%\\PrayerBar klasöründe tutulur.",
+        specsTitle: "Günlük Kullanımda Neler Sunar?", specsLead: "Namaz vakitleri, ezan hatırlatıcı, aylık imsakiye ve Kıble pusulası masaüstünüze sade bir şekilde yerleşir.",
+        sp1T: "Görev Çubuğunda Canlı Geri Sayım", sp1D: "Bilgisayarı yormadan ve pili tüketmeden arka planda sessizce çalışır; uyku sonrası vakti anında günceller.",
+        sp2T: "Ezan Sesleri ve Vakit Öncesi Uyarı", sp2D: "6 vaktin her biri için ayrı bildirim, 5–60 dakika önce hatırlatma ve kısa/uzun ezan veya zil seçimi sunar.",
+        sp3T: "Diyanet ve 23 Dünya Hesaplama Metodu", sp3D: "Diyanet, MWL, ISNA, Ümmü'l-Kura, Mısır, Karaçi dahil 23 metot. İnternet kesilse bile vakitleri hesaplamaya devam eder.",
+        sp4T: "Oyun ve Toplantı Sessiz Modu", sp4D: "Oyun oynarken, film izlerken veya sunum yaparken ezan ve uyarı seslerini otomatik susturur.",
+        sp5T: "Ramazan İmsakiyesi & 12 Dil Desteği", sp5D: "Ramazan'da otomatik İftar/Sahur geri sayımına geçer; Türkçe, İngilizce, Arapça ve 9 dilde daha kullanılabilir.",
+        sp6T: "Sıfır Reklam, Sıfır Takip", sp6D: "Hesap açılmaz, reklam gösterilmez. Tüm ayarlar yalnızca kendi bilgisayarınızda saklanır.",
         priceTitle: "Basit Fiyatlandırma", priceLead: "Temel namaz vakitleri, bildirimler ve aylık imsakiye daima ücretsiz ve reklamsızdır.",
         pFreeName: "Ücretsiz", pFreeSub: "Sonsuza kadar ücretsiz · Sıfır reklam",
         pf1: "23 hesaplama metodu ve çevrimdışı mod", pf2: "Temel görev çubuğu stilleri & Kompakt açılır ekran",
@@ -1614,18 +1694,21 @@
         pl3: "Microsoft Store üzerinden güvenli lisans doğrulama", pl4: "Abonelik veya yenileme ücreti yok",
         btnGetLife: "Microsoft Store'dan Al",
         faqTitle: "Sık Sorulanlar",
-        fq1Q: "Neden sadece ~3 MB RAM harcıyor?", fq1A: "PrayerBar içinde tarayıcı motoru (Electron / WebView2) barındırmaz. Doğrudan C++20 ve Windows Win32/GDI+ API'leri ile yazıldığı için bellek ve pil tüketimi minimumdur.",
-        fq2Q: "İnternet bağlantısı olmadan çalışır mı?", fq2A: "Evet. Aylık eşitlemeyi kapatsanız veya internetiniz kesilse bile dahili astronomik hesaplama motoru bulunduğunuz koordinat ve metoda göre vakitleri yerel olarak hesaplar.",
-        fq3Q: "Oyun veya toplantı sırasında ses çıkarır mı?", fq3A: "Tam ekran sessiz modu açıkken oyun, video veya sunum sırasında ezan ve bildirim seslerini otomatik olarak susturur.",
+        fq1Q: "Bilgisayarı yavaşlatır mı veya çok pil tüketir mi?", fq1A: "Hayır. Windows için doğrudan hafif bir masaüstü aracı olarak tasarlandığı için arka planda bellek ve işlemciyi neredeyse hiç kullanmaz, eski laptoplarda bile kasma yapmaz.",
+        fq2Q: "İnternet bağlantısı olmadan çalışır mı?", fq2A: "Evet. İnternet kesilse bile bulunduğunuz şehir ve metoda göre imsak, güneş, öğle, ikindi, akşam ve yatsı vakitlerini yerel olarak hesaplamaya devam eder.",
+        fq3Q: "Oyun veya toplantı sırasında ezan sesi çıkarır mı?", fq3A: "Tam ekran sessiz modu açıkken oyun, video veya sunum sırasında ezan ve bildirim seslerini otomatik olarak susturur.",
         fq4Q: "Ücretsiz sürümde süre veya özellik kısıtı var mı?", fq4A: "Vakitler, geri sayım, günlük bildirimler, dahili ezanlar ve imsakiye görüntüleme süre sınırı olmadan sonsuza kadar ücretsizdir. Yalnızca ekstra temalar, özel MP3 ve dışa aktarım araçları 5 günlük deneme sonrası Pro gerektirir.",
+        dirTitle: "Şehirlere Göre Namaz Vakitleri ve İmsakiye",
+        dirLead: "Türkiye'deki 81 il ve dünya şehirleri için bugünkü ezan saatlerine ve 30 günlük imsakiye tablolarına doğrudan ulaşın.",
         ftPrivacy: "Gizlilik Politikası", ftTerms: "Kullanım Koşulları"
       },
       en: {
-        navDemo: "Live Preview", navSpecs: "Specs", navPricing: "Pricing", navStore: "Microsoft Store",
-        heroTitle: "Prayer times, right in your Windows taskbar.",
-        heroLead: "A quiet native Windows 10 & 11 utility using ~3 MB RAM with zero ads and full offline calculation. Sits neatly beside your clock.",
+        navCities: "Prayer Times", navImsakiye: "Imsakiye", navProgram: "Windows App",
+        navDemo: "Live Preview", navSpecs: "Features", navPricing: "Pricing", navStore: "Microsoft Store",
+        heroTitle: "Prayer times, Adhan alerts & Ramadan schedule — on your Windows taskbar.",
+        heroLead: "See the live countdown to the next prayer right beside your clock, get Adhan and pre-prayer reminders, check monthly or Ramadan Imsakiye, and find Qibla — ad-free and offline-ready.",
         ctaStore: "Get on Microsoft Store", ctaDemo: "Show Features Live",
-        heroMeta: "Windows 10 / 11 (x64) · Core edition free forever · 5-day Pro trial · No account required",
+        heroMeta: "Windows 10 / 11 · 23 calculation methods · Free forever core · Ad-free · No account required",
         tabTaskbar: "Taskbar", tabFlyout: "4 Flyouts & Qibla", tabRamadan: "Ramadan & Imsakiye",
         tabAlerts: "Alerts & Quiet Mode", tabCities: "Cities & 23 Methods",
         demoHint: "Click pill: open flyout · Right-click: simplified menu",
@@ -1640,7 +1723,7 @@
         lblAlerts: "Alerts & Fullscreen Quiet Mode", alDesc: "Independent pre-prayer reminders (5–60 min) and Adhan choices. Automatically mutes during games, movies, or presentations.",
         optToast: "Windows notification toast", optQuiet: "Game / Fullscreen quiet mode",
         lblCities: "City & Calculation Method", citDesc: "23 global calculation methods, Hanafi/Standard Asr juristic rule, and offline fallback.",
-        controlsNote: "The real Windows app is built in native C++20 & GDI+ (~3 MB RAM). Every control here mirrors its actual behavior.",
+        controlsNote: "Try every taskbar layout, Adhan notification, and Ramadan Imsakiye mode live here before downloading.",
         gameTitle: "Fullscreen app / game detected (1920×1080)", gameMuted: "Audio auto-muted",
         btnCsv: "Export CSV", btnHtml: "Print HTML",
         colDay: "Day", colFajr: "Fajr", colSun: "Sunrise", colDhuhr: "Dhuhr", colAsr: "Asr", colMaghrib: "Maghrib", colIsha: "Isha",
@@ -1653,18 +1736,18 @@
         toastTitleTxt: "Asr prayer time", toastMutedTxt: "Adhan muted",
         ramBanner: "Ramadan Mode · Iftar in 02h 14m", stdBanner: "November 2026 Schedule",
         csvSaved: "prayerbar_2026_11.csv prepared (demo preview)", htmlSaved: "Printable HTML schedule generated (demo preview)",
-        rendersTitle: "Genuine App Renders",
-        rendersLead: "Unretouched GDI+ renders generated directly by PrayerBar.exe — no marketing illustrations.",
+        rendersTitle: "App Screenshots",
+        rendersLead: "Clean daily prayer lists, live Qibla compass, and taskbar flyout views straight from PrayerBar.",
         ren1Title: "Compact Fluent", ren1Sub: "Daily prayer list, progress bar, and optional Sunnah times",
         ren2Title: "2×3 Bento Cards", ren2Sub: "Elapsed interval ring and clean two-column cards",
         ren3Title: "Timeline & Qibla", ren3Sub: "Vector Qibla compass and relative time offsets for every prayer",
-        specsTitle: "What It Does — and What It Doesn't", specsLead: "No Electron, no WebView2, no background telemetry services. Compiled directly to native Win32 C++20.",
-        sp1T: "Memory & CPU (~3 MB RAM, 0% Idle)", sp1D: "Trims working set automatically, updates immediately on sleep/wake, and stays invisible on laptop batteries.",
-        sp2T: "Simplified Menu & Settings", sp2D: "Flat, scannable right-click menu with one-click mute and a live-preview Settings window without developer clutter.",
-        sp3T: "23 Methods & True Offline Mode", sp3D: "Diyanet, MWL, ISNA, Umm al-Qura, Egyptian, Karachi, Singapore, and more — plus built-in astronomical calculation offline.",
-        sp4T: "Fullscreen & Game Quiet Mode", sp4D: "Detects fullscreen games, videos, and Focus Assist to mute Adhan audio automatically.",
-        sp5T: "12 Languages & Custom Names", sp5D: "English, Turkish, Arabic (full RTL), German, French, Indonesian, Urdu, Bengali, Malay, Persian, Russian, Spanish.",
-        sp6T: "Zero Telemetry, Zero Ads", sp6D: "No accounts, no trackers. All preferences live locally under %LocalAppData%\\PrayerBar.",
+        specsTitle: "Built for Everyday Prayer Tracking", specsLead: "Daily Adhan reminders, Ramadan Suhoor/Iftar countdown, Qibla direction, and monthly schedules right on Windows.",
+        sp1T: "Always Visible on Your Taskbar", sp1D: "Runs quietly in the background without slowing down your laptop or draining battery, updating immediately on wake.",
+        sp2T: "Per-Prayer Adhan & Early Reminders", sp2D: "Customize on-time alerts, 5–60 min pre-prayer reminders, and built-in Adhan or soft chimes for each of the 6 times.",
+        sp3T: "23 Global Methods & Offline Support", sp3D: "ISNA, MWL, Umm al-Qura, Diyanet, Egyptian, Karachi, KEMENAG, JAKIM, and more — works offline anytime.",
+        sp4T: "Fullscreen & Game Quiet Mode", sp4D: "Automatically mutes Adhan audio during fullscreen games, movies, calls, or presentations.",
+        sp5T: "Ramadan Imsakiye & 12 Languages", sp5D: "Automatic Suhoor/Iftar countdown during Ramadan plus English, Arabic, Turkish, Urdu, Indonesian, and 7 more languages.",
+        sp6T: "Zero Ads, Zero Tracking", sp6D: "No sign-up, no ads, and no telemetry. All preferences stay on your own Windows PC.",
         priceTitle: "Simple, Honest Pricing", priceLead: "Core prayer times, daily reminders, and monthly/Ramadan schedules are free forever with zero ads.",
         pFreeName: "Free Edition", pFreeSub: "Forever free · Zero ads",
         pf1: "All 23 calculation methods & offline calculation", pf2: "Core taskbar styles & Compact Fluent flyout",
@@ -1679,18 +1762,21 @@
         pl3: "Synced securely via your Microsoft Store account", pl4: "No subscription or renewal fees",
         btnGetLife: "Get Lifetime Pro",
         faqTitle: "Questions",
-        fq1Q: "Why does it only use ~3 MB RAM?", fq1A: "PrayerBar contains no browser engine (no Electron or WebView2). It renders directly with native Win32 and GDI+ in C++20.",
-        fq2Q: "Does it work completely offline?", fq2A: "Yes. You can turn off monthly schedule sync anytime and rely entirely on the built-in astronomical calculation engine.",
+        fq1Q: "Will it slow down my PC or drain laptop battery?", fq1A: "No. PrayerBar is built as a lightweight native Windows desktop app that stays quiet in the background and preserves battery life.",
+        fq2Q: "Does it work completely offline?", fq2A: "Yes. You can rely on the built-in astronomical calculation engine for your city and calculation method even without an internet connection.",
         fq3Q: "Will Adhan play during fullscreen games or calls?", fq3A: "No when Fullscreen Quiet Mode is enabled — PrayerBar automatically detects fullscreen apps and Focus Assist and silences audio.",
         fq4Q: "Is there a time limit on the Free edition?", fq4A: "Never. Core prayer countdowns, reminders, built-in Adhans, and Imsakiye viewing remain free forever. Only extra themes, custom MP3 audio, and export tools require Pro after the 5-day trial.",
+        dirTitle: "Prayer Times & Imsakiye by City",
+        dirLead: "Browse today's Fajr, Dhuhr, Asr, Maghrib, and Isha schedule plus 30-day timetables for world and Turkish cities.",
         ftPrivacy: "Privacy Policy", ftTerms: "Terms & Refunds"
       },
       ar: {
-        navDemo: "معاينة مباشرة", navSpecs: "المواصفات", navPricing: "الأسعار", navStore: "Microsoft Store",
-        heroTitle: "مواقيت الصلاة مباشرة على شريط مهام ويندوز.",
-        heroLead: "أداة أصلية خفيفة لويندوز 10 و 11 تستهلك ~3 ميجابايت من الذاكرة فقط، بلا إعلانات وتعمل دون اتصال.",
+        navCities: "مواقيت الصلاة", navImsakiye: "الإمساكية", navProgram: "تطبيق ويندوز",
+        navDemo: "معاينة مباشرة", navSpecs: "الميزات", navPricing: "الأسعار", navStore: "Microsoft Store",
+        heroTitle: "مواقيت الصلاة والأذان والإمساكية مباشرة على شريط مهام ويندوز.",
+        heroLead: "تابع العد التنازلي للصلاة القادمة بجانب الساعة، مع تنبيهات الأذان والتذكير المسبق وإمساكية رمضان وبوصلة القبلة — بلا إعلانات ويعمل دون اتصال.",
         ctaStore: "احصل عليه من Microsoft Store", ctaDemo: "استعراض الميزات مباشرة",
-        heroMeta: "ويندوز 10 / 11 (x64) · النسخة الأساسية مجانية للأبد · تجربة Pro لـ 5 أيام · بدون تسجيل",
+        heroMeta: "ويندوز 10 / 11 · 23 طريقة حساب · النسخة الأساسية مجانية للأبد · بدون إعلانات",
         tabTaskbar: "شريط المهام", tabFlyout: "4 نوافذ منبثقة والقبلة", tabRamadan: "رمضان والإمساكية",
         tabAlerts: "التنبيهات والهدوء", tabCities: "المدن و 23 طريقة",
         demoHint: "انقر للنافذة المنبثقة · انقر باليمين للقائمة المبسطة",
@@ -1705,7 +1791,7 @@
         lblAlerts: "التنبيهات ووضع الألعاب", alDesc: "تذكير مسبق لكل صلاة (5–60 د) وكتم تلقائي أثناء الألعاب والعروض.",
         optToast: "إشعار ويندوز", optQuiet: "كتم الصوت بوضع ملء الشاشة",
         lblCities: "المدينة وطريقة الحساب", citDesc: "23 طريقة حساب عالمية ومذهب العصر والعمل بدون إنترنت.",
-        controlsNote: "التطبيق مبني بـ C++20 و Win32 (~3 ميجابايت ذاكرة).",
+        controlsNote: "جرّب أشكال شريط المهام وتنبيهات الأذان وإمساكية رمضان مباشرة هنا.",
         gameTitle: "تم رصد تطبيق ملء الشاشة / لعبة", gameMuted: "تم كتم الصوت تلقائياً",
         btnCsv: "تصدير CSV", btnHtml: "طباعة HTML",
         colDay: "اليوم", colFajr: "الفجر", colSun: "الشروق", colDhuhr: "الظهر", colAsr: "العصر", colMaghrib: "المغرب", colIsha: "العشاء",
@@ -1718,16 +1804,16 @@
         toastTitleTxt: "دخل وقت العصر", toastMutedTxt: "تم إيقاف الأذان",
         ramBanner: "وضع رمضان · متبقي للإفطار 02س 14د", stdBanner: "جدول نوفمبر 2026",
         csvSaved: "تم تجهيز prayerbar_2026_11.csv", htmlSaved: "تم تجهيز صفحة الطباعة HTML",
-        rendersTitle: "لقطات حقيقية من التطبيق", rendersLead: "صور أصلية من محرك الرسم GDI+ داخل التطبيق مباشرة.",
+        rendersTitle: "لقطات من التطبيق", rendersLead: "عرض قائمة الصلوات وبوصلة القبلة المباشرة من داخل التطبيق.",
         ren1Title: "مدمج Fluent", ren1Sub: "قائمة المواقيت وشريط التقدم",
         ren2Title: "بطاقات 2×3", ren2Sub: "بطاقات واضحة مع نسبة الوقت المنقضي",
         ren3Title: "الخط الزمني والقبلة", ren3Sub: "بوصلة القبلة المباشرة والفارق الزمني",
-        specsTitle: "المواصفات التقنية", specsLead: "بدون Electron أو متصفح مدمج — برمجة أصلية بـ C++20.",
-        sp1T: "الذاكرة والمعالج (~3 MB RAM)", sp1D: "استهلاك معدوم للمعالج في الخلفية ومناسب للبطارية.",
-        sp2T: "قائمة مبسطة وإعدادات واضحة", sp2D: "قائمة مختصرة وسهلة الفهم مع معاينة فورية لشريط المهام.",
+        specsTitle: "مزايا التطبيق اليومية", specsLead: "مواقيت الصلاة، الأذان، إمساكية رمضان، وبوصلة القبلة بوضوح على سطح المكتب.",
+        sp1T: "خفيف على الجهاز والبطارية", sp1D: "يعمل بهدوء في الخلفية دون إبطاء الكمبيوتر أو استهلاك البطارية.",
+        sp2T: "أذان وتنبيهات مخصصة لكل صلاة", sp2D: "تذكير مسبق من 5 إلى 60 دقيقة مع أصوات أذان مدمجة أو مخصصة.",
         sp3T: "23 طريقة حساب وعمل دون إنترنت", sp3D: "حساب فلكي محلي دقيق في أي وقت.",
         sp4T: "وضع الهدوء التلقائي", sp4D: "يكتم الصوت أثناء الألعاب أو الاجتماعات بوضع ملء الشاشة.",
-        sp5T: "12 لغة مع دعم RTL كامل", sp5D: "العربية، التركية، الإنجليزية، الفرنسية، الألمانية، الإندونيسية وغيرها.",
+        sp5T: "إمساكية رمضان و 12 لغة", sp5D: "عد تنازلي تلقائي للإفطار والسحور مع دعم كامل للغة العربية.",
         sp6T: "خصوصية تامة بدون إعلانات", sp6D: "لا جمع للبيانات ولا حسابات.",
         priceTitle: "أسعار واضحة", priceLead: "مواقيت الصلاة الأساسية والتنبيهات مجانية للأبد.",
         pFreeName: "النسخة المجانية", pFreeSub: "مجانية للأبد · بدون إعلانات",
@@ -1740,18 +1826,20 @@
         pl1: "فتح جميع ميزات Pro للأبد", pl2: "يشمل جميع التحديثات المستقبلية", pl3: "مزامنة آمنة عبر Microsoft Store", pl4: "بدون اشتراكات متكررة",
         btnGetLife: "شراء مدى الحياة",
         faqTitle: "الأسئلة الشائعة",
-        fq1Q: "لماذا يستهلك 3 ميجابايت فقط؟", fq1A: "لأنه مكتوب بلغة C++20 مباشرة لنظام ويندوز بدون أي محرك متصفح.",
+        fq1Q: "هل يبطئ التطبيق جهاز الكمبيوتر؟", fq1A: "لا، التطبيق مصمم ليعمل بهدوء وخفة تامة دون التأثير على سرعة الجهاز أو البطارية.",
         fq2Q: "هل يعمل بدون إنترنت؟", fq2A: "نعم، يعتمد على حساب فلكي محلي بالكامل.",
         fq3Q: "هل يعمل الأذان أثناء الألعاب؟", fq3A: "يقوم وضع الهدوء بكتم الصوت تلقائياً في وضع ملء الشاشة.",
         fq4Q: "هل النسخة المجانية محدودة بوقت؟", fq4A: "لا، المواقيت والتنبيهات الأساسية مجانية للأبد.",
+        dirTitle: "مواقيت الصلاة حسب المدينة", dirLead: "تصفح مواقيت الفجر والظهر والعصر والمغرب والعشاء وجداول 30 يوماً لمدن العالم.",
         ftPrivacy: "سياسة الخصوصية", ftTerms: "الشروط والأحكام"
       },
       de: {
+        navCities: "Gebetszeiten", navImsakiye: "Kalender", navProgram: "Windows-App",
         navDemo: "Live-Vorschau", navSpecs: "Funktionen", navPricing: "Preise", navStore: "Microsoft Store",
-        heroTitle: "Gebetszeiten direkt in Ihrer Windows-Taskleiste.",
-        heroLead: "Ein schlankes natives Windows-10/11-Werkzeug (~3 MB RAM, 0 % Leerlauf-CPU), werbefrei und vollständig offline nutzbar.",
+        heroTitle: "Gebetszeiten, Adhan & Ramadan-Kalender direkt in Ihrer Windows-Taskleiste.",
+        heroLead: "Behalten Sie den Countdown bis zum nächsten Gebet immer im Blick — mit Adhan-Erinnerungen, Monatskalender und Qibla-Kompass, werbefrei und offline nutzbar.",
         ctaStore: "Im Microsoft Store laden", ctaDemo: "Funktionen live zeigen",
-        heroMeta: "Windows 10 / 11 (x64) · Basisversion dauerhaft kostenlos · 5 Tage Pro-Test",
+        heroMeta: "Windows 10 / 11 · 23 Berechnungsmethoden · Basisversion dauerhaft kostenlos · Werbefrei",
         tabTaskbar: "Taskleiste", tabFlyout: "4 Flyouts & Qibla", tabRamadan: "Ramadan & Kalender",
         tabAlerts: "Hinweise & Ruhemodus", tabCities: "Städte & 23 Methoden",
         demoHint: "Klick: Flyout · Rechtsklick: kompaktes Menü",
@@ -1766,7 +1854,7 @@
         lblAlerts: "Benachrichtigungen & Vollbild", alDesc: "Vorab-Erinnerungen (5–60 Min.) je Gebet. Schaltet im Vollbild und bei Spielen automatisch stumm.",
         optToast: "Windows-Benachrichtigung", optQuiet: "Spiel- / Vollbild-Ruhemodus",
         lblCities: "Stadt & Methode", citDesc: "23 Berechnungsmethoden, Standard/Hanafi Asr und vollständige Offline-Berechnung.",
-        controlsNote: "Native C++20- & GDI+-App (~3 MB RAM).",
+        controlsNote: "Testen Sie Taskleisten-Design, Adhan-Hinweise und Ramadan-Kalender hier live.",
         gameTitle: "Vollbild-App / Spiel erkannt (1920×1080)", gameMuted: "Ton automatisch stumm",
         btnCsv: "CSV exportieren", btnHtml: "HTML drucken",
         colDay: "Tag", colFajr: "Fadschr", colSun: "Sonne", colDhuhr: "Dhuhr", colAsr: "Asr", colMaghrib: "Maghrib", colIsha: "Ischa",
@@ -1779,17 +1867,17 @@
         toastTitleTxt: "Asr-Gebetszeit", toastMutedTxt: "Adhan stummgeschaltet",
         ramBanner: "Ramadan-Modus · Iftar in 02h 14m", stdBanner: "November 2026",
         csvSaved: "prayerbar_2026_11.csv vorbereitet", htmlSaved: "Druckbare HTML-Ansicht erstellt",
-        rendersTitle: "Echte App-Ausgaben", rendersLead: "Direkt von PrayerBar.exe gerenderte GDI+-Ansichten.",
+        rendersTitle: "Echte App-Ansichten", rendersLead: "Tagesübersicht, Qibla-Kompass und Taskleisten-Menü direkt aus PrayerBar.",
         ren1Title: "Kompakt Fluent", ren1Sub: "Tagesübersicht, Fortschrittsbalken und Zusatzzeiten",
         ren2Title: "2×3 Kartenraster", ren2Sub: "Übersichtliche Kacheln mit Fortschrittsring",
         ren3Title: "Zeitachse & Qibla", ren3Sub: "Qibla-Kompass und relative Abstände",
-        specsTitle: "Technik & Datenschutz", specsLead: "Kein Electron, kein WebView2 — reines Win32 C++20.",
-        sp1T: "~3 MB RAM & 0 % Leerlauf-CPU", sp1D: "Minimaler Speicherbedarf und voller Akkuschutz.",
-        sp2T: "Aufgeräumtes Menü & Einstellungen", sp2D: "Klares Rechtsklick-Menü und Live-Vorschau in den Einstellungen.",
+        specsTitle: "Für den Alltag entwickelt", specsLead: "Gebetszeiten, Adhan-Benachrichtigungen, Ramadan-Imsakiye und Qibla auf einen Blick.",
+        sp1T: "Leicht & akkuschonend", sp1D: "Läuft unauffällig im Hintergrund ohne den PC zu verlangsamen.",
+        sp2T: "Adhan & Vorab-Erinnerungen", sp2D: "Eigene Hinweise (5–60 Min. vorher) und Adhan-Töne für jedes Gebet.",
         sp3T: "23 Methoden & Offline-Modus", sp3D: "Diyanet, MWL, ISNA, Umm al-Qura und lokale Astronomie-Berechnung.",
         sp4T: "Vollbild-Ruhemodus", sp4D: "Automatisch leise bei Spielen, Filmen oder Präsentationen.",
-        sp5T: "12 Sprachen", sp5D: "Inklusive Deutsch, Türkisch, Englisch, Arabisch (RTL) und mehr.",
-        sp6T: "Keine Werbung, keine Telemetrie", sp6D: "Alle Einstellungen bleiben lokal unter %LocalAppData%\\PrayerBar.",
+        sp5T: "Ramadan-Kalender & 12 Sprachen", sp5D: "Automatischer Iftar-/Suhoor-Countdown in Deutsch, Türkisch, Arabisch und mehr.",
+        sp6T: "Keine Werbung, keine Telemetrie", sp6D: "Alle Einstellungen bleiben lokal auf Ihrem PC.",
         priceTitle: "Einfache Preise", priceLead: "Alle Grundfunktionen bleiben dauerhaft kostenlos.",
         pFreeName: "Kostenlos", pFreeSub: "Dauerhaft kostenlos · Keine Werbung",
         pf1: "Alle 23 Methoden & Offline-Modus", pf2: "Basis-Taskleistenstile & Kompakt-Flyout", pf3: "Gebetserinnerungen & integrierter Adhan", pf4: "Monats- & Ramadan-Kalender",
@@ -1801,18 +1889,20 @@
         pl1: "Alle Pro-Funktionen dauerhaft", pl2: "Alle künftigen Updates inklusive", pl3: "Über Ihr Microsoft-Konto synchronisiert", pl4: "Kein Abo",
         btnGetLife: "Lebenslang sichern",
         faqTitle: "Häufige Fragen",
-        fq1Q: "Warum nur ~3 MB RAM?", fq1A: "Kein eingebetteter Browser — natives C++20 mit Win32 und GDI+.",
+        fq1Q: "Verlangsamt die App meinen PC?", fq1A: "Nein, PrayerBar läuft sehr ressourcenschonend und schont den Laptop-Akku.",
         fq2Q: "Funktioniert es offline?", fq2A: "Ja, die astronomische Berechnung läuft jederzeit lokal.",
         fq3Q: "Stört der Ton beim Spielen?", fq3A: "Im Vollbild-Ruhemodus wird Audio automatisch stummgeschaltet.",
         fq4Q: "Ist die Basisversion zeitlich begrenzt?", fq4A: "Nein, sie bleibt dauerhaft kostenlos.",
+        dirTitle: "Gebetszeiten nach Stadt", dirLead: "Heutige Gebetszeiten und 30-Tage-Kalender für Städte weltweit.",
         ftPrivacy: "Datenschutz", ftTerms: "Bedingungen"
       },
       fr: {
-        navDemo: "Aperçu", navSpecs: "Détails", navPricing: "Tarifs", navStore: "Microsoft Store",
-        heroTitle: "Les horaires de prière dans la barre des tâches Windows.",
-        heroLead: "Un utilitaire natif Windows 10 & 11 léger (~3 Mo de RAM, 0 % CPU au repos), sans publicité et utilisable hors ligne.",
+        navCities: "Horaires de prière", navImsakiye: "Calendrier", navProgram: "App Windows",
+        navDemo: "Aperçu", navSpecs: "Fonctionnalités", navPricing: "Tarifs", navStore: "Microsoft Store",
+        heroTitle: "Horaires de prière, Adhan et calendrier du Ramadan dans votre barre des tâches Windows.",
+        heroLead: "Suivez le compte à rebours avant la prochaine prière, recevez les rappels d'Adhan et consultez le calendrier mensuel et la Qibla — sans pub et hors ligne.",
         ctaStore: "Télécharger sur Microsoft Store", ctaDemo: "Voir les fonctions en direct",
-        heroMeta: "Windows 10 / 11 (x64) · Version de base gratuite · Essai Pro 5 jours",
+        heroMeta: "Windows 10 / 11 · 23 méthodes (UOIF, MWL, Diyanet) · Version de base gratuite · Sans pub",
         tabTaskbar: "Barre des tâches", tabFlyout: "4 Panneaux & Qibla", tabRamadan: "Ramadan & Calendrier",
         tabAlerts: "Alertes & Silence", tabCities: "Villes & 23 Méthodes",
         demoHint: "Clic : panneau · Clic droit : menu simplifié",
@@ -1827,7 +1917,7 @@
         lblAlerts: "Alertes & Mode Jeu", alDesc: "Rappels par prière et mise en sourdine automatique en plein écran.",
         optToast: "Notification Windows", optQuiet: "Silence en plein écran / jeu",
         lblCities: "Ville & Méthode", citDesc: "23 méthodes mondiales et calcul astronomique hors ligne.",
-        controlsNote: "Application native C++20 & GDI+ (~3 Mo RAM).",
+        controlsNote: "Essayez ici l'affichage dans la barre des tâches, les rappels d'Adhan et le calendrier du Ramadan.",
         gameTitle: "Mode plein écran / jeu détecté", gameMuted: "Son coupé automatiquement",
         btnCsv: "Export CSV", btnHtml: "Imprimer HTML",
         colDay: "Jour", colFajr: "Fajr", colSun: "Lever", colDhuhr: "Dhuhr", colAsr: "Asr", colMaghrib: "Maghrib", colIsha: "Isha",
@@ -1840,17 +1930,17 @@
         toastTitleTxt: "Heure de l'Asr", toastMutedTxt: "Adhan coupé",
         ramBanner: "Mode Ramadan · Iftar dans 02h 14m", stdBanner: "Novembre 2026",
         csvSaved: "prayerbar_2026_11.csv prêt", htmlSaved: "HTML imprimable généré",
-        rendersTitle: "Rendus réels de l'application", rendersLead: "Captures GDI+ directes générées par PrayerBar.exe.",
+        rendersTitle: "Captures de l'application", rendersLead: "Liste quotidienne, boussole Qibla et menu contextuel de PrayerBar.",
         ren1Title: "Fluent Compact", ren1Sub: "Liste quotidienne et barre de progression",
         ren2Title: "Grille 2×3", ren2Sub: "Cartes lisibles avec anneau de progression",
         ren3Title: "Chronologie & Qibla", ren3Sub: "Boussole Qibla en direct et écarts horaires",
-        specsTitle: "Architecture & Confidentialité", specsLead: "Zéro Electron, zéro WebView2 — C++20 natif.",
-        sp1T: "~3 Mo RAM, 0 % CPU au repos", sp1D: "Léger sur batterie et instantané au réveil.",
-        sp2T: "Menu & Paramètres simplifiés", sp2D: "Menu contextuel direct et aperçu en temps réel.",
-        sp3T: "23 méthodes & mode hors ligne", sp3D: "Diyanet, MWL, ISNA, UOIF France et calcul local.",
+        specsTitle: "Pensé pour le suivi quotidien", specsLead: "Horaires de prière, rappels Adhan, calendrier du Ramadan et Qibla sur votre bureau Windows.",
+        sp1T: "Discret et économe en batterie", sp1D: "Fonctionne silencieusement en arrière-plan sans ralentir votre PC.",
+        sp2T: "Adhan & rappels anticipés", sp2D: "Alertes 5 à 60 min avant chaque prière et adhans intégrés.",
+        sp3T: "23 méthodes & mode hors ligne", sp3D: "UOIF France, Diyanet, MWL, ISNA et calcul local.",
         sp4T: "Silence automatique en jeu", sp4D: "Coupe le son pendant les jeux et présentations.",
-        sp5T: "12 langues", sp5D: "Français, anglais, arabe (RTL), turc, allemand, etc.",
-        sp6T: "Zéro pub, zéro suivi", sp6D: "Données locales uniquement dans %LocalAppData%\\PrayerBar.",
+        sp5T: "Calendrier Ramadan & 12 langues", sp5D: "Compte à rebours Iftar/Suhoor automatique en français, arabe, turc, etc.",
+        sp6T: "Zéro pub, zéro suivi", sp6D: "Toutes vos préférences restent localement sur votre PC.",
         priceTitle: "Tarification simple", priceLead: "Les fonctions essentielles restent gratuites à vie.",
         pFreeName: "Gratuit", pFreeSub: "Gratuit pour toujours · Sans pub",
         pf1: "23 méthodes et mode hors ligne", pf2: "Styles de base et panneau compact", pf3: "Rappels et adhans intégrés", pf4: "Calendrier mensuel & Ramadan",
@@ -1862,18 +1952,20 @@
         pl1: "Tout Pro débloqué définitivement", pl2: "Mises à jour futures incluses", pl3: "Synchronisé avec votre compte Microsoft", pl4: "Aucun abonnement",
         btnGetLife: "Obtenir à vie",
         faqTitle: "Questions",
-        fq1Q: "Pourquoi seulement ~3 Mo de RAM ?", fq1A: "Aucun moteur de navigateur embarqué — C++20 natif avec Win32 et GDI+.",
+        fq1Q: "L'application ralentit-elle mon PC ?", fq1A: "Non, elle reste très légère en arrière-plan et préserve la batterie.",
         fq2Q: "Fonctionne-t-il hors ligne ?", fq2A: "Oui, le calcul astronomique intégré fonctionne sans connexion.",
         fq3Q: "Le son joue-t-il pendant un jeu ?", fq3A: "Non, le mode plein écran coupe l'audio automatiquement.",
         fq4Q: "La version gratuite expire-t-elle ?", fq4A: "Non, les horaires et rappels de base restent gratuits.",
+        dirTitle: "Horaires de prière par ville", dirLead: "Consultez les horaires d'aujourd'hui et le calendrier sur 30 jours.",
         ftPrivacy: "Confidentialité", ftTerms: "Conditions"
       },
       id: {
-        navDemo: "Pratinjau", navSpecs: "Spesifikasi", navPricing: "Harga", navStore: "Microsoft Store",
-        heroTitle: "Waktu sholat langsung di taskbar Windows.",
-        heroLead: "Aplikasi native Windows 10 & 11 yang ringan (~3 MB RAM, 0% CPU diam), bebas iklan, dan bekerja penuh secara offline.",
+        navCities: "Jadwal Sholat", navImsakiye: "Imsakiyah", navProgram: "Aplikasi Windows",
+        navDemo: "Pratinjau", navSpecs: "Fitur", navPricing: "Harga", navStore: "Microsoft Store",
+        heroTitle: "Jadwal sholat, adzan & imsakiyah langsung di taskbar Windows.",
+        heroLead: "Pantau hitung mundur waktu sholat berikutnya di sebelah jam, lengkap dengan pengingat adzan, jadwal Ramadan, dan kompas Kiblat — bebas iklan dan bisa offline.",
         ctaStore: "Unduh di Microsoft Store", ctaDemo: "Lihat Fitur Langsung",
-        heroMeta: "Windows 10 / 11 (x64) · Versi inti gratis selamanya · Uji Pro 5 hari",
+        heroMeta: "Windows 10 / 11 · 23 metode (KEMENAG, MWL) · Versi inti gratis selamanya · Bebas iklan",
         tabTaskbar: "Taskbar", tabFlyout: "4 Panel & Kiblat", tabRamadan: "Ramadan & Imsakiyah",
         tabAlerts: "Notifikasi & Senyap", tabCities: "Kota & 23 Metode",
         demoHint: "Klik kiri: buka panel · Klik kanan: menu ringkas",
@@ -1888,7 +1980,7 @@
         lblAlerts: "Pengingat & Mode Game", alDesc: "Pengingat tiap waktu (5–60 mnt) dan otomatis bisu saat game atau presentasi layar penuh.",
         optToast: "Notifikasi Windows", optQuiet: "Bisu saat game / layar penuh",
         lblCities: "Kota & Metode", citDesc: "23 metode global termasuk KEMENAG, MWL, Diyanet, dan hitungan offline.",
-        controlsNote: "Aplikasi Windows asli dibangun dengan C++20 & GDI+ (~3 MB RAM).",
+        controlsNote: "Coba tampilan taskbar, pengingat adzan, dan Imsakiyah Ramadan secara langsung di sini.",
         gameTitle: "Layar penuh / game terdeteksi", gameMuted: "Audio otomatis dibisukan",
         btnCsv: "Ekspor CSV", btnHtml: "Cetak HTML",
         colDay: "Hari", colFajr: "Subuh", colSun: "Terbit", colDhuhr: "Dzuhur", colAsr: "Ashar", colMaghrib: "Maghrib", colIsha: "Isya",
@@ -1901,17 +1993,17 @@
         toastTitleTxt: "Waktu Ashar tiba", toastMutedTxt: "Azan dihentikan",
         ramBanner: "Mode Ramadan · Berbuka 02j 14m lagi", stdBanner: "Jadwal November 2026",
         csvSaved: "prayerbar_2026_11.csv siap", htmlSaved: "HTML siap cetak dibuat",
-        rendersTitle: "Tangkapan Asli Aplikasi", rendersLead: "Render GDI+ langsung dari PrayerBar.exe.",
+        rendersTitle: "Tangkapan Layar Aplikasi", rendersLead: "Daftar jadwal harian, kompas Kiblat langsung, dan tampilan panel PrayerBar.",
         ren1Title: "Fluent Ringkas", ren1Sub: "Daftar harian dan bilah progres",
         ren2Title: "Kartu 2×3", ren2Sub: "Kartu jelas dengan cincin progres",
         ren3Title: "Linimasa & Kiblat", ren3Sub: "Kompas Kiblat langsung dan selisih waktu",
-        specsTitle: "Spesifikasi & Privasi", specsLead: "Tanpa Electron atau WebView2 — murni C++20 Win32.",
-        sp1T: "~3 MB RAM & 0% CPU Diam", sp1D: "Hemat baterai laptop dan responsif seketika.",
-        sp2T: "Menu & Pengaturan Ringkas", sp2D: "Menu klik kanan sederhana dengan pratinjau langsung.",
+        specsTitle: "Dirancang untuk Ibadah Harian", specsLead: "Jadwal sholat, pengingat adzan, Imsakiyah Ramadan, dan arah Kiblat langsung di desktop Windows.",
+        sp1T: "Ringan & Hemat Baterai", sp1D: "Berjalan tenang di latar belakang tanpa memperlambat laptop.",
+        sp2T: "Adzan & Pengingat Awal", sp2D: "Pengingat 5–60 menit sebelum adzan dan audio bawaan.",
         sp3T: "23 Metode & Offline", sp3D: "KEMENAG, MWL, ISNA, Diyanet, dan hitungan astronomi lokal.",
         sp4T: "Mode Senyap Layar Penuh", sp4D: "Otomatis senyap saat game, video, atau rapat.",
-        sp5T: "12 Bahasa", sp5D: "Indonesia, Melayu, Inggris, Arab (RTL), Turki, dan lainnya.",
-        sp6T: "Bebas Iklan & Pelacakan", sp6D: "Semua pengaturan tersimpan lokal di %LocalAppData%\\PrayerBar.",
+        sp5T: "Imsakiyah Ramadan & 12 Bahasa", sp5D: "Hitung mundur Berbuka/Sahur otomatis dalam Bahasa Indonesia, Arab, Inggris, dan lainnya.",
+        sp6T: "Bebas Iklan & Pelacakan", sp6D: "Semua pengaturan tersimpan lokal di PC Anda.",
         priceTitle: "Harga Jelas", priceLead: "Jadwal sholat inti dan notifikasi gratis selamanya.",
         pFreeName: "Gratis", pFreeSub: "Gratis selamanya · Tanpa iklan",
         pf1: "23 metode & mode offline", pf2: "Gaya taskbar dasar & panel ringkas", pf3: "Pengingat & suara azan bawaan", pf4: "Lihat Imsakiyah Bulanan & Ramadan",
@@ -1923,10 +2015,11 @@
         pl1: "Semua fitur Pro permanen", pl2: "Termasuk pembaruan mendatang", pl3: "Sinkronisasi aman via Microsoft Store", pl4: "Tanpa biaya langganan",
         btnGetLife: "Beli Selamanya",
         faqTitle: "Pertanyaan Umum",
-        fq1Q: "Mengapa hanya memakai ~3 MB RAM?", fq1A: "Tidak memakai mesin peramban seperti Electron; ditulis langsung dengan C++20 Win32 & GDI+.",
+        fq1Q: "Apakah aplikasi ini memperlambat laptop?", fq1A: "Tidak, PrayerBar sangat ringan di latar belakang dan hemat baterai.",
         fq2Q: "Apakah bisa jalan tanpa internet?", fq2A: "Ya, kalkulator astronomi bawaan bekerja penuh secara offline.",
         fq3Q: "Apakah azan berbunyi saat main game?", fq3A: "Tidak jika Mode Senyap Layar Penuh aktif.",
         fq4Q: "Apakah versi gratis punya batas waktu?", fq4A: "Tidak, jadwal inti dan notifikasi gratis selamanya.",
+        dirTitle: "Jadwal Sholat Menurut Kota", dirLead: "Lihat jadwal Subuh, Dzuhur, Ashar, Maghrib, Isya hari ini dan jadwal 30 hari.",
         ftPrivacy: "Privasi", ftTerms: "Ketentuan"
       }
     };
@@ -2135,6 +2228,10 @@
       state.lang = T[l] ? l : "en";
       document.documentElement.lang = state.lang;
       document.documentElement.dir = state.lang === "ar" ? "rtl" : "ltr";
+      const navCityHub = $("navCityHub");
+      if (navCityHub) {
+        navCityHub.setAttribute("href", state.lang === "tr" ? "/namaz-vakitleri" : "/prayer-times");
+      }
       const d = dict();
       document.querySelectorAll("[data-i18n]").forEach(el => {
         const k = el.getAttribute("data-i18n");

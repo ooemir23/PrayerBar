@@ -44,6 +44,7 @@ private:
     void PaintCanvas(HDC hdc, int width, int height);
     void PaintOwnerPushButton(DRAWITEMSTRUCT* dis);
     void SetBusy(bool busy);
+    void UpdatePurchaseButtons();
     void StartStorePurchase(const wchar_t* addOnStoreId);
     void StartStoreRestore(bool afterPurchase);
 

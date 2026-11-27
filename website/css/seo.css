@@ -1,0 +1,540 @@
+:root {
+  --bg: #f3f3f3;
+  --surface: #ffffff;
+  --surface-soft: #f7f8fa;
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.14);
+  --ink: #18181b;
+  --ink-secondary: #52525b;
+  --ink-muted: #71717a;
+  --accent: #0f766e;
+  --accent-hover: #115e59;
+  --accent-tint: #f0fdfa;
+  --accent-border: rgba(15, 118, 110, 0.28);
+  --amber: #b45309;
+  --amber-tint: #fffbeb;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+.num { font-variant-numeric: tabular-nums; }
+.container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+/* Navigation */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(243, 243, 243, 0.90);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  height: 60px;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+.brand img { width: 26px; height: 26px; border-radius: 6px; display: block; }
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.nav-links a {
+  color: var(--ink-secondary);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+.nav-links a:hover,
+.nav-links a.active { color: var(--accent); }
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background-color 0.14s ease, border-color 0.14s ease, color 0.14s ease;
+}
+.btn-sm { padding: 7px 13px; font-size: 13px; }
+.btn-primary {
+  background: var(--accent);
+  color: #ffffff;
+  border-color: var(--accent);
+}
+.btn-primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+.btn-secondary {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--border-strong);
+}
+.btn-secondary:hover { background: var(--surface-soft); }
+
+/* Breadcrumb */
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 20px 0 4px;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+.breadcrumbs a {
+  color: var(--ink-secondary);
+  text-decoration: none;
+}
+.breadcrumbs a:hover { color: var(--accent); text-decoration: underline; }
+
+/* Page Hero */
+.page-hero {
+  padding: 14px 0 26px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.page-hero h1 {
+  font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif;
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  margin: 0 0 8px;
+}
+.page-lead {
+  font-size: 16px;
+  color: var(--ink-secondary);
+  margin: 0;
+  max-width: 660px;
+}
+.page-meta-row {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+.meta-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--ink-secondary);
+  font-weight: 500;
+}
+
+/* Live Countdown Card */
+.countdown-pill {
+  background: var(--surface);
+  border: 1px solid var(--accent-border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  box-shadow: var(--shadow-sm);
+  min-width: 240px;
+}
+.countdown-label {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+.countdown-value {
+  font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-top: 2px;
+}
+.countdown-sub {
+  font-size: 12.5px;
+  color: var(--ink-muted);
+  margin-top: 2px;
+}
+
+/* Today's 6 Prayer Times Grid */
+.prayer-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.prayer-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 14px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.prayer-card.is-active {
+  background: var(--surface-soft);
+  border-color: var(--border-strong);
+}
+.prayer-card.is-next {
+  background: var(--accent-tint);
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow-md);
+}
+.prayer-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.prayer-card.is-next .prayer-name { color: var(--accent); }
+.prayer-time {
+  font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.prayer-tag {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(15, 118, 110, 0.14);
+  color: var(--accent);
+}
+
+/* Download Banner */
+.app-banner {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  box-shadow: var(--shadow-sm);
+}
+.app-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: 680px;
+}
+.app-banner-left img {
+  width: 44px;
+  height: 44px;
+  border-radius: 9px;
+  flex-shrink: 0;
+}
+.app-banner h2 {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 700;
+}
+.app-banner p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-secondary);
+}
+.app-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Search & City Directory */
+.search-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-sm);
+}
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.search-input {
+  flex: 1;
+  min-width: 220px;
+  height: 42px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  font-size: 14.5px;
+  font-family: inherit;
+  color: var(--ink);
+  background: var(--surface-soft);
+}
+.search-input:focus {
+  outline: 2px solid var(--accent-border);
+  border-color: var(--accent);
+  background: var(--surface);
+}
+.quick-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.chip-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 11px;
+  border-radius: 99px;
+  background: var(--surface-soft);
+  border: 1px solid var(--border);
+  color: var(--ink-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+}
+.chip-link:hover,
+.chip-link.active {
+  background: var(--accent-tint);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+
+/* Monthly / 30-Day Imsakiye Table */
+.section {
+  padding: 36px 0;
+  border-top: 1px solid var(--border);
+}
+.section-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.section-head h2 {
+  font-family: "Segoe UI Variable Display", "Segoe UI", sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px;
+}
+.section-head p {
+  margin: 0;
+  color: var(--ink-secondary);
+  font-size: 14.5px;
+}
+.table-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  box-shadow: var(--shadow-sm);
+}
+.ims-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+.ims-table th,
+.ims-table td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.ims-table th {
+  background: var(--surface-soft);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-secondary);
+}
+.ims-table tbody tr:last-child td { border-bottom: 0; }
+.ims-table tbody tr.today-row {
+  background: var(--accent-tint);
+  font-weight: 600;
+}
+.ims-table tbody tr.today-row td:first-child {
+  color: var(--accent);
+}
+.ims-iftar {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* City Links Grid */
+.city-links-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(185px, 1fr));
+  gap: 10px;
+}
+.city-link-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 11px 14px;
+  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--ink);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: border-color 0.12s, background-color 0.12s;
+}
+.city-link-card:hover {
+  border-color: var(--accent-border);
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+.city-link-card small {
+  color: var(--ink-muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+
+/* Feature Cards (Landing Page) */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.feature-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+.feature-card h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 700;
+}
+.feature-card p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink-secondary);
+}
+
+/* FAQ */
+.faq-list {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+.faq-list details {
+  border-bottom: 1px solid var(--border);
+  padding: 15px 20px;
+}
+.faq-list details:last-child { border-bottom: 0; }
+.faq-list summary {
+  cursor: pointer;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--ink);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.faq-list summary::-webkit-details-marker { display: none; }
+.faq-list summary::after { content: "+"; color: var(--ink-muted); font-size: 18px; font-weight: 400; }
+.faq-list details[open] summary::after { content: "−"; }
+.faq-list p { margin: 10px 0 2px; font-size: 14px; color: var(--ink-secondary); }
+
+/* Footer */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 28px 0 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 13px;
+  color: var(--ink-muted);
+}
+.footer-links { display: flex; gap: 18px; flex-wrap: wrap; }
+.footer-links a { color: var(--ink-secondary); text-decoration: none; }
+.footer-links a:hover { color: var(--ink); text-decoration: underline; }
+
+@media (max-width: 920px) {
+  .prayer-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .feature-grid { grid-template-columns: 1fr; }
+  .nav-links { display: none; }
+}
+@media (max-width: 560px) {
+  .prayer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media print {
+  .topbar,
+  .breadcrumbs,
+  .app-banner,
+  .search-panel,
+  .no-print,
+  footer {
+    display: none !important;
+  }
+  body { background: #ffffff; }
+  .container { max-width: 100%; padding: 0; }
+  .table-card { border: 1px solid #ccc; box-shadow: none; }
+  .ims-table th, .ims-table td { padding: 6px 8px; font-size: 12px; }
+}

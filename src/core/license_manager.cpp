@@ -183,4 +183,12 @@ bool LicenseManager::IsFeatureProOnly(FlyoutDesignStyle design) {
     return design != FlyoutDesignStyle::CompactFluent;
 }
 
+bool LicenseManager::CanPurchaseAnnual(LicenseTier tier) {
+    return tier != LicenseTier::ProAnnual && tier != LicenseTier::ProLifetime;
+}
+
+bool LicenseManager::CanPurchaseLifetime(LicenseTier tier) {
+    return tier != LicenseTier::ProLifetime;
+}
+
 } // namespace vakit

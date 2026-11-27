@@ -23,6 +23,8 @@ public:
 
     static bool IsFeatureProOnly(TaskbarDisplayStyle style);
     static bool IsFeatureProOnly(FlyoutDesignStyle design);
+    static bool CanPurchaseAnnual(LicenseTier tier);
+    static bool CanPurchaseLifetime(LicenseTier tier);
 
 private:
     struct StoredLicenseData {

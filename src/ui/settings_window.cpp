@@ -346,6 +346,7 @@ void SettingsWindow::OpenProTab(bool showLockedHint) {
     proFeedbackText_.clear();
     proFeedbackIsError_ = false;
     OpenOrFocus(5);
+    RefreshLicenseStatus();
     if (hwnd_) InvalidateRect(hwnd_, nullptr, FALSE);
 }
 
@@ -456,6 +457,7 @@ void SettingsWindow::RefreshLicenseStatus() {
         }
         SetWindowTextW(licenseLabel_, buf);
     }
+    UpdateProPurchaseButtons();
     if (activeTab_ == 5) {
         InvalidateRect(hwnd_, nullptr, FALSE);
     }
@@ -518,6 +520,13 @@ LRESULT CALLBACK SettingsWindow::HoverBtnProc(HWND h, UINT msg, WPARAM wp, LPARA
     auto* self = reinterpret_cast<SettingsWindow*>(ref);
     if (!self) return DefSubclassProc(h, msg, wp, lp);
     if (msg == WM_MOUSEMOVE) {
+        if (!IsWindowEnabled(h)) {
+            if (self->hoveredBtn_ == h) {
+                self->hoveredBtn_ = nullptr;
+                InvalidateRect(h, nullptr, FALSE);
+            }
+            return DefSubclassProc(h, msg, wp, lp);
+        }
         if (self->hoveredBtn_ != h) {
             HWND prev = self->hoveredBtn_;
             self->hoveredBtn_ = h;
@@ -1319,16 +1328,35 @@ LRESULT CALLBACK SettingsWindow::HotkeyBtnProc(HWND h, UINT msg, WPARAM wp, LPAR
     return DefSubclassProc(h, msg, wp, lp);
 }
 
+void SettingsWindow::UpdateProPurchaseButtons() {
+    LicenseTier tier = licenseManager_.GetStatus().tier;
+    bool canAnnual = !proBusy_ && LicenseManager::CanPurchaseAnnual(tier);
+    bool canLifetime = !proBusy_ && LicenseManager::CanPurchaseLifetime(tier);
+    if (proBuyAnnualBtn_) EnableWindow(proBuyAnnualBtn_, canAnnual ? TRUE : FALSE);
+    if (proBuyLifetimeBtn_) EnableWindow(proBuyLifetimeBtn_, canLifetime ? TRUE : FALSE);
+    if (proRestoreBtn_) EnableWindow(proRestoreBtn_, proBusy_ ? FALSE : TRUE);
+    if (hoveredBtn_ && !IsWindowEnabled(hoveredBtn_)) {
+        hoveredBtn_ = nullptr;
+    }
+    if (proBuyAnnualBtn_) InvalidateRect(proBuyAnnualBtn_, nullptr, FALSE);
+    if (proBuyLifetimeBtn_) InvalidateRect(proBuyLifetimeBtn_, nullptr, FALSE);
+    if (proRestoreBtn_) InvalidateRect(proRestoreBtn_, nullptr, FALSE);
+}
+
 void SettingsWindow::SetProBusy(bool busy) {
     proBusy_ = busy;
-    BOOL en = busy ? FALSE : TRUE;
-    if (proBuyAnnualBtn_) EnableWindow(proBuyAnnualBtn_, en);
-    if (proBuyLifetimeBtn_) EnableWindow(proBuyLifetimeBtn_, en);
-    if (proRestoreBtn_) EnableWindow(proRestoreBtn_, en);
+    UpdateProPurchaseButtons();
 }
 
 void SettingsWindow::StartProStorePurchase(const wchar_t* addOnStoreId) {
-    if (proBusy_ || !hwnd_) return;
+    if (proBusy_ || !hwnd_ || !addOnStoreId) return;
+    LicenseTier tier = licenseManager_.GetStatus().tier;
+    if (wcscmp(addOnStoreId, commercial::kStoreAddonAnnualId) == 0 && !LicenseManager::CanPurchaseAnnual(tier)) {
+        return;
+    }
+    if (wcscmp(addOnStoreId, commercial::kStoreAddonLifetimeId) == 0 && !LicenseManager::CanPurchaseLifetime(tier)) {
+        return;
+    }
     SetProBusy(true);
     proFeedbackIsError_ = false;
     proFeedbackText_ = Tr(settings_.language, StrId::StorePurchasing);
@@ -1408,55 +1436,65 @@ void SettingsWindow::PaintProTabCanvas(void* g, float s) {
     float leftX = static_cast<float>(kContentX) * s;
     float rightX = static_cast<float>(kContentX + 367) * s;
 
+    bool canAnnual = LicenseManager::CanPurchaseAnnual(lst.tier);
+    bool canLifetime = LicenseManager::CanPurchaseLifetime(lst.tier);
+
+    uint32_t dimBadgeBg = pal.isDark ? 0xFF1E2B37u : 0xFFE9F0F2u;
+    uint32_t dimBadgeText = theme::WithAlpha(0x99u, pal.textMuted);
+    uint32_t dimTitleCol = theme::WithAlpha(0xA8u, pal.textMuted);
+    uint32_t dimBodyCol = theme::WithAlpha(0x8Cu, pal.textMuted);
+
     // Sol kart: Yıllık Pro
-    gdip::FillRoundedRect(g, leftX, cardY, cardW, cardH, 10.0f * s, pal.bgCard);
-    gdip::StrokeRoundedRect(g, leftX, cardY, cardW, cardH, 10.0f * s, pal.border, 1.2f);
+    gdip::FillRoundedRect(g, leftX, cardY, cardW, cardH, 10.0f * s, canAnnual ? pal.bgCard : pal.bgCardAlt);
+    gdip::StrokeRoundedRect(g, leftX, cardY, cardW, cardH, 10.0f * s, canAnnual ? pal.border : pal.borderSubtle, canAnnual ? 1.2f : 1.0f);
 
     float badgeW = cardW - 56.0f * s;
-    gdip::FillRoundedRect(g, leftX + 28.0f * s, cardY + 14.0f * s, badgeW, 22.0f * s, 11.0f * s, pal.chipBg);
-    gdip::StrokeRoundedRect(g, leftX + 28.0f * s, cardY + 14.0f * s, badgeW, 22.0f * s, 11.0f * s, pal.border, 1.0f);
-    gdip::DrawTextBox(g, Tr(lang, StrId::ProBadgeFlexible), uiFam, 10.2f * s, true, pal.textSecondary,
+    gdip::FillRoundedRect(g, leftX + 28.0f * s, cardY + 14.0f * s, badgeW, 22.0f * s, 11.0f * s, canAnnual ? pal.chipBg : dimBadgeBg);
+    gdip::StrokeRoundedRect(g, leftX + 28.0f * s, cardY + 14.0f * s, badgeW, 22.0f * s, 11.0f * s, canAnnual ? pal.border : pal.borderSubtle, 1.0f);
+    gdip::DrawTextBox(g, Tr(lang, StrId::ProBadgeFlexible), uiFam, 10.2f * s, true, canAnnual ? pal.textSecondary : dimBadgeText,
                       leftX + 28.0f * s, cardY + 14.0f * s, badgeW, 22.0f * s,
                       gdip::kStringAlignmentCenter, gdip::kStringAlignmentCenter);
 
-    gdip::DrawTextBox(g, Tr(lang, StrId::ProPlanAnnualTitle), dispFam, 15.5f * s, true, pal.textPrimary,
+    gdip::DrawTextBox(g, Tr(lang, StrId::ProPlanAnnualTitle), dispFam, 15.5f * s, true, canAnnual ? pal.textPrimary : dimTitleCol,
                       leftX + 18.0f * s, cardY + 46.0f * s, cardW - 36.0f * s, 24.0f * s,
                       gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
-    gdip::DrawTextBox(g, Tr(lang, StrId::ProPlanAnnualPrice), dispFam, 24.0f * s, true, pal.textPrimary,
+    gdip::DrawTextBox(g, Tr(lang, StrId::ProPlanAnnualPrice), dispFam, 24.0f * s, true, canAnnual ? pal.textPrimary : dimTitleCol,
                       leftX + 18.0f * s, cardY + 72.0f * s, cardW - 36.0f * s, 32.0f * s,
                       gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
-    gdip::DrawTextBox(g, Tr(lang, StrId::ProAnnualSub), uiFam, 12.0f * s, false, pal.textSecondary,
+    gdip::DrawTextBox(g, Tr(lang, StrId::ProAnnualSub), uiFam, 12.0f * s, false, canAnnual ? pal.textSecondary : dimBodyCol,
                       leftX + 18.0f * s, cardY + 108.0f * s, cardW - 36.0f * s, 20.0f * s,
                       gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
 
     const StrId annualBullets[3] = {StrId::ProBulletAllFeatures, StrId::ProBulletSubUpdates, StrId::ProBulletCancelAnytime};
     for (int i = 0; i < 3; ++i) {
         float by = cardY + 142.0f * s + i * 30.0f * s;
-        gdip::DrawTextBox(g, L"✓", uiFam, 12.8f * s, true, pal.accent,
+        gdip::DrawTextBox(g, L"✓", uiFam, 12.8f * s, true, canAnnual ? pal.accent : dimBodyCol,
                           leftX + 18.0f * s, by, 20.0f * s, 22.0f * s,
                           gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
-        gdip::DrawTextBox(g, Tr(lang, annualBullets[i]), uiFam, 12.8f * s, false, pal.textPrimary,
+        gdip::DrawTextBox(g, Tr(lang, annualBullets[i]), uiFam, 12.8f * s, false, canAnnual ? pal.textPrimary : dimBodyCol,
                           leftX + 40.0f * s, by, cardW - 58.0f * s, 22.0f * s,
                           gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
     }
 
-    // Sağ kart: Ömür Boyu Pro (Zümrüt Vurgulu)
-    gdip::FillRoundedRect(g, rightX, cardY, cardW, cardH, 10.0f * s, pal.bgHighlight);
-    gdip::StrokeRoundedRect(g, rightX, cardY, cardW, cardH, 10.0f * s, pal.borderAccent, 1.8f);
+    // Sağ kart: Ömür Boyu Pro (Zümrüt Vurgulu veya Aktif Lisans Varsa Silik)
+    gdip::FillRoundedRect(g, rightX, cardY, cardW, cardH, 10.0f * s, canLifetime ? pal.bgHighlight : pal.bgCardAlt);
+    gdip::StrokeRoundedRect(g, rightX, cardY, cardW, cardH, 10.0f * s, canLifetime ? pal.borderAccent : pal.borderSubtle, canLifetime ? 1.8f : 1.0f);
 
-    gdip::FillRoundedRect(g, rightX + 28.0f * s, cardY + 14.0f * s, badgeW, 22.0f * s, 11.0f * s, theme::WithAlpha(0x36u, pal.accent));
-    gdip::StrokeRoundedRect(g, rightX + 28.0f * s, cardY + 14.0f * s, badgeW, 22.0f * s, 11.0f * s, pal.borderAccentSoft, 1.0f);
-    gdip::DrawTextBox(g, Tr(lang, StrId::ProBadgePopular), uiFam, 10.2f * s, true, pal.accent,
+    gdip::FillRoundedRect(g, rightX + 28.0f * s, cardY + 14.0f * s, badgeW, 22.0f * s, 11.0f * s,
+                          canLifetime ? theme::WithAlpha(0x36u, pal.accent) : dimBadgeBg);
+    gdip::StrokeRoundedRect(g, rightX + 28.0f * s, cardY + 14.0f * s, badgeW, 22.0f * s, 11.0f * s,
+                            canLifetime ? pal.borderAccentSoft : pal.borderSubtle, 1.0f);
+    gdip::DrawTextBox(g, Tr(lang, StrId::ProBadgePopular), uiFam, 10.2f * s, true, canLifetime ? pal.accent : dimBadgeText,
                       rightX + 28.0f * s, cardY + 14.0f * s, badgeW, 22.0f * s,
                       gdip::kStringAlignmentCenter, gdip::kStringAlignmentCenter);
 
-    gdip::DrawTextBox(g, Tr(lang, StrId::ProPlanLifetimeTitle), dispFam, 15.5f * s, true, pal.textPrimary,
+    gdip::DrawTextBox(g, Tr(lang, StrId::ProPlanLifetimeTitle), dispFam, 15.5f * s, true, canLifetime ? pal.textPrimary : dimTitleCol,
                       rightX + 18.0f * s, cardY + 46.0f * s, cardW - 36.0f * s, 24.0f * s,
                       gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
-    gdip::DrawTextBox(g, Tr(lang, StrId::ProPlanLifetimePrice), dispFam, 24.0f * s, true, pal.gold,
+    gdip::DrawTextBox(g, Tr(lang, StrId::ProPlanLifetimePrice), dispFam, 24.0f * s, true, canLifetime ? pal.gold : dimTitleCol,
                       rightX + 18.0f * s, cardY + 72.0f * s, cardW - 36.0f * s, 32.0f * s,
                       gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
-    gdip::DrawTextBox(g, Tr(lang, StrId::ProLifetimeSub), uiFam, 12.0f * s, false, pal.textSecondary,
+    gdip::DrawTextBox(g, Tr(lang, StrId::ProLifetimeSub), uiFam, 12.0f * s, false, canLifetime ? pal.textSecondary : dimBodyCol,
                       rightX + 18.0f * s, cardY + 108.0f * s, cardW - 36.0f * s, 20.0f * s,
                       gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
 
@@ -1467,10 +1505,12 @@ void SettingsWindow::PaintProTabCanvas(void* g, float s) {
     for (int i = 0; i < 4; ++i) {
         float by = cardY + 138.0f * s + i * 26.0f * s;
         bool isStar = (i == 3);
-        gdip::DrawTextBox(g, isStar ? L"★" : L"✓", uiFam, 12.8f * s, true, isStar ? pal.gold : pal.accent,
+        uint32_t iconCol = canLifetime ? (isStar ? pal.gold : pal.accent) : dimBodyCol;
+        uint32_t rowCol = canLifetime ? (isStar ? pal.gold : pal.textPrimary) : dimBodyCol;
+        gdip::DrawTextBox(g, isStar ? L"★" : L"✓", uiFam, 12.8f * s, true, iconCol,
                           rightX + 18.0f * s, by, 20.0f * s, 22.0f * s,
                           gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
-        gdip::DrawTextBox(g, Tr(lang, lifeBullets[i]), uiFam, 12.8f * s, isStar, isStar ? pal.gold : pal.textPrimary,
+        gdip::DrawTextBox(g, Tr(lang, lifeBullets[i]), uiFam, 12.8f * s, isStar && canLifetime, rowCol,
                           rightX + 40.0f * s, by, cardW - 58.0f * s, 22.0f * s,
                           gdip::kStringAlignmentNear, gdip::kStringAlignmentCenter);
     }
@@ -1717,19 +1757,26 @@ void SettingsWindow::PaintOwnerPushButton(DRAWITEMSTRUCT* dis) {
     }
 
     auto pal = theme::GetUiPalette(isDark_, settings_.useSystemAccentColor);
+    LicenseTier tier = licenseManager_.GetStatus().tier;
+    bool canAnnual = LicenseManager::CanPurchaseAnnual(tier);
+    bool canLifetime = LicenseManager::CanPurchaseLifetime(tier);
     uint32_t parentBg = (id == IDC_PRO_BUY_LIFETIME)
-        ? pal.bgHighlight
-        : (inCard ? pal.bgCard : pal.bgWindow);
+        ? (canLifetime ? pal.bgHighlight : pal.bgCardAlt)
+        : ((id == IDC_PRO_BUY_ANNUAL) ? (canAnnual ? pal.bgCard : pal.bgCardAlt) : (inCard ? pal.bgCard : pal.bgWindow));
 
     uint32_t fill = 0;
     uint32_t border = 0;
     uint32_t fg = 0;
-    if (accentBtn) {
-        fill = disabled
-            ? pal.bgBtnPressed
-            : (pressed ? theme::WithAlpha(0xCCu, pal.accent) : (hovered ? theme::WithAlpha(0xE8u, pal.accent) : pal.accent));
-        border = disabled ? pal.border : pal.accent;
-        fg = disabled ? pal.textMuted : pal.accentTextOnFill;
+    if (disabled) {
+        fill = pal.isDark ? 0xFF1B2631u : 0xFFE8EFF1u;
+        border = pal.borderSubtle;
+        fg = theme::WithAlpha(0x96u, pal.textMuted);
+    } else if (accentBtn) {
+        fill = pressed
+            ? theme::WithAlpha(0xCCu, pal.accent)
+            : (hovered ? theme::WithAlpha(0xE8u, pal.accent) : pal.accent);
+        border = pal.accent;
+        fg = pal.accentTextOnFill;
     } else if (presetActive) {
         fill = pal.bgHighlight;
         border = pal.borderAccent;
@@ -1739,7 +1786,7 @@ void SettingsWindow::PaintOwnerPushButton(DRAWITEMSTRUCT* dis) {
             ? pal.bgBtnPressed
             : (hovered ? pal.bgBtnHover : pal.bgBtn);
         border = hovered ? pal.borderAccentSoft : pal.border;
-        fg = disabled ? pal.textMuted : pal.textPrimary;
+        fg = pal.textPrimary;
     }
 
     std::wstring label = GetEditText(dis->hwndItem);
@@ -1774,7 +1821,7 @@ void SettingsWindow::PaintOwnerPushButton(DRAWITEMSTRUCT* dis) {
             gdip::StrokeRoundedRect(g, 0.5f, 0.5f, w - 1.0f, h - 1.0f, 6.0f * s, border, presetActive ? 1.3f : 1.0f);
 
             void* fam = gdip::CreateBestUiFontFamily(false);
-            gdip::DrawTextBox(g, label, fam, 13.0f * s, accentBtn || presetActive, fg,
+            gdip::DrawTextBox(g, label, fam, 13.0f * s, (accentBtn && !disabled) || presetActive, fg,
                               4.0f * s, 0.0f, w - 8.0f * s, static_cast<float>(h),
                               gdip::kStringAlignmentCenter, gdip::kStringAlignmentCenter);
             if (fam) gdip::GdipDeleteFontFamily(fam);
@@ -2564,10 +2611,12 @@ void SettingsWindow::HandleCommand(WORD id, WORD code, HWND ctrl) {
 
     // Tab 5 (Pro & Lisans)
     if (id == IDC_PRO_BUY_ANNUAL && code == BN_CLICKED) {
+        if (!LicenseManager::CanPurchaseAnnual(licenseManager_.GetStatus().tier)) return;
         StartProStorePurchase(commercial::kStoreAddonAnnualId);
         return;
     }
     if (id == IDC_PRO_BUY_LIFETIME && code == BN_CLICKED) {
+        if (!LicenseManager::CanPurchaseLifetime(licenseManager_.GetStatus().tier)) return;
         StartProStorePurchase(commercial::kStoreAddonLifetimeId);
         return;
     }

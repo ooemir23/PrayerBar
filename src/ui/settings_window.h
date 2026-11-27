@@ -86,6 +86,7 @@ private:
     void StartProStorePurchase(const wchar_t* addOnStoreId);
     void StartProStoreRestore();
     void SetProBusy(bool busy);
+    void UpdateProPurchaseButtons();
     void UpdateHotkeyUi();
     void BeginHotkeyCapture();
     static LRESULT CALLBACK HotkeyBtnProc(HWND h, UINT msg, WPARAM wp, LPARAM lp, UINT_PTR id, DWORD_PTR ref);

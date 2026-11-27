@@ -575,6 +575,17 @@ int TestLicenseManagerTrialOfflineKeysAndGating() {
         CHECK(LicenseManager::IsFeatureProOnly(FlyoutDesignStyle::MinimalGlass));
         CHECK(LicenseManager::IsFeatureProOnly(FlyoutDesignStyle::CardGrid));
         CHECK(LicenseManager::IsFeatureProOnly(FlyoutDesignStyle::TimelineDashboard));
+
+        // Purchase gating: active annual allows lifetime upgrade only; active lifetime blocks both
+        CHECK(LicenseManager::CanPurchaseAnnual(LicenseTier::Free));
+        CHECK(LicenseManager::CanPurchaseAnnual(LicenseTier::Trial));
+        CHECK(!LicenseManager::CanPurchaseAnnual(LicenseTier::ProAnnual));
+        CHECK(!LicenseManager::CanPurchaseAnnual(LicenseTier::ProLifetime));
+
+        CHECK(LicenseManager::CanPurchaseLifetime(LicenseTier::Free));
+        CHECK(LicenseManager::CanPurchaseLifetime(LicenseTier::Trial));
+        CHECK(LicenseManager::CanPurchaseLifetime(LicenseTier::ProAnnual));
+        CHECK(!LicenseManager::CanPurchaseLifetime(LicenseTier::ProLifetime));
     }
 
     std::filesystem::remove_all(tempDir, ec);
