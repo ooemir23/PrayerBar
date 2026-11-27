@@ -1,4 +1,4 @@
-# Microsoft Partner Center — Adım Adım Yayınlama Başvuru Formu (PrayerBar v2.1.0.0)
+# Microsoft Partner Center — Adım Adım Yayınlama Başvuru Formu (PrayerBar v2.4.5.0)
 
 Partner Center'da (`partner.microsoft.com` ➔ **PrayerBar: Prayer Times & Adhan** ➔ **Start submission**) soldaki menüyü **yukarıdan aşağıya** şu değerlerle doldurup tek seferde **Submit to the Store** diyebilirsiniz.
 
@@ -46,10 +46,10 @@ Ankette şu şekilde seçin *(tüm dünyada `3+` / `Everyone` derecesi verir)*:
 
 ## 4. Packages (Uygulama Paketi Yükleme)
 Yüklenecek hazır ve doğrulanmış MSIX dosyası:
-- **Dosya Yolu:** [PrayerBar_2.1.0.0_x64_Store.msix](file:///c:/Users/ooemi/Desktop/Projeler/EzanNamazVak/dist/release/PrayerBar_2.1.0.0_x64_Store.msix)
-- **Sürüm:** `2.1.0.0` (`x64`)
+- **Dosya Yolu:** [PrayerBar_2.4.5.0_x64_Store.msix](file:///c:/Users/ooemi/Desktop/Projeler/EzanNamazVak/dist/release/PrayerBar_2.4.5.0_x64_Store.msix)
+- **Sürüm:** `2.4.5.0` (`x64`)
 - **Identity / Publisher:** `BomeraGdaLimitedirketi.PrayerBar` / `CN=8C3658B6-BFA1-4074-AF50-3C28C1865B0C` (`Bomera Gıda Limited Şirketi`)
-- **SHA256:** `4DC2432F98BC100AEB00587C4CB4AB4D4613B3ED8B62D58AEA240C822128320B`
+- **SHA256:** `dist\release\SHA256SUMS.txt` içinde üretilen `2.4.5.0` özeti
 - **Device families:** `Windows.Desktop` *(Otomatik seçili gelir)*
 
 ---
@@ -84,7 +84,7 @@ Klasör: `dist\store-assets\logos\`
 Paket `runFullTrust` kullandığı için Microsoft inceleme ekibinin sorusuz onaylaması adına **Notes for certification** kutusuna şunu aynen yapıştırın:
 
 ```text
-This pure native C++20 Win32 desktop utility displays a lightweight prayer-time countdown band anchored adjacent to the Windows taskbar (Shell_TrayWnd / Shell_NotifyIconW) alongside an on-demand Fluent flyout, monthly/Ramadan calendar (Imsakiye), and settings window using ~3 MB RAM and 0% idle CPU. The runFullTrust capability is required solely for taskbar indicator window positioning (SetWindowPos / SetWinEventHook), WinHTTP monthly prayer-schedule caching (optional, full offline fallback supported), and optional Windows Startup registration. All core prayer features operate offline without accounts or telemetry. No special test credentials are required to test the application or its Microsoft Store IAP add-ons (pro_annual / pro_lifetime).
+This pure native C++20 Win32 desktop utility displays a lightweight prayer-time countdown band anchored adjacent to the Windows taskbar (Shell_TrayWnd / Shell_NotifyIconW) alongside an on-demand Fluent flyout, Windows 11 Widget provider, monthly/Ramadan calendar (Imsakiye), and settings window using ~3-5 MB RAM and 0% idle CPU. The runFullTrust capability is required solely for taskbar indicator window positioning (SetWindowPos / SetWinEventHook), WinHTTP monthly prayer-schedule caching (optional, full offline fallback supported), and seamless Store update relaunch. The location device capability is used solely when the user enables automatic location detection at startup (optional, manual city selection and full offline calculation supported). All core prayer features operate offline without accounts or telemetry. No special test credentials are required to test the application or its Microsoft Store IAP add-ons (pro_annual / pro_lifetime).
 ```
 
 Tüm yeşil tikler tamamlandığında sağ üstten **"Submit to the Store"** butonuna basın!

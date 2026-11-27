@@ -26,6 +26,9 @@ public:
     void SaveMonthToCache(const std::wstring& monthKey, const std::vector<DailyPrayerTimes>& days);
 
     static std::wstring BuildMonthKey(int year, int month, const AppSettings& settings);
+    static std::wstring MapIanaToWindowsTimeZone(std::string_view iana);
+    static std::optional<DetectedLocationResult> ParseIpGeoResponse(std::string_view providerKey, std::string_view jsonBody);
+    static std::optional<DetectedLocationResult> ParseReverseGeoResponse(double lat, double lon, std::string_view jsonBody);
     static std::optional<DetectedLocationResult> DetectCurrentLocation();
     static std::vector<CityLocation> SearchWorldwideCities(std::wstring_view query);
     static LocalDateTime GetCurrentLocalDateTime();

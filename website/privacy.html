@@ -70,12 +70,12 @@
       <p><strong>PrayerBar</strong> does not collect or store location history, device identifiers, or usage telemetry. Limited data required by the optional features below is sent to the relevant service providers.</p>
 
       <h2>2. Local Storage Only</h2>
-      <p>Your chosen city coordinates, notification preferences, display styles, cached monthly schedules, and license status are stored strictly on your Windows device inside <code>%LocalAppData%\PrayerBar</code> (with an anonymous first-launch day stamp in <code>HKCU\Software\PrayerBar</code> for the 14-day local Pro trial).</p>
+      <p>Your chosen city coordinates, notification preferences, display styles, cached monthly schedules, and license status are stored strictly on your Windows device inside <code>%LocalAppData%\PrayerBar</code> (with an anonymous first-launch day stamp in <code>HKCU\Software\PrayerBar</code> for the 5-day local Pro trial).</p>
 
       <h2>3. Optional Network Connections</h2>
       <ul>
         <li><strong>Monthly Prayer Schedule Sync:</strong> If enabled in Settings, the app sends an anonymous HTTPS GET request once per month to <code>api.aladhan.com</code> with your configured city coordinates and calculation method. You can disable this anytime for 100% offline astronomical prayer calculation.</li>
-        <li><strong>Automatic Location:</strong> "Automatically update my location at startup" is enabled by default. At startup, the app tries Windows Location first; if unavailable or city details are needed, it may use approximate IP geolocation (<code>ipwho.is</code> / <code>get.geojs.io</code>). You can turn this off or choose a location manually.</li>
+        <li><strong>Automatic Location:</strong> "Automatically update my location at startup" is enabled by default. At startup, the app tries Windows Location first (for coordinates outside the offline city catalog, coordinates may be sent to <code>api.bigdatacloud.net</code> to resolve the city name); if unavailable, it may use approximate IP geolocation (<code>ipwho.is</code>, <code>free.freeipapi.com</code>, <code>ipapi.co</code>, <code>ipinfo.io</code>, <code>get.geojs.io</code>). You can turn this off or choose a location manually.</li>
         <li><strong>Worldwide City Search:</strong> While you search for a city, your search query and connection IP address are sent to <code>geocoding-api.open-meteo.com</code>. The built-in city catalog remains available offline.</li>
       </ul>
 
@@ -94,7 +94,7 @@
       <p>Seçtiğiniz şehir, bildirim kuralları, görünüm tercihleri, aylık önbellek ve lisans durumu yalnızca kendi bilgisayarınızdaki <code>%LocalAppData%\PrayerBar</code> klasöründe saklanır.</p>
 
       <h2>3. İsteğe Bağlı Ağ İstekleri</h2>
-      <p>Açılışta konumu otomatik güncelleme varsayılan olarak açıktır. Uygulama önce Windows Konum Hizmeti'ni kullanır; kullanılamazsa veya şehir bilgisi gerekirse yaklaşık konum için <code>ipwho.is</code> / <code>get.geojs.io</code> hizmetlerini deneyebilir. Bu özelliği kapatabilir veya konumu elle seçebilirsiniz. Şehir araması sorgusu ve bağlantı IP adresi dünya çapındaki sonuçlar için <code>geocoding-api.open-meteo.com</code> hizmetine gönderilir; yerleşik katalog çevrimdışı çalışır. Aylık vakit eşitlemesi açıksa koordinatlarınız ve hesaplama yönteminiz <code>api.aladhan.com</code> adresine gönderilir; kapatıldığında çevrimdışı astronomik hesaplama kullanılır.</p>
+      <p>Açılışta konumu otomatik güncelleme varsayılan olarak açıktır. Uygulama önce Windows Konum Hizmeti'ni kullanır (çevrimdışı katalog dışındaki koordinatlar için şehir adını çözmek üzere <code>api.bigdatacloud.net</code> adresine yalnızca koordinat gönderilebilir); kullanılamazsa yaklaşık konum için <code>ipwho.is</code>, <code>free.freeipapi.com</code>, <code>ipapi.co</code>, <code>ipinfo.io</code> veya <code>get.geojs.io</code> hizmetlerini deneyebilir. Bu özelliği kapatabilir veya konumu elle seçebilirsiniz. Şehir araması sorgusu ve bağlantı IP adresi dünya çapındaki sonuçlar için <code>geocoding-api.open-meteo.com</code> hizmetine gönderilir; yerleşik katalog çevrimdışı çalışır. Aylık vakit eşitlemesi açıksa koordinatlarınız ve hesaplama yönteminiz <code>api.aladhan.com</code> adresine gönderilir; kapatıldığında çevrimdışı astronomik hesaplama kullanılır.</p>
 
       <h2>4. Ödemeler</h2>
       <p>Tüm ödemeler Microsoft Store tarafından işlenir; ödeme bilgileriniz uygulamaya asla iletilmez.</p>

@@ -40,6 +40,7 @@ UINT GetDpiForMonitorCompat(HMONITOR mon);
 
 bool IsStartupEnabled();
 bool SetStartupEnabled(bool enable, std::wstring& outNote);
+void MigrateLegacyPackagedStartupIfNeeded(bool settingsStartWithWindows);
 
 void TrimWorkingSet();
 MemoryStats GetMemoryStats();

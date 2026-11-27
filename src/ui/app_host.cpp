@@ -8,11 +8,13 @@
 #include "../platform/theme_utils.h"
 #include "../platform/toast.h"
 #include "../platform/widget_provider.h"
+#include "../platform/win_store.h"
 #include "../core/prayer_calc.h"
 
 #include <shellapi.h>
 
 #include <algorithm>
+#include <atomic>
 #include <cstdio>
 #include <thread>
 
@@ -28,6 +30,8 @@ constexpr UINT_PTR kTimerTickId = 1;
 constexpr UINT_PTR kTimerWatchdogId = 2;
 constexpr UINT_PTR kTimerAutoMemId = 3;
 constexpr UINT_PTR kTimerTrayNotifCleanupId = 4;
+constexpr UINT_PTR kTimerAutoLocRetryId = 5;
+constexpr UINT_PTR kTimerStoreUpdateCheckId = 6;
 
 RECT FallbackAnchorNearCursor() {
     POINT pt{};
@@ -46,6 +50,7 @@ AppHost::AppHost(SettingsStore& settingsStore, ScheduleService& scheduleService)
 }
 
 AppHost::~AppHost() {
+    shuttingDown_ = true;
     UnregisterWidgetProvider();
     AudioPlayer::Stop();
     settingsWindow_.reset();
@@ -60,6 +65,8 @@ AppHost::~AppHost() {
         KillTimer(hostHwnd_, kTimerWatchdogId);
         KillTimer(hostHwnd_, kTimerAutoMemId);
         KillTimer(hostHwnd_, kTimerTrayNotifCleanupId);
+        KillTimer(hostHwnd_, kTimerAutoLocRetryId);
+        KillTimer(hostHwnd_, kTimerStoreUpdateCheckId);
         DestroyWindow(hostHwnd_);
         hostHwnd_ = nullptr;
     }
@@ -81,6 +88,14 @@ int AppHost::Run() {
         0, kHostWindowClassName, L"PrayerBarHost", 0,
         0, 0, 0, 0, nullptr, nullptr, hInst, this);
     if (!hostHwnd_) return 1;
+
+    if (HMODULE k32 = GetModuleHandleW(L"kernel32.dll")) {
+        using RegRestartFn = HRESULT(WINAPI*)(PCWSTR, DWORD);
+        if (auto fn = reinterpret_cast<RegRestartFn>(reinterpret_cast<void*>(GetProcAddress(k32, "RegisterApplicationRestart")))) {
+            fn(L"--restarted", 1 /* RESTART_NO_CRASH */ | 2 /* RESTART_NO_HANG */);
+        }
+    }
+
     // Capture the HWND by value: background fetch threads may fire after AppHost is gone.
     scheduleService_.SetRefreshedCallback([h = hostHwnd_]() { PostMessageW(h, kMsgScheduleRefreshed, 0, 0); });
 
@@ -227,6 +242,12 @@ int AppHost::Run() {
     SetTimer(hostHwnd_, kTimerAutoMemId, 600000, nullptr);
 
     if (IsPackagedApp()) {
+        std::thread([startWithWindows = settings_.startWithWindows]() {
+            MigrateLegacyPackagedStartupIfNeeded(startWithWindows);
+        }).detach();
+
+        SetTimer(hostHwnd_, kTimerStoreUpdateCheckId, 25000, nullptr);
+
         RegisterWidgetProvider(
             [this]() { return FormatWidgetDataJson(scheduleService_.ComputeState(ScheduleService::GetCurrentLocalDateTime(), settings_), settings_); },
             [h = hostHwnd_]() { PostMessageW(h, kMsgShowFlyout, 0, 0); });
@@ -255,6 +276,11 @@ int AppHost::Run() {
 }
 
 void AppHost::OnSettingsChanged() {
+    if (!settings_.autoDetectLocation) {
+        ++autoLocGeneration_;
+        autoLocRetryCount_ = 0;
+        if (hostHwnd_) KillTimer(hostHwnd_, kTimerAutoLocRetryId);
+    }
     ApplyWin11AppDarkMode(settings_.themeMode);
     ApplyHotkey();
     RefreshTick(false);
@@ -307,13 +333,13 @@ void AppHost::ApplyHotkey() {
     }
 }
 
-void AppHost::CheckTimeZoneChange() {
+bool AppHost::CheckTimeZoneChange() {
     DYNAMIC_TIME_ZONE_INFORMATION tz{};
-    if (GetDynamicTimeZoneInformation(&tz) == TIME_ZONE_ID_INVALID) return;
+    if (GetDynamicTimeZoneInformation(&tz) == TIME_ZONE_ID_INVALID) return false;
     uint32_t h = 2166136261u;  // FNV-1a of the zone key; DST switches keep the same key
     for (const wchar_t* p = tz.TimeZoneKeyName; *p; ++p) h = (h ^ static_cast<uint32_t>(*p)) * 16777619u;
     int hash = static_cast<int>(h & 0x7FFFFFFF) | 1;
-    if (settings_.lastTzHash == hash) return;
+    if (settings_.lastTzHash == hash) return false;
     bool firstRecord = (settings_.lastTzHash == 0);
     settings_.lastTzHash = hash;
     settingsStore_.Save(settings_);
@@ -321,6 +347,7 @@ void AppHost::CheckTimeZoneChange() {
         AppLanguage lang = settings_.language;
         ShowActionBalloon(Tr(lang, StrId::TravelTitle), Tr(lang, StrId::TravelBody), kBalloonLocation);
     }
+    return !firstRecord;
 }
 
 void AppHost::ToggleFlyout(RECT anchorRect) {
@@ -345,10 +372,11 @@ void AppHost::TriggerBackgroundRefresh() {
 
 void AppHost::StartAutomaticLocationDetection() {
     HWND target = hostHwnd_;
-    std::thread([target]() {
+    unsigned int gen = autoLocGeneration_;
+    std::thread([target, gen]() {
         auto detected = ScheduleService::DetectCurrentLocation();
         auto* heapPtr = detected ? new DetectedLocationResult(*detected) : nullptr;
-        if (!PostMessageW(target, kMsgAutoLocationDetected, 0, reinterpret_cast<LPARAM>(heapPtr))) {
+        if (!PostMessageW(target, kMsgAutoLocationDetected, static_cast<WPARAM>(gen), reinterpret_cast<LPARAM>(heapPtr))) {
             delete heapPtr;
         }
     }).detach();
@@ -589,6 +617,24 @@ LRESULT AppHost::HostWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
             } else if (wParam == kTimerTrayNotifCleanupId) {
                 KillTimer(hWnd, kTimerTrayNotifCleanupId);
                 if (trayHost_) trayHost_->CleanupTemporaryHiddenIcon();
+            } else if (wParam == kTimerAutoLocRetryId) {
+                KillTimer(hWnd, kTimerAutoLocRetryId);
+                if (settings_.autoDetectLocation) {
+                    StartAutomaticLocationDetection();
+                }
+            } else if (wParam == kTimerStoreUpdateCheckId) {
+                SetTimer(hWnd, kTimerStoreUpdateCheckId, 21600000u, nullptr);
+                static std::atomic<bool> storeUpdateInFlight{false};
+                if (!storeUpdateInFlight.exchange(true)) {
+                    HWND host = hostHwnd_;
+                    std::thread([host]() {
+                        StoreUpdateOutcome outcome = CheckAndInstallStoreUpdatesSilently();
+                        storeUpdateInFlight.store(false);
+                        if (outcome == StoreUpdateOutcome::CompletedNeedsRestart && host) {
+                            PostMessageW(host, kMsgStoreUpdateReady, 0, 0);
+                        }
+                    }).detach();
+                }
             }
             return 0;
 
@@ -636,7 +682,19 @@ LRESULT AppHost::HostWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
 
         case kMsgAutoLocationDetected: {
             auto* detected = reinterpret_cast<DetectedLocationResult*>(lParam);
-            if (!detected) return 0;
+            if (static_cast<unsigned int>(wParam) != autoLocGeneration_) {
+                delete detected;
+                return 0;
+            }
+            if (!detected) {
+                if (settings_.autoDetectLocation && autoLocRetryCount_ < 4) {
+                    static constexpr UINT kRetryDelaysMs[4] = {8000, 20000, 45000, 90000};
+                    SetTimer(hWnd, kTimerAutoLocRetryId, kRetryDelaysMs[autoLocRetryCount_++], nullptr);
+                }
+                return 0;
+            }
+            autoLocRetryCount_ = 0;
+            KillTimer(hWnd, kTimerAutoLocRetryId);
             if (settings_.autoDetectLocation) {
                 settings_.cityId = detected->cityId;
                 settings_.cityName = detected->cityName;
@@ -655,6 +713,11 @@ LRESULT AppHost::HostWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
             delete detected;
             return 0;
         }
+
+        case kMsgStoreUpdateReady:
+            relaunchAfterUpdate_ = true;
+            PostQuitMessage(0);
+            return 0;
 
         case kMsgScheduleRefreshed:
             RefreshTick(false);
@@ -683,6 +746,9 @@ LRESULT AppHost::HostWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
             if (wParam == PBT_APMRESUMEAUTOMATIC || wParam == PBT_APMSUSPEND || wParam == PBT_APMPOWERSTATUSCHANGE) {
                 RefreshTick(false);
                 ScheduleNextTickTimer();
+                if (wParam == PBT_APMRESUMEAUTOMATIC && settings_.autoDetectLocation && autoLocRetryCount_ > 0) {
+                    StartAutomaticLocationDetection();
+                }
             }
             return TRUE;
 
@@ -690,10 +756,31 @@ LRESULT AppHost::HostWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) 
             if (wParam == kHotkeyId) ToggleFlyout(bandWindow_ ? bandWindow_->CurrentRect() : FallbackAnchorNearCursor());
             return 0;
 
-        case WM_TIMECHANGE:
-            CheckTimeZoneChange();
+        case WM_TIMECHANGE: {
+            bool tzChanged = CheckTimeZoneChange();
             RefreshTick(false);
             ScheduleNextTickTimer();
+            if (tzChanged && settings_.autoDetectLocation) {
+                autoLocRetryCount_ = 0;
+                ++autoLocGeneration_;
+                StartAutomaticLocationDetection();
+            }
+            return 0;
+        }
+
+        case WM_QUERYENDSESSION:
+            return TRUE;
+
+        case WM_ENDSESSION:
+            if (wParam != FALSE) PostQuitMessage(0);
+            return 0;
+
+        case WM_CLOSE:
+            PostQuitMessage(0);
+            return 0;
+
+        case WM_DESTROY:
+            if (!shuttingDown_) PostQuitMessage(0);
             return 0;
 
         case WM_DWMCOLORIZATIONCOLORCHANGED:

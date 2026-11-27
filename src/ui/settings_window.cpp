@@ -1038,6 +1038,13 @@ void SettingsWindow::PopulateAllValues() {
     SetFluentCheck(IDC_AUTO_DETECT_LOC_CHK, autoDetectLocChk_, settings_.autoDetectLocation);
     SetFluentCheck(IDC_AUTO_METHOD_CHK, autoMethodChk_, settings_.autoSelectMethodByCountry);
     RefreshCityList(L"");
+    if (!settings_.cityName.empty()) {
+        std::wstring locSummary = settings_.cityName;
+        if (!settings_.countryName.empty()) locSummary += L", " + settings_.countryName;
+        locSummary += L" · ";
+        locSummary += GetMethodFriendlyName(settings_.calculationMethod);
+        SetWindowTextW(autoLocStatus_, locSummary.c_str());
+    }
     SetFluentCheck(IDC_CUSTOM_COORD_CHK, customCoordChk_, settings_.useCustomCoordinates);
 
     wchar_t latBuf[32], lonBuf[32];
@@ -1154,6 +1161,22 @@ void SettingsWindow::UpdateTab0CustomTemplateVisibility() {
 
 void SettingsWindow::RefreshCityList(const std::wstring& query) {
     visibleCities_ = SearchCities(query, 80);
+    std::wstring trimmed = TrimWide(query);
+    if (trimmed.empty() && !settings_.cityName.empty()) {
+        bool hasCurrent = std::any_of(visibleCities_.begin(), visibleCities_.end(), [&](const CityLocation& c) {
+            return c.id == settings_.cityId;
+        });
+        if (!hasCurrent) {
+            CityLocation activeCity;
+            activeCity.id = settings_.cityId.empty() ? L"custom" : settings_.cityId;
+            activeCity.name = settings_.cityName;
+            activeCity.country = settings_.countryName;
+            activeCity.latitude = settings_.latitude;
+            activeCity.longitude = settings_.longitude;
+            activeCity.timeZoneId = settings_.timeZoneId;
+            visibleCities_.insert(visibleCities_.begin(), std::move(activeCity));
+        }
+    }
     SendMessageW(cityList_, LB_RESETCONTENT, 0, 0);
     int selIdx = -1;
     for (size_t i = 0; i < visibleCities_.size(); ++i) {
@@ -2806,6 +2829,12 @@ LRESULT SettingsWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
             SetWindowTextW(latEdit_, latBuf);
             SetWindowTextW(lonEdit_, lonBuf);
             RefreshCityList(GetEditText(citySearchEdit_));
+            std::wstring statusMsg = detected->cityName;
+            if (!detected->countryName.empty()) statusMsg += L", " + detected->countryName;
+            if (!detected->sourceLabel.empty()) statusMsg += L" (" + detected->sourceLabel + L")";
+            statusMsg += L" · ";
+            statusMsg += GetMethodFriendlyName(settings_.calculationMethod);
+            SetWindowTextW(autoLocStatus_, statusMsg.c_str());
             isLoading_ = false;
             delete detected;
             SaveAndNotify();

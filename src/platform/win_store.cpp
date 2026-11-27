@@ -2,6 +2,7 @@
 #include "../core/commercial_config.h"
 #include "../core/utf_util.h"
 
+#include <shellapi.h>
 #include <unknwn.h>
 
 #include <atomic>
@@ -24,6 +25,10 @@ const IID kIidInitializeWithWindow = {0x3E68D4BDu, 0x7135u, 0x4D10u, {0x80, 0x18
 const IID kIidStoreContextStatics = {0x9C06EE5Fu, 0x15C0u, 0x4E72u, {0x93, 0x30, 0xD6, 0x19, 0x1C, 0xEB, 0xD1, 0x9C}};
 const IID kIidCompletedPurchaseHandler = {0x1D9F89EEu, 0x2FCEu, 0x54E6u, {0xA0, 0xA9, 0x52, 0xD0, 0x0C, 0x52, 0xCC, 0x3A}};
 const IID kIidIterableKvpLicense = {0xCA8BA445u, 0x6F4Du, 0x5DA9u, {0x95, 0xEE, 0x42, 0xCF, 0x11, 0x8D, 0xEF, 0x63}};
+const IID kIidStoreContext3 = {0xE26226CAu, 0x1A01u, 0x4730u, {0x85, 0xA6, 0xEC, 0xC8, 0x96, 0xE4, 0xAE, 0x38}};
+const IID kIidVectorViewStorePackageUpdate = {0x971C3EA6u, 0x4388u, 0x5A38u, {0xAE, 0x13, 0x49, 0x29, 0xB6, 0xD6, 0xD7, 0x80}};
+const IID kIidIterableStorePackageUpdate = {0x6B076C51u, 0x849Eu, 0x5EC5u, {0xAE, 0xD5, 0x9B, 0x05, 0x85, 0x59, 0x19, 0x02}};
+const IID kIidStorePackageUpdateResult = {0xE79142EDu, 0x61F9u, 0x4893u, {0xB4, 0xFE, 0xCF, 0x19, 0x16, 0x03, 0xAF, 0x7B}};
 
 struct ComBaseApi {
     HMODULE mod = nullptr;
@@ -146,6 +151,68 @@ struct AbiStoreContext {
         void* GetConsumableBalanceRemainingAsync;
         void* AcquireStoreLicenseForOptionalPackageAsync;
         HRESULT (STDMETHODCALLTYPE* RequestPurchaseAsync)(void* self, WinRtHString storeId, AbiAsyncOperation** op);
+        void* RequestPurchaseWithPropertiesAsync;
+        HRESULT (STDMETHODCALLTYPE* GetAppAndOptionalStorePackageUpdatesAsync)(void* self, AbiAsyncOperation** op);
+    };
+    const Vtbl* lpVtbl;
+};
+
+struct AbiAsyncOpWithProgress {
+    struct Vtbl {
+        HRESULT (STDMETHODCALLTYPE* QueryInterface)(void* self, REFIID riid, void** ppv);
+        ULONG (STDMETHODCALLTYPE* AddRef)(void* self);
+        ULONG (STDMETHODCALLTYPE* Release)(void* self);
+        void* getIids;
+        void* getRuntimeClassName;
+        void* getTrustLevel;
+        HRESULT (STDMETHODCALLTYPE* put_Progress)(void* self, void* handler);
+        HRESULT (STDMETHODCALLTYPE* get_Progress)(void* self, void** handler);
+        HRESULT (STDMETHODCALLTYPE* put_Completed)(void* self, void* handler);
+        HRESULT (STDMETHODCALLTYPE* get_Completed)(void* self, void** handler);
+        HRESULT (STDMETHODCALLTYPE* GetResults)(void* self, void** results);
+    };
+    const Vtbl* lpVtbl;
+};
+
+struct AbiStoreContext3 {
+    struct Vtbl {
+        HRESULT (STDMETHODCALLTYPE* QueryInterface)(void* self, REFIID riid, void** ppv);
+        ULONG (STDMETHODCALLTYPE* AddRef)(void* self);
+        ULONG (STDMETHODCALLTYPE* Release)(void* self);
+        void* getIids;
+        void* getRuntimeClassName;
+        void* getTrustLevel;
+        HRESULT (STDMETHODCALLTYPE* get_CanSilentlyDownloadStorePackageUpdates)(void* self, unsigned char* val);
+        void* TrySilentDownloadStorePackageUpdatesAsync;
+        HRESULT (STDMETHODCALLTYPE* TrySilentDownloadAndInstallStorePackageUpdatesAsync)(void* self, void* packages, AbiAsyncOpWithProgress** op);
+    };
+    const Vtbl* lpVtbl;
+};
+
+struct AbiVectorView {
+    struct Vtbl {
+        HRESULT (STDMETHODCALLTYPE* QueryInterface)(void* self, REFIID riid, void** ppv);
+        ULONG (STDMETHODCALLTYPE* AddRef)(void* self);
+        ULONG (STDMETHODCALLTYPE* Release)(void* self);
+        void* getIids;
+        void* getRuntimeClassName;
+        void* getTrustLevel;
+        HRESULT (STDMETHODCALLTYPE* GetAt)(void* self, uint32_t index, void** item);
+        HRESULT (STDMETHODCALLTYPE* get_Size)(void* self, uint32_t* size);
+    };
+    const Vtbl* lpVtbl;
+};
+
+struct AbiStorePackageUpdateResult {
+    struct Vtbl {
+        HRESULT (STDMETHODCALLTYPE* QueryInterface)(void* self, REFIID riid, void** ppv);
+        ULONG (STDMETHODCALLTYPE* AddRef)(void* self);
+        ULONG (STDMETHODCALLTYPE* Release)(void* self);
+        void* getIids;
+        void* getRuntimeClassName;
+        void* getTrustLevel;
+        HRESULT (STDMETHODCALLTYPE* get_OverallState)(void* self, int32_t* val);
+        void* get_StorePackageUpdateStatuses;
     };
     const Vtbl* lpVtbl;
 };
@@ -677,6 +744,174 @@ bool BeginMicrosoftStorePurchaseAsync(
 
     if (onDone) onDone({StorePurchaseOutcome::StoreUnavailable, failHr, S_OK});
     return false;
+}
+
+StoreUpdateOutcome CheckAndInstallStoreUpdatesSilently() {
+    if (!IsRunningPackaged()) {
+        return StoreUpdateOutcome::NotPackaged;
+    }
+
+    ComBaseApi api;
+    if (!api.Load()) {
+        return StoreUpdateOutcome::Failed;
+    }
+
+    HRESULT roHr = api.roInitialize(1 /* RO_INIT_MULTITHREADED */);
+    bool shouldUninit = (roHr == S_OK || roHr == S_FALSE);
+    if (FAILED(roHr) && roHr != RPC_E_CHANGED_MODE) {
+        return StoreUpdateOutcome::Failed;
+    }
+
+    StoreUpdateOutcome outcome = StoreUpdateOutcome::Failed;
+    WinRtHString hsClass = nullptr;
+    AbiStoreContextStatics* statics = nullptr;
+    AbiStoreContext* ctx = nullptr;
+    AbiStoreContext3* ctx3 = nullptr;
+    AbiAsyncOperation* updatesOp = nullptr;
+    AbiAsyncInfo* updatesInfo = nullptr;
+    void* rawUpdates = nullptr;
+    AbiVectorView* updatesVec = nullptr;
+    void* updatesIterable = nullptr;
+    AbiAsyncOpWithProgress* installOp = nullptr;
+    AbiAsyncInfo* installInfo = nullptr;
+    void* rawResult = nullptr;
+    AbiStorePackageUpdateResult* updResult = nullptr;
+
+    do {
+        constexpr wchar_t kClassName[] = L"Windows.Services.Store.StoreContext";
+        if (FAILED(api.createString(kClassName, static_cast<UINT32>(wcslen(kClassName)), &hsClass)) || !hsClass) break;
+        if (FAILED(api.roGetActivationFactory(hsClass, kIidStoreContextStatics, reinterpret_cast<void**>(&statics))) || !statics) break;
+
+        void* rawCtx = nullptr;
+        if (FAILED(statics->lpVtbl->GetDefault(statics, &rawCtx)) || !rawCtx) break;
+        ctx = static_cast<AbiStoreContext*>(rawCtx);
+
+        if (FAILED(ctx->lpVtbl->GetAppAndOptionalStorePackageUpdatesAsync(ctx, &updatesOp)) || !updatesOp) break;
+        if (FAILED(updatesOp->lpVtbl->QueryInterface(updatesOp, kIidIAsyncInfo, reinterpret_cast<void**>(&updatesInfo))) || !updatesInfo) break;
+
+        int32_t asyncStatus = 0;
+        for (int waitMs = 0; waitMs < 30000; waitMs += 50) {
+            if (FAILED(updatesInfo->lpVtbl->get_Status(updatesInfo, &asyncStatus)) || asyncStatus != 0) break;
+            Sleep(50);
+        }
+        if (asyncStatus != 1) break;
+
+        if (FAILED(updatesOp->lpVtbl->GetResults(updatesOp, &rawUpdates)) || !rawUpdates) break;
+        auto* rawUpdatesUnk = static_cast<RawComUnknown*>(rawUpdates);
+        if (FAILED(rawUpdatesUnk->lpVtbl->QueryInterface(rawUpdatesUnk, kIidVectorViewStorePackageUpdate, reinterpret_cast<void**>(&updatesVec))) || !updatesVec) break;
+
+        uint32_t count = 0;
+        if (FAILED(updatesVec->lpVtbl->get_Size(updatesVec, &count))) break;
+        if (count == 0) {
+            outcome = StoreUpdateOutcome::NoUpdate;
+            break;
+        }
+
+        if (FAILED(ctx->lpVtbl->QueryInterface(ctx, kIidStoreContext3, reinterpret_cast<void**>(&ctx3))) || !ctx3) {
+            outcome = StoreUpdateOutcome::CannotInstallSilently;
+            break;
+        }
+
+        unsigned char canSilent = 0;
+        if (FAILED(ctx3->lpVtbl->get_CanSilentlyDownloadStorePackageUpdates(ctx3, &canSilent)) || canSilent == 0) {
+            outcome = StoreUpdateOutcome::CannotInstallSilently;
+            break;
+        }
+
+        if (FAILED(rawUpdatesUnk->lpVtbl->QueryInterface(rawUpdatesUnk, kIidIterableStorePackageUpdate, &updatesIterable)) || !updatesIterable) {
+            break;
+        }
+
+        if (FAILED(ctx3->lpVtbl->TrySilentDownloadAndInstallStorePackageUpdatesAsync(ctx3, updatesIterable, &installOp)) || !installOp) {
+            break;
+        }
+        if (FAILED(installOp->lpVtbl->QueryInterface(installOp, kIidIAsyncInfo, reinterpret_cast<void**>(&installInfo))) || !installInfo) {
+            break;
+        }
+
+        int32_t installStatus = 0;
+        for (int waitMs = 0; waitMs < 600000; waitMs += 250) {
+            if (FAILED(installInfo->lpVtbl->get_Status(installInfo, &installStatus)) || installStatus != 0) break;
+            Sleep(250);
+        }
+        if (installStatus != 1) break;
+
+        if (FAILED(installOp->lpVtbl->GetResults(installOp, &rawResult)) || !rawResult) break;
+        auto* rawResUnk = static_cast<RawComUnknown*>(rawResult);
+        if (FAILED(rawResUnk->lpVtbl->QueryInterface(rawResUnk, kIidStorePackageUpdateResult, reinterpret_cast<void**>(&updResult))) || !updResult) {
+            break;
+        }
+
+        int32_t overallState = 0;
+        if (SUCCEEDED(updResult->lpVtbl->get_OverallState(updResult, &overallState)) && overallState == 3 /* Completed */) {
+            outcome = StoreUpdateOutcome::CompletedNeedsRestart;
+        }
+    } while (false);
+
+    SafeComRelease(updResult);
+    SafeComRelease(rawResult);
+    SafeComRelease(installInfo);
+    SafeComRelease(installOp);
+    SafeComRelease(updatesIterable);
+    SafeComRelease(updatesVec);
+    SafeComRelease(rawUpdates);
+    SafeComRelease(updatesInfo);
+    SafeComRelease(updatesOp);
+    SafeComRelease(ctx3);
+    SafeComRelease(ctx);
+    SafeComRelease(statics);
+    if (hsClass) api.deleteString(hsClass);
+    if (shouldUninit) api.roUninitialize();
+    return outcome;
+}
+
+bool RelaunchPackagedApp(const wchar_t* args) {
+    if (!IsRunningPackaged()) return false;
+
+    using GetFamilyFn = LONG(WINAPI*)(UINT32*, PWSTR);
+    HMODULE k32 = GetModuleHandleW(L"kernel32.dll");
+    if (!k32) return false;
+    auto getFamily = reinterpret_cast<GetFamilyFn>(reinterpret_cast<void*>(GetProcAddress(k32, "GetCurrentPackageFamilyName")));
+    if (!getFamily) return false;
+
+    UINT32 len = 0;
+    getFamily(&len, nullptr);
+    if (len == 0 || len > 256) return false;
+    std::wstring family(len, L'\0');
+    if (getFamily(&len, family.data()) != ERROR_SUCCESS) return false;
+    if (!family.empty() && family.back() == L'\0') family.pop_back();
+    std::wstring aumid = family + L"!App";
+
+    struct AbiAppActivationMgr {
+        struct Vtbl {
+            HRESULT (STDMETHODCALLTYPE* QueryInterface)(void* self, REFIID riid, void** ppv);
+            ULONG (STDMETHODCALLTYPE* AddRef)(void* self);
+            ULONG (STDMETHODCALLTYPE* Release)(void* self);
+            HRESULT (STDMETHODCALLTYPE* ActivateApplication)(void* self, LPCWSTR aumid, LPCWSTR arguments, int32_t options, DWORD* pid);
+        };
+        const Vtbl* lpVtbl;
+    };
+
+    static constexpr CLSID kClsidAppActivationMgr = {0x45BA127Du, 0x10A8u, 0x46EAu, {0x8A, 0xB7, 0x56, 0xEA, 0x90, 0x78, 0x94, 0x3C}};
+    static constexpr IID kIidAppActivationMgr = {0x2E941141u, 0x7F97u, 0x4756u, {0xBA, 0x1D, 0x9D, 0xEC, 0xDE, 0x89, 0x4A, 0x3D}};
+
+    bool activated = false;
+    AbiAppActivationMgr* mgr = nullptr;
+    if (SUCCEEDED(CoCreateInstance(kClsidAppActivationMgr, nullptr, CLSCTX_LOCAL_SERVER,
+                                   kIidAppActivationMgr, reinterpret_cast<void**>(&mgr))) && mgr) {
+        DWORD pid = 0;
+        if (SUCCEEDED(mgr->lpVtbl->ActivateApplication(mgr, aumid.c_str(), args ? args : L"", 0 /* AO_NONE */, &pid))) {
+            activated = true;
+        }
+        SafeComRelease(mgr);
+    }
+
+    if (!activated) {
+        std::wstring shellTarget = L"shell:AppsFolder\\" + aumid;
+        HINSTANCE shRc = ShellExecuteW(nullptr, L"open", L"explorer.exe", shellTarget.c_str(), nullptr, SW_SHOWNORMAL);
+        activated = reinterpret_cast<INT_PTR>(shRc) > 32;
+    }
+    return activated;
 }
 
 } // namespace vakit

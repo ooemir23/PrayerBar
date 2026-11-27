@@ -57,4 +57,15 @@ bool BeginMicrosoftStorePurchaseAsync(
     const std::wstring& addOnStoreId,
     std::function<void(StorePurchaseResponse)> onDone);
 
+enum class StoreUpdateOutcome : int {
+    NoUpdate = 0,
+    NotPackaged = 1,
+    CannotInstallSilently = 2,
+    Failed = 3,
+    CompletedNeedsRestart = 4
+};
+
+StoreUpdateOutcome CheckAndInstallStoreUpdatesSilently();
+bool RelaunchPackagedApp(const wchar_t* args);
+
 } // namespace vakit

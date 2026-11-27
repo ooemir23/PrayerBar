@@ -1,5 +1,6 @@
 # PrayerBar
 
+[![Version 2.4.5.0](https://img.shields.io/badge/Version-2.4.5.0-0F766E)](https://github.com/ooemir23/EzanNamazVak/releases)
 [![Windows 10/11](https://img.shields.io/badge/Platform-Windows%2010%2F11%20(x64)-0078D4?logo=windows)](https://apps.microsoft.com/detail/9MSQBZTPGWX6)
 [![Ad-Free](https://img.shields.io/badge/Privacy-Ad--Free%20%26%20Offline--Ready-2EA44F)](#key-features)
 [![RAM](https://img.shields.io/badge/RAM-~3--5%20MB-2EA44F)](#key-features)
@@ -35,7 +36,12 @@ Many desktop prayer apps stay heavy in the background and consume hundreds of me
 - **12 Languages (`Auto` OS Detection):** English, Türkçe, العربية, Deutsch, Français, Bahasa Indonesia, اردو, বাংলা, Bahasa Melayu, فارسی, Русский, Español (with full RTL layout support).
 - **23 Global Calculation Methods:** Diyanet, MWL, ISNA, Umm al-Qura, Egyptian, Karachi, Singapore, France UOIF, Malaysia JAKIM, Indonesia KEMENAG, Russia, and more — plus Standard/Hanafi Asr and 100% offline calculation.
 - **Ramadan & Daily Tools:** Automatic Ramadan Iftar/Suhoor countdown, Monthly Imsakiye (CSV/HTML export), live Qibla compass, Hijri date, optional Duha/Midnight/Tahajjud times, Friday & holiday reminders, Travel mode (timezone change alert), prayer tracking, and `Win+Alt+P` global hotkey.
-- **Ethical Freemium & Ad-Free:** Zero ads and zero tracking. Core prayer times, daily notifications, built-in Adhan/chime sounds, and Monthly Imsakiye are **free forever**. Pro (`$4.99/yr` or `$9.99` lifetime via Microsoft Store, with a **14-day free trial**) unlocks extra taskbar styles, popup themes, custom audio files, and backup/restore.
+- **Ethical Freemium & Ad-Free:** Zero ads and zero tracking. Core prayer times, daily notifications, built-in Adhan/chime sounds, and Monthly Imsakiye are **free forever**. Pro (`$4.99/yr` or `$9.99` lifetime via Microsoft Store, with a **5-day free trial**) unlocks extra taskbar styles, popup themes, custom audio files, and backup/restore.
+
+### What's New in v2.4.5.0
+- **Worldwide Automatic Location Detection:** Uses Windows Location (`Windows.Devices.Geolocation.Geolocator`) with `location` capability, BigDataCloud reverse geocoding for cities outside the offline catalog, a 5-provider HTTPS IP geolocation fallback (`ipwho.is`, `free.freeipapi.com`, `ipapi.co`, `ipinfo.io`, `get.geojs.io`), universal `icu.dll` IANA-to-Windows timezone mapping, startup retry backoff, and timezone-change re-detection.
+- **Seamless Microsoft Store Updates & Relaunch:** Registers with Windows Restart Manager (`RegisterApplicationRestart`), handles Store shutdown signals cleanly, resolves single-instance mutex handoff across updated versions, checks/installs Store updates silently in the background with automatic relaunch, and uses MSIX `StartupTask` for reliable Windows autostart across updates.
+- **Windows 11 Widgets & Fluent UI:** Includes Windows 11 Widgets Board (`Win+W`), Fluent right-click context menu, crisp tray icons, and 5-day free Pro trial.
 
 ---
 
@@ -51,9 +57,14 @@ Windows 10/11 görev çubuğunun istediğiniz bölümünde (sistem tepsisi yanı
 - **23 Dünya Hesaplama Metodu + Otomatik Konum:** Diyanet, MWL, ISNA, Ümmü'l-Kura, Mısır, Karaçi, UOIF Fransa vb. tüm metotlar, Standart/Hanefi İkindi mezhebi, otomatik konum algılama ve internetsiz çalışma desteği.
 - **12 Dilli Global Arayüz (`Auto` OS Dili Algılama):** English, Türkçe, العربية, Deutsch, Français, Bahasa Indonesia, اردو, বাংলা, Bahasa Melayu, فارسی, Русский, Español.
 - **Ramazan İftar & Sahur Geri Sayımı + Aylık İmsakiye:** İmsakiye penceresi, CSV/HTML dışa aktarım ve otomatik Ramazan İftar/Sahur modu.
-- **Etik Freemium & 14 Gün Ücretsiz Pro Deneme:** Reklamsız ve takipçisizdir. Çekirdek vakitler, günlük bildirimler, dahili ezan sesleri ve İmsakiye görüntüleme daima ücretsizdir. Pro (`$4.99/yıl` veya `$9.99 ömür boyu`, Türkiye'de `₺100 / ₺250`) 14 gün tam deneme sunar ve ekstra temalar ile özel ses/yedekleme özelliklerini açar.
+- **Etik Freemium & 5 Gün Ücretsiz Pro Deneme:** Reklamsız ve takipçisizdir. Çekirdek vakitler, günlük bildirimler, dahili ezan sesleri ve İmsakiye görüntüleme daima ücretsizdir. Pro (`$4.99/yıl` veya `$9.99 ömür boyu`, Türkiye'de `₺100 / ₺250`) 5 gün tam deneme sunar ve ekstra temalar ile özel ses/yedekleme özelliklerini açar.
 - **Aç/Kapa Özellikler Sekmesi:** Cuma ve dini gün hatırlatmaları, seyahat modu (saat dilimi değişince uyarı), Ertele düğmeli Windows bildirimleri, Kuşluk / Gece yarısı / Teheccüd vakitleri, haftalık özetli namaz takibi ve `Win+Alt+P` kısayolu.
 - **Sabah Ezanı Seçimi:** İmsak vakti için ayrı ses seçilebilir.
+
+### v2.4.5.0 Yenilikleri
+- **Dünya Genelinde Otomatik Konum:** Modern Windows Konum API (`Geolocator` + `location` yetkisi), çevrimdışı katalog dışı şehirler için BigDataCloud ters coğrafi kodlama, 5 sağlayıcılı HTTPS IP konum yedeği, Windows `icu.dll` ile evrensel saat dilimi eşlemesi, açılışta kademeli yeniden deneme ve saat dilimi değişiminde otomatik güncelleme.
+- **Sorunsuz Microsoft Store Güncelleme & Yeniden Açılma:** Windows Restart Manager kaydı, temiz kapanma sinyalleri, sürümler arası tek-örnek devir teslimi, arka planda sessiz Store güncellemesi ve güncelleme sonrası otomatik yeniden açılma + MSIX `StartupTask` ile kalıcı başlangıç desteği.
+- **Windows 11 Widget Paneli (`Win+W`) & Fluent Menü:** Görev çubuğu ve Widget panosunda canlı geri sayım, akıcı sağ tık menüsü ve net sistem tepsisi simgeleri.
 
 ---
 
@@ -71,7 +82,7 @@ powershell -ExecutionPolicy Bypass -File scripts\build.ps1
 # Render flyout preview BMPs in any language (--lang 1-12)
 .\build\PrayerBar.exe --diag-smoke --lang 2 --flyout-preview C:\Temp\en
 
-# Open Settings on a specific tab (0-4) in the running instance
+# Open Settings on a specific tab (0-5) in the running instance
 .\build\PrayerBar.exe --settings 3
 
 # Build Store (.msix) + Portable (.zip) + SHA256SUMS.txt under dist\release\

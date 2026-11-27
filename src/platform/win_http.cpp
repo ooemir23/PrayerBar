@@ -22,86 +22,96 @@ std::optional<std::string> WinHttpExecuteUtf8(
     bool useHttps,
     int timeoutMs) {
 
-    HINTERNET hSession = WinHttpOpen(
-        L"PrayerBar/2.1",
-        WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,
-        WINHTTP_NO_PROXY_NAME,
-        WINHTTP_NO_PROXY_BYPASS,
-        0);
-    if (!hSession) return std::nullopt;
+    auto tryOnce = [&](DWORD accessType, bool& transportOk) -> std::optional<std::string> {
+        transportOk = false;
+        HINTERNET hSession = WinHttpOpen(
+            L"PrayerBar/2.4",
+            accessType,
+            WINHTTP_NO_PROXY_NAME,
+            WINHTTP_NO_PROXY_BYPASS,
+            0);
+        if (!hSession) return std::nullopt;
 
-    WinHttpSetTimeouts(hSession, timeoutMs, timeoutMs, timeoutMs, timeoutMs);
+        WinHttpSetTimeouts(hSession, timeoutMs, timeoutMs, timeoutMs, timeoutMs);
 
-    HINTERNET hConnect = WinHttpConnect(
-        hSession,
-        host.c_str(),
-        useHttps ? INTERNET_DEFAULT_HTTPS_PORT : INTERNET_DEFAULT_HTTP_PORT,
-        0);
-    if (!hConnect) {
-        WinHttpCloseHandle(hSession);
-        return std::nullopt;
-    }
+        HINTERNET hConnect = WinHttpConnect(
+            hSession,
+            host.c_str(),
+            useHttps ? INTERNET_DEFAULT_HTTPS_PORT : INTERNET_DEFAULT_HTTP_PORT,
+            0);
+        if (!hConnect) {
+            WinHttpCloseHandle(hSession);
+            return std::nullopt;
+        }
 
-    HINTERNET hRequest = WinHttpOpenRequest(
-        hConnect,
-        verb,
-        pathAndQuery.c_str(),
-        nullptr,
-        WINHTTP_NO_REFERER,
-        WINHTTP_DEFAULT_ACCEPT_TYPES,
-        useHttps ? WINHTTP_FLAG_SECURE : 0);
-    if (!hRequest) {
-        WinHttpCloseHandle(hConnect);
-        WinHttpCloseHandle(hSession);
-        return std::nullopt;
-    }
+        HINTERNET hRequest = WinHttpOpenRequest(
+            hConnect,
+            verb,
+            pathAndQuery.c_str(),
+            nullptr,
+            WINHTTP_NO_REFERER,
+            WINHTTP_DEFAULT_ACCEPT_TYPES,
+            useHttps ? WINHTTP_FLAG_SECURE : 0);
+        if (!hRequest) {
+            WinHttpCloseHandle(hConnect);
+            WinHttpCloseHandle(hSession);
+            return std::nullopt;
+        }
 
-    LPVOID optData = bodyData && !bodyData->empty()
-        ? const_cast<char*>(bodyData->data())
-        : WINHTTP_NO_REQUEST_DATA;
-    DWORD optLen = bodyData ? static_cast<DWORD>(bodyData->size()) : 0;
-    DWORD hdrLen = extraHeaders ? static_cast<DWORD>(wcslen(extraHeaders)) : 0;
+        const wchar_t* hdrs = extraHeaders ? extraHeaders : L"Accept: application/json, */*;q=0.8\r\n";
+        DWORD hdrLen = static_cast<DWORD>(wcslen(hdrs));
+        LPVOID optData = bodyData && !bodyData->empty()
+            ? const_cast<char*>(bodyData->data())
+            : WINHTTP_NO_REQUEST_DATA;
+        DWORD optLen = bodyData ? static_cast<DWORD>(bodyData->size()) : 0;
 
-    std::optional<std::string> result;
-    if (WinHttpSendRequest(hRequest,
-                           extraHeaders ? extraHeaders : WINHTTP_NO_ADDITIONAL_HEADERS,
-                           hdrLen,
-                           optData,
-                           optLen,
-                           optLen,
-                           0) &&
-        WinHttpReceiveResponse(hRequest, nullptr)) {
+        std::optional<std::string> result;
+        if (WinHttpSendRequest(hRequest, hdrs, hdrLen, optData, optLen, optLen, 0) &&
+            WinHttpReceiveResponse(hRequest, nullptr)) {
 
-        DWORD statusCode = 0;
-        DWORD statusSize = sizeof(statusCode);
-        WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
-                            WINHTTP_HEADER_NAME_BY_INDEX, &statusCode, &statusSize, WINHTTP_NO_HEADER_INDEX);
+            transportOk = true;
+            DWORD statusCode = 0;
+            DWORD statusSize = sizeof(statusCode);
+            WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+                                WINHTTP_HEADER_NAME_BY_INDEX, &statusCode, &statusSize, WINHTTP_NO_HEADER_INDEX);
 
-        if (statusCode >= 200 && statusCode < 500) {
-            std::string body;
-            body.reserve(16384);
-            DWORD avail = 0;
-            while (WinHttpQueryDataAvailable(hRequest, &avail) && avail > 0) {
-                if (body.size() + avail > 2 * 1024 * 1024) break;
-                size_t prev = body.size();
-                body.resize(prev + avail);
-                DWORD readBytes = 0;
-                if (!WinHttpReadData(hRequest, body.data() + prev, avail, &readBytes) || readBytes == 0) {
-                    body.resize(prev);
-                    break;
+            bool statusOk = (bodyData == nullptr)
+                ? (statusCode >= 200 && statusCode < 300)
+                : (statusCode >= 200 && statusCode < 500);
+
+            if (statusOk) {
+                std::string body;
+                body.reserve(16384);
+                DWORD avail = 0;
+                while (WinHttpQueryDataAvailable(hRequest, &avail) && avail > 0) {
+                    if (body.size() + avail > 2 * 1024 * 1024) break;
+                    size_t prev = body.size();
+                    body.resize(prev + avail);
+                    DWORD readBytes = 0;
+                    if (!WinHttpReadData(hRequest, body.data() + prev, avail, &readBytes) || readBytes == 0) {
+                        body.resize(prev);
+                        break;
+                    }
+                    body.resize(prev + readBytes);
                 }
-                body.resize(prev + readBytes);
-            }
-            if (!body.empty() && (statusCode < 300 || body[0] == '{')) {
-                result = std::move(body);
+                if (!body.empty() && (statusCode < 300 || body[0] == '{')) {
+                    result = std::move(body);
+                }
             }
         }
-    }
 
-    WinHttpCloseHandle(hRequest);
-    WinHttpCloseHandle(hConnect);
-    WinHttpCloseHandle(hSession);
-    return result;
+        WinHttpCloseHandle(hRequest);
+        WinHttpCloseHandle(hConnect);
+        WinHttpCloseHandle(hSession);
+        return result;
+    };
+
+    bool transportOk = false;
+    auto res = tryOnce(WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY, transportOk);
+    if (!transportOk) {
+        res = tryOnce(WINHTTP_ACCESS_TYPE_NO_PROXY, transportOk);
+    }
+    return res;
 }
 
 } // namespace

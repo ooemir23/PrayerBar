@@ -731,6 +731,99 @@ int TestMicrosoftStoreIapHelpersAndLicenseSync() {
     // 4. Unpackaged runtime safety check
     StoreLicenseSnapshot liveUnpackaged = QueryMicrosoftStoreLicenseSync();
     CHECK(!liveUnpackaged.storeAvailable);
+    CHECK(CheckAndInstallStoreUpdatesSilently() == StoreUpdateOutcome::NotPackaged);
+    CHECK(!RelaunchPackagedApp(L"--restarted"));
+
+    ++g_passed;
+    return 0;
+}
+
+int TestWorldwideTimeZonesAndLocationParsers() {
+    // 1. Universal IANA-to-Windows timezone mapping (via icu.dll + fallback table)
+    CHECK(ScheduleService::MapIanaToWindowsTimeZone("Europe/Istanbul") == L"Turkey Standard Time");
+    CHECK(ScheduleService::MapIanaToWindowsTimeZone("Asia/Istanbul") == L"Turkey Standard Time");
+    CHECK(ScheduleService::MapIanaToWindowsTimeZone("Australia/Adelaide") == L"Cen. Australia Standard Time");
+    CHECK(ScheduleService::MapIanaToWindowsTimeZone("Asia/Makassar") == L"Singapore Standard Time");
+    CHECK(ScheduleService::MapIanaToWindowsTimeZone("America/Argentina/Buenos_Aires") == L"Argentina Standard Time");
+    CHECK(ScheduleService::MapIanaToWindowsTimeZone("Europe/Kyiv") == L"FLE Standard Time");
+    CHECK(ScheduleService::MapIanaToWindowsTimeZone("Africa/Casablanca") == L"Morocco Standard Time");
+    CHECK(ScheduleService::MapIanaToWindowsTimeZone("Pacific/Auckland") == L"New Zealand Standard Time");
+    CHECK(ScheduleService::MapIanaToWindowsTimeZone("America/Los_Angeles") == L"Pacific Standard Time");
+    CHECK(ScheduleService::MapIanaToWindowsTimeZone("Asia/Tokyo") == L"Tokyo Standard Time");
+    CHECK(ScheduleService::MapIanaToWindowsTimeZone("Asia/Kolkata") == L"India Standard Time");
+    CHECK(ScheduleService::MapIanaToWindowsTimeZone("Asia/Riyadh") == L"Arab Standard Time");
+
+    // 2. IP geolocation parsers across all 5 providers
+    {
+        auto failIpWho = ScheduleService::ParseIpGeoResponse("ipwho", R"({"success":false,"message":"reserved range"})");
+        CHECK(!failIpWho.has_value());
+
+        auto okIpWho = ScheduleService::ParseIpGeoResponse(
+            "ipwho",
+            R"({"success":true,"city":"Adelaide","country":"Australia","country_code":"AU","latitude":-34.9285,"longitude":138.6007,"timezone":{"id":"Australia/Adelaide"}})");
+        CHECK(okIpWho.has_value());
+        CHECK(okIpWho->cityId == L"adelaide");
+        CHECK(okIpWho->timeZoneId == L"Cen. Australia Standard Time");
+        CHECK(okIpWho->recommendedMethod == CalculationMethod::MWL);
+
+        auto okFreeIpApi = ScheduleService::ParseIpGeoResponse(
+            "freeipapi",
+            R"({"latitude":-6.2088,"longitude":106.8456,"countryName":"Indonesia","countryCode":"ID","cityName":"Jakarta","timeZones":["Asia/Jakarta"]})");
+        CHECK(okFreeIpApi.has_value());
+        CHECK(okFreeIpApi->cityId == L"jakarta");
+        CHECK(okFreeIpApi->timeZoneId == L"SE Asia Standard Time");
+        CHECK(okFreeIpApi->recommendedMethod == CalculationMethod::IndonesiaKEMENAG);
+
+        auto failIpApi = ScheduleService::ParseIpGeoResponse("ipapi", R"({"error":true,"reason":"RateLimited"})");
+        CHECK(!failIpApi.has_value());
+
+        auto okIpApi = ScheduleService::ParseIpGeoResponse(
+            "ipapi",
+            R"({"city":"New York","country_name":"United States","country_code":"US","latitude":40.7128,"longitude":-74.006,"timezone":"America/New_York"})");
+        CHECK(okIpApi.has_value());
+        CHECK(okIpApi->cityId == L"newyork");
+        CHECK(okIpApi->timeZoneId == L"Eastern Standard Time");
+        CHECK(okIpApi->recommendedMethod == CalculationMethod::ISNA);
+
+        auto okIpInfo = ScheduleService::ParseIpGeoResponse(
+            "ipinfo",
+            R"({"city":"Istanbul","country":"TR","loc":"41.0138,28.9497","timezone":"Europe/Istanbul"})");
+        CHECK(okIpInfo.has_value());
+        CHECK(okIpInfo->cityId == L"istanbul");
+        CHECK(okIpInfo->timeZoneId == L"Turkey Standard Time");
+        CHECK(okIpInfo->recommendedMethod == CalculationMethod::Diyanet);
+
+        auto okGeoJs = ScheduleService::ParseIpGeoResponse(
+            "geojs",
+            R"({"city":"nil","country":"United Kingdom","country_code":"GB","latitude":"51.5072","longitude":"-0.1276","timezone":"Europe/London"})");
+        CHECK(okGeoJs.has_value());
+        CHECK(okGeoJs->cityId == L"london");
+        CHECK(okGeoJs->cityName == L"Londra");
+        CHECK(okGeoJs->timeZoneId == L"GMT Standard Time");
+
+        auto nullIsland = ScheduleService::ParseIpGeoResponse(
+            "geojs",
+            R"({"city":"Test","country":"None","country_code":"XX","latitude":"0.0","longitude":"0.0","timezone":"UTC"})");
+        CHECK(!nullIsland.has_value());
+    }
+
+    // 3. BigDataCloud reverse geocoding parser
+    {
+        auto rev1 = ScheduleService::ParseReverseGeoResponse(
+            35.6895, 139.6917,
+            R"({"city":"Tokyo","locality":"Shinjuku","countryName":"Japan","countryCode":"JP"})");
+        CHECK(rev1.has_value());
+        CHECK(rev1->cityId == L"tokyo");
+        CHECK(rev1->timeZoneId == L"Tokyo Standard Time");
+
+        auto revFallback = ScheduleService::ParseReverseGeoResponse(
+            48.2082, 16.3738,
+            R"({"city":"","locality":"Innere Stadt","countryName":"Austria","countryCode":"AT"})");
+        CHECK(revFallback.has_value());
+        CHECK(revFallback->cityId == L"vienna");
+        CHECK(revFallback->cityName == L"Innere Stadt");
+        CHECK(revFallback->countryCode == L"AT");
+    }
 
     ++g_passed;
     return 0;
@@ -751,6 +844,7 @@ int main() {
     if (TestLicenseManagerTrialOfflineKeysAndGating() != 0) return 1;
     if (TestRamadanIftarSahurModeAndGlobalAutoLang() != 0) return 1;
     if (TestMicrosoftStoreIapHelpersAndLicenseSync() != 0) return 1;
+    if (TestWorldwideTimeZonesAndLocationParsers() != 0) return 1;
     printf("All %d native C++20 unit test suites passed!\n", g_passed);
     return 0;
 }

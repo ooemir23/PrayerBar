@@ -389,6 +389,17 @@ LRESULT TaskbarBandWindow::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
             return 0;
         }
 
+        case WM_QUERYENDSESSION:
+            return TRUE;
+
+        case WM_ENDSESSION:
+            if (wParam != FALSE && onExit_) onExit_();
+            return 0;
+
+        case WM_CLOSE:
+            if (onExit_) onExit_();
+            return 0;
+
         case WM_SETTINGCHANGE:
         case WM_DISPLAYCHANGE:
         case WM_DPICHANGED:

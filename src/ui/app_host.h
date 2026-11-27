@@ -33,11 +33,13 @@ public:
     static constexpr UINT kMsgStoreLicenseSynced = WM_APP + 104;
     static constexpr UINT kMsgShowSettings = WM_APP + 105;  // wParam = tab index
     static constexpr UINT kMsgAutoLocationDetected = WM_APP + 106;
+    static constexpr UINT kMsgStoreUpdateReady = WM_APP + 107;
 
     AppHost(SettingsStore& settingsStore, ScheduleService& scheduleService);
     ~AppHost();
 
     int Run();
+    bool WantsRelaunchAfterUpdate() const { return relaunchAfterUpdate_; }
 
 private:
     static LRESULT CALLBACK HostWndProcStatic(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -53,7 +55,7 @@ private:
     void StartAutomaticLocationDetection();
     void ShowUserNotification(const std::wstring& title, const std::wstring& body, bool silent, bool hasAudio = false);
     void ShowActionBalloon(const std::wstring& title, const std::wstring& body, int action);
-    void CheckTimeZoneChange();
+    bool CheckTimeZoneChange();
     void ApplyHotkey();
     void OnSettingsChanged();
 
@@ -77,6 +79,10 @@ private:
     PrayerCountdownState lastState_{};
     bool hasLastState_ = false;
     UINT watchdogIntervalMs_ = 15000;
+    unsigned int autoLocGeneration_ = 0;
+    int autoLocRetryCount_ = 0;
+    bool relaunchAfterUpdate_ = false;
+    bool shuttingDown_ = false;
 };
 
 } // namespace vakit

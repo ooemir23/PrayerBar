@@ -4,17 +4,18 @@ Read this note before changing location detection, city search, timezone handlin
 
 ## Behavior
 
-- Automatic location detection is enabled for fresh installs and runs asynchronously after startup. Windows Location is tried first; IP geolocation (`ipwho.is`, then `get.geojs.io`) is the fallback and may be approximate.
+- Automatic location detection is enabled for fresh installs and runs asynchronously after startup (with backoff retries if network/location services are not yet ready at boot, and automatic re-detection on system timezone changes). Modern WinRT `Windows.Devices.Geolocation.Geolocator` (`location` capability) is tried first with legacy `ILocation` fallback; if coordinates fall outside the offline catalog, `api.bigdatacloud.net` reverse geocoding (then WinRT `CivicAddress` / nearby-city / system region fallback) resolves the city. If Windows Location is unavailable, a 5-provider HTTPS IP geolocation waterfall (`ipwho.is`, `free.freeipapi.com`, `ipapi.co`, `ipinfo.io`, `get.geojs.io`) is used as approximate fallback.
 - Existing 2.4.0.0 settings without an auto-detection preference are migrated conservatively: the default Istanbul location can opt into detection, while a saved non-default city or custom coordinates remain manual.
 - Settings allow automatic detection to be turned off and on. Selecting a city or applying custom coordinates turns it off; a late detection result must not overwrite a newer manual choice.
 - City search always starts with the built-in offline catalog. After a short debounce, it adds worldwide results from Open-Meteo Geocoding; network failure must not remove or disable offline results.
-- Coordinates and timezone feed the same prayer calculation, online month sync, and Imsakiye views. Keep IANA-to-Windows timezone mappings aligned with search results and regional cities.
+- Coordinates and timezone feed the same prayer calculation, online month sync, and Imsakiye views. Keep IANA-to-Windows timezone mappings (via Windows `icu.dll` `ucal_getWindowsTimeZoneID` + static fallback table) aligned with search results and regional cities.
 - The Australian offline catalog includes Adelaide, Sydney, Melbourne, Brisbane, Perth, Darwin, and Canberra. Adelaide uses `Cen. Australia Standard Time` and observes daylight-saving transitions.
 
 ## Privacy
 
 - Location detection is enabled by default on fresh installs. Users can disable it or choose a city/coordinates manually.
-- IP providers may receive the request IP. Worldwide city search sends the search query and request IP to `geocoding-api.open-meteo.com`.
+- When Windows Location returns coordinates outside the offline city catalog, coordinates are sent to `api.bigdatacloud.net` for reverse geocoding.
+- IP providers (`ipwho.is`, `free.freeipapi.com`, `ipapi.co`, `ipinfo.io`, `get.geojs.io`) may receive the request IP when Windows Location is unavailable. Worldwide city search sends the search query and request IP to `geocoding-api.open-meteo.com`.
 - Monthly prayer-time sync sends configured coordinates and calculation method to `api.aladhan.com` only when online sync is enabled.
 - Do not claim that these requests never occur. Keep both `docs/PRIVACY_POLICY.md` and `website/privacy.html` accurate when behavior or providers change.
 

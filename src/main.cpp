@@ -6,6 +6,7 @@
 #include "core/utf_util.h"
 #include "platform/audio_player.h"
 #include "platform/theme_utils.h"
+#include "platform/win_store.h"
 #include "ui/app_host.h"
 #include "ui/gdiplus_flat.h"
 #include "ui/taskbar_renderer.h"
@@ -257,6 +258,23 @@ int RunDiagnosticSmoke(const std::wstring& previewBmpPath, const std::wstring& f
     return 0;
 }
 
+std::wstring GetSelfExePath() {
+    wchar_t buf[MAX_PATH * 2]{};
+    DWORD len = GetModuleFileNameW(nullptr, buf, MAX_PATH * 2);
+    return (len > 0 && len < MAX_PATH * 2) ? std::wstring(buf, len) : std::wstring();
+}
+
+std::wstring GetProcessExePath(DWORD pid) {
+    if (pid == 0) return {};
+    HANDLE hProc = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+    if (!hProc) return {};
+    wchar_t buf[MAX_PATH * 2]{};
+    DWORD size = MAX_PATH * 2;
+    BOOL ok = QueryFullProcessImageNameW(hProc, 0, buf, &size);
+    CloseHandle(hProc);
+    return (ok && size > 0) ? std::wstring(buf, size) : std::wstring();
+}
+
 } // namespace
 
 int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
@@ -275,6 +293,7 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     int langOverride = 0;
     int openSettingsTab = -1;  // --settings [tab]: open settings (in the running instance if any)
     bool comLaunch = false;    // started by COM for the Widgets board: run normally, never pop the flyout
+    bool restartedLaunch = false;  // relaunched after Store update or Windows Restart Manager
     if (argv) {
         for (int i = 1; i < argc; ++i) {
             if (_wcsicmp(argv[i], L"--diag-smoke") == 0) {
@@ -287,6 +306,8 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
                 langOverride = std::clamp(_wtoi(argv[++i]), 0, 12);
             } else if (_wcsicmp(argv[i], L"-RegisterProcessAsComServer") == 0) {
                 comLaunch = true;
+            } else if (_wcsicmp(argv[i], L"--restarted") == 0) {
+                restartedLaunch = true;
             } else if (_wcsicmp(argv[i], L"--settings") == 0) {
                 openSettingsTab = ((i + 1) < argc && iswdigit(argv[i + 1][0])) ? std::clamp(_wtoi(argv[++i]), 0, 5) : 0;
             }
@@ -317,27 +338,66 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR, int) {
     HANDLE hMutex = CreateMutexW(nullptr, TRUE, L"Local\\PrayerBar_SingleInstance_v1");
     if (hMutex && GetLastError() == ERROR_ALREADY_EXISTS) {
         HWND existing = FindWindowW(vakit::AppHost::kHostWindowClassName, nullptr);
+        bool sameExe = false;
         if (existing) {
-            if (openSettingsTab >= 0) {
-                PostMessageW(existing, vakit::AppHost::kMsgShowSettings, static_cast<WPARAM>(openSettingsTab), 0);
-            } else if (!comLaunch) {
-                PostMessageW(existing, vakit::AppHost::kMsgShowFlyout, 0, 0);
+            DWORD existingPid = 0;
+            GetWindowThreadProcessId(existing, &existingPid);
+            std::wstring selfExe = GetSelfExePath();
+            std::wstring otherExe = GetProcessExePath(existingPid);
+            if (!selfExe.empty() && !otherExe.empty() && _wcsicmp(selfExe.c_str(), otherExe.c_str()) == 0) {
+                sameExe = true;
             }
         }
-        CloseHandle(hMutex);
-        CoUninitialize();
-        return 0;
+
+        if (existing && sameExe) {
+            if (openSettingsTab >= 0) {
+                PostMessageW(existing, vakit::AppHost::kMsgShowSettings, static_cast<WPARAM>(openSettingsTab), 0);
+            } else if (!comLaunch && !restartedLaunch) {
+                PostMessageW(existing, vakit::AppHost::kMsgShowFlyout, 0, 0);
+            }
+            CloseHandle(hMutex);
+            CoUninitialize();
+            return 0;
+        }
+
+        if (existing && !sameExe) {
+            PostMessageW(existing, WM_CLOSE, 0, 0);
+        }
+
+        DWORD waitRc = WaitForSingleObject(hMutex, 6000);
+        if (waitRc != WAIT_OBJECT_0 && waitRc != WAIT_ABANDONED) {
+            HWND retryExisting = FindWindowW(vakit::AppHost::kHostWindowClassName, nullptr);
+            if (retryExisting) {
+                if (openSettingsTab >= 0) {
+                    PostMessageW(retryExisting, vakit::AppHost::kMsgShowSettings, static_cast<WPARAM>(openSettingsTab), 0);
+                } else if (!comLaunch && !restartedLaunch) {
+                    PostMessageW(retryExisting, vakit::AppHost::kMsgShowFlyout, 0, 0);
+                }
+            }
+            CloseHandle(hMutex);
+            CoUninitialize();
+            return 0;
+        }
     }
 
     vakit::SettingsStore settingsStore;
     vakit::ScheduleService scheduleService;
     int exitCode = 0;
+    bool wantRelaunch = false;
     {
         vakit::AppHost host(settingsStore, scheduleService);
         exitCode = host.Run();
+        wantRelaunch = host.WantsRelaunchAfterUpdate();
     }
 
-    if (hMutex) CloseHandle(hMutex);
+    if (hMutex) {
+        ReleaseMutex(hMutex);
+        CloseHandle(hMutex);
+        hMutex = nullptr;
+    }
+    if (wantRelaunch) {
+        vakit::RelaunchPackagedApp(L"--restarted");
+    }
     CoUninitialize();
     // Detached network threads still hold &scheduleService; end the process before it is destroyed.
     ExitProcess(static_cast<UINT>(exitCode));

@@ -3,6 +3,9 @@
 #include <dwmapi.h>
 #include <psapi.h>
 
+#include <cstdint>
+#include <thread>
+
 namespace vakit {
 
 namespace {
@@ -280,14 +283,242 @@ void ApplyWindowDwmStyle(HWND hwnd, bool isDark, int cornerPref, int backdropTyp
     }
 }
 
-bool IsStartupEnabled() {
+namespace {
+
+constexpr wchar_t kStartupTaskId[] = L"PrayerBarStartup";
+
+struct StartupRawUnknown {
+    struct Vtbl {
+        HRESULT (STDMETHODCALLTYPE* QueryInterface)(void* self, REFIID riid, void** ppv);
+        ULONG (STDMETHODCALLTYPE* AddRef)(void* self);
+        ULONG (STDMETHODCALLTYPE* Release)(void* self);
+    };
+    const Vtbl* lpVtbl;
+};
+
+struct StartupAsyncInfo {
+    struct Vtbl {
+        HRESULT (STDMETHODCALLTYPE* QueryInterface)(void* self, REFIID riid, void** ppv);
+        ULONG (STDMETHODCALLTYPE* AddRef)(void* self);
+        ULONG (STDMETHODCALLTYPE* Release)(void* self);
+        void* getIids;
+        void* getRuntimeClassName;
+        void* getTrustLevel;
+        HRESULT (STDMETHODCALLTYPE* get_Id)(void* self, uint32_t* id);
+        HRESULT (STDMETHODCALLTYPE* get_Status)(void* self, int32_t* status);
+        HRESULT (STDMETHODCALLTYPE* get_ErrorCode)(void* self, HRESULT* errorCode);
+        HRESULT (STDMETHODCALLTYPE* Cancel)(void* self);
+        HRESULT (STDMETHODCALLTYPE* Close)(void* self);
+    };
+    const Vtbl* lpVtbl;
+};
+
+struct StartupAsyncOpPtr {
+    struct Vtbl {
+        HRESULT (STDMETHODCALLTYPE* QueryInterface)(void* self, REFIID riid, void** ppv);
+        ULONG (STDMETHODCALLTYPE* AddRef)(void* self);
+        ULONG (STDMETHODCALLTYPE* Release)(void* self);
+        void* getIids;
+        void* getRuntimeClassName;
+        void* getTrustLevel;
+        HRESULT (STDMETHODCALLTYPE* put_Completed)(void* self, void* handler);
+        HRESULT (STDMETHODCALLTYPE* get_Completed)(void* self, void** handler);
+        HRESULT (STDMETHODCALLTYPE* GetResults)(void* self, void** results);
+    };
+    const Vtbl* lpVtbl;
+};
+
+struct StartupAsyncOpState {
+    struct Vtbl {
+        HRESULT (STDMETHODCALLTYPE* QueryInterface)(void* self, REFIID riid, void** ppv);
+        ULONG (STDMETHODCALLTYPE* AddRef)(void* self);
+        ULONG (STDMETHODCALLTYPE* Release)(void* self);
+        void* getIids;
+        void* getRuntimeClassName;
+        void* getTrustLevel;
+        HRESULT (STDMETHODCALLTYPE* put_Completed)(void* self, void* handler);
+        HRESULT (STDMETHODCALLTYPE* get_Completed)(void* self, void** handler);
+        HRESULT (STDMETHODCALLTYPE* GetResults)(void* self, int32_t* results);
+    };
+    const Vtbl* lpVtbl;
+};
+
+struct StartupTaskStaticsAbi {
+    struct Vtbl {
+        HRESULT (STDMETHODCALLTYPE* QueryInterface)(void* self, REFIID riid, void** ppv);
+        ULONG (STDMETHODCALLTYPE* AddRef)(void* self);
+        ULONG (STDMETHODCALLTYPE* Release)(void* self);
+        void* getIids;
+        void* getRuntimeClassName;
+        void* getTrustLevel;
+        HRESULT (STDMETHODCALLTYPE* GetForCurrentPackageAsync)(void* self, void** op);
+        HRESULT (STDMETHODCALLTYPE* GetAsync)(void* self, void* taskId, StartupAsyncOpPtr** op);
+    };
+    const Vtbl* lpVtbl;
+};
+
+struct StartupTaskAbi {
+    struct Vtbl {
+        HRESULT (STDMETHODCALLTYPE* QueryInterface)(void* self, REFIID riid, void** ppv);
+        ULONG (STDMETHODCALLTYPE* AddRef)(void* self);
+        ULONG (STDMETHODCALLTYPE* Release)(void* self);
+        void* getIids;
+        void* getRuntimeClassName;
+        void* getTrustLevel;
+        HRESULT (STDMETHODCALLTYPE* RequestEnableAsync)(void* self, StartupAsyncOpState** op);
+        HRESULT (STDMETHODCALLTYPE* Disable)(void* self);
+        HRESULT (STDMETHODCALLTYPE* get_State)(void* self, int32_t* state);
+        HRESULT (STDMETHODCALLTYPE* get_TaskId)(void* self, void** taskId);
+    };
+    const Vtbl* lpVtbl;
+};
+
+template <typename T>
+void StartupSafeRelease(T*& p) {
+    if (p) {
+        reinterpret_cast<StartupRawUnknown*>(p)->lpVtbl->Release(p);
+        p = nullptr;
+    }
+}
+
+// Run on an MTA worker thread so polling IAsyncInfo never deadlocks the UI STA.
+bool QueryOrUpdatePackagedStartupTask(int action /* 0=query, 1=enable, 2=disable, 3=migrateEnable */, int32_t& outState) {
+    outState = 0;
+    bool ok = false;
+    std::thread([action, &outState, &ok]() {
+        HMODULE combase = GetModuleHandleW(L"combase.dll");
+        if (!combase) combase = LoadLibraryW(L"combase.dll");
+        if (!combase) return;
+
+        auto roInit = reinterpret_cast<HRESULT (WINAPI*)(int)>(GetProcAddress(combase, "RoInitialize"));
+        auto roUninit = reinterpret_cast<void (WINAPI*)()>(GetProcAddress(combase, "RoUninitialize"));
+        auto roFactory = reinterpret_cast<HRESULT (WINAPI*)(void*, REFIID, void**)>(GetProcAddress(combase, "RoGetActivationFactory"));
+        auto createStr = reinterpret_cast<HRESULT (WINAPI*)(const wchar_t*, UINT32, void**)>(GetProcAddress(combase, "WindowsCreateString"));
+        auto deleteStr = reinterpret_cast<HRESULT (WINAPI*)(void*)>(GetProcAddress(combase, "WindowsDeleteString"));
+        if (!roInit || !roUninit || !roFactory || !createStr || !deleteStr) return;
+
+        HRESULT roHr = roInit(1 /* RO_INIT_MULTITHREADED */);
+        bool shouldUninit = (roHr == S_OK || roHr == S_FALSE);
+        if (FAILED(roHr) && roHr != RPC_E_CHANGED_MODE) return;
+
+        static constexpr IID kIidAsyncInfo = {0x00000036u, 0x0000u, 0x0000u, {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}};
+        static constexpr IID kIidStartupStatics = {0xEE5B60BDu, 0xA148u, 0x41A7u, {0xB2, 0x6E, 0xE8, 0xB8, 0x8A, 0x1E, 0x62, 0xF8}};
+
+        void* hsClass = nullptr;
+        void* hsTaskId = nullptr;
+        StartupTaskStaticsAbi* statics = nullptr;
+        StartupAsyncOpPtr* getOp = nullptr;
+        StartupAsyncInfo* getInfo = nullptr;
+        StartupTaskAbi* task = nullptr;
+        StartupAsyncOpState* reqOp = nullptr;
+        StartupAsyncInfo* reqInfo = nullptr;
+
+        auto waitAsync = [](StartupAsyncInfo* info, int maxMs) -> int32_t {
+            int32_t st = 0;
+            for (int w = 0; w < maxMs; w += 20) {
+                if (FAILED(info->lpVtbl->get_Status(info, &st)) || st != 0) break;
+                Sleep(20);
+            }
+            return st;
+        };
+
+        do {
+            constexpr wchar_t kClass[] = L"Windows.ApplicationModel.StartupTask";
+            if (FAILED(createStr(kClass, static_cast<UINT32>(wcslen(kClass)), &hsClass)) || !hsClass) break;
+            if (FAILED(createStr(kStartupTaskId, static_cast<UINT32>(wcslen(kStartupTaskId)), &hsTaskId)) || !hsTaskId) break;
+            if (FAILED(roFactory(hsClass, kIidStartupStatics, reinterpret_cast<void**>(&statics))) || !statics) break;
+
+            if (FAILED(statics->lpVtbl->GetAsync(statics, hsTaskId, &getOp)) || !getOp) break;
+            if (FAILED(getOp->lpVtbl->QueryInterface(getOp, kIidAsyncInfo, reinterpret_cast<void**>(&getInfo))) || !getInfo) break;
+            if (waitAsync(getInfo, 5000) != 1) break;
+
+            void* rawTask = nullptr;
+            if (FAILED(getOp->lpVtbl->GetResults(getOp, &rawTask)) || !rawTask) break;
+            task = static_cast<StartupTaskAbi*>(rawTask);
+
+            int32_t st = 0;
+            if (FAILED(task->lpVtbl->get_State(task, &st))) break;
+            outState = st;
+
+            if (action == 1 || (action == 3 && st == 0)) {
+                if (SUCCEEDED(task->lpVtbl->RequestEnableAsync(task, &reqOp)) && reqOp) {
+                    if (SUCCEEDED(reqOp->lpVtbl->QueryInterface(reqOp, kIidAsyncInfo, reinterpret_cast<void**>(&reqInfo))) && reqInfo) {
+                        if (waitAsync(reqInfo, 5000) == 1) {
+                            int32_t newSt = st;
+                            if (SUCCEEDED(reqOp->lpVtbl->GetResults(reqOp, &newSt))) {
+                                outState = newSt;
+                                ok = true;
+                            }
+                        }
+                    }
+                }
+            } else if (action == 2) {
+                if (SUCCEEDED(task->lpVtbl->Disable(task))) {
+                    task->lpVtbl->get_State(task, &outState);
+                    ok = true;
+                }
+            } else {
+                ok = true;
+            }
+        } while (false);
+
+        StartupSafeRelease(reqInfo);
+        StartupSafeRelease(reqOp);
+        StartupSafeRelease(task);
+        StartupSafeRelease(getInfo);
+        StartupSafeRelease(getOp);
+        StartupSafeRelease(statics);
+        if (hsTaskId) deleteStr(hsTaskId);
+        if (hsClass) deleteStr(hsClass);
+        if (shouldUninit) roUninit();
+    }).join();
+    return ok;
+}
+
+bool HasLegacyRunKeyEntry() {
     wchar_t buf[MAX_PATH * 2]{};
     DWORD size = sizeof(buf);
     LSTATUS rc = RegGetValueW(HKEY_CURRENT_USER, kRunKey, kRunValueName, RRF_RT_REG_SZ, nullptr, buf, &size);
     return rc == ERROR_SUCCESS && buf[0] != L'\0';
 }
 
+void DeleteLegacyRunKeyEntry() {
+    HKEY hKey = nullptr;
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, kRunKey, 0, KEY_SET_VALUE, &hKey) == ERROR_SUCCESS && hKey) {
+        RegDeleteValueW(hKey, kRunValueName);
+        RegCloseKey(hKey);
+    }
+}
+
+} // namespace
+
+bool IsStartupEnabled() {
+    if (IsPackagedApp()) {
+        int32_t state = 0;
+        if (QueryOrUpdatePackagedStartupTask(0, state)) {
+            return state == 2 /* Enabled */ || state == 4 /* EnabledByPolicy */;
+        }
+        return false;
+    }
+    return HasLegacyRunKeyEntry();
+}
+
 bool SetStartupEnabled(bool enable, std::wstring& outNote) {
+    if (IsPackagedApp()) {
+        DeleteLegacyRunKeyEntry();
+        int32_t state = 0;
+        if (!QueryOrUpdatePackagedStartupTask(enable ? 1 : 2, state)) {
+            outNote = L"Başlangıç görevi güncellenemedi.";
+            return false;
+        }
+        if (enable && state != 2 && state != 4) {
+            outNote = L"Başlangıç görevi Windows ayarlarından devre dışı bırakılmış.";
+            return false;
+        }
+        outNote.clear();
+        return true;
+    }
+
     HKEY hKey = nullptr;
     LSTATUS rc = RegOpenKeyExW(HKEY_CURRENT_USER, kRunKey, 0, KEY_SET_VALUE, &hKey);
     if (rc != ERROR_SUCCESS) {
@@ -318,6 +549,18 @@ bool SetStartupEnabled(bool enable, std::wstring& outNote) {
         outNote.clear();
     }
     return ok;
+}
+
+void MigrateLegacyPackagedStartupIfNeeded(bool settingsStartWithWindows) {
+    if (!IsPackagedApp()) return;
+    bool hadRunEntry = HasLegacyRunKeyEntry();
+    if (hadRunEntry) {
+        DeleteLegacyRunKeyEntry();
+    }
+    if (hadRunEntry || settingsStartWithWindows) {
+        int32_t state = 0;
+        QueryOrUpdatePackagedStartupTask(3, state);
+    }
 }
 
 void TrimWorkingSet() {

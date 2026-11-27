@@ -18,8 +18,9 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <thread>
-#include <windows.h>
 #include <initguid.h>
 #include <locationapi.h>
 
@@ -70,7 +71,7 @@ DailyPrayerTimes ApplyOffsets(const DailyPrayerTimes& raw, const PrayerOffsets& 
     return copy;
 }
 
-std::wstring MapIanaToWindowsTimeZone(std::string_view iana) {
+std::wstring MapIanaStaticFallback(std::string_view iana) {
     if (iana == "Europe/Istanbul" || iana == "Asia/Istanbul") return L"Turkey Standard Time";
     if (iana == "Europe/Berlin" || iana == "Europe/Vienna" || iana == "Europe/Amsterdam" ||
         iana == "Europe/Rome" || iana == "Europe/Stockholm" || iana == "Europe/Copenhagen" ||
@@ -78,32 +79,42 @@ std::wstring MapIanaToWindowsTimeZone(std::string_view iana) {
     if (iana == "Europe/Paris" || iana == "Europe/Brussels" || iana == "Europe/Luxembourg") return L"Romance Standard Time";
     if (iana == "Europe/London" || iana == "Europe/Lisbon" || iana == "Europe/Dublin") return L"GMT Standard Time";
     if (iana == "Europe/Sarajevo" || iana == "Europe/Prague" || iana == "Europe/Warsaw" ||
-        iana == "Europe/Budapest" || iana == "Europe/Belgrade" || iana == "Europe/Zagreb") return L"Central European Standard Time";
+        iana == "Europe/Budapest" || iana == "Europe/Belgrade" || iana == "Europe/Zagreb" ||
+        iana == "Europe/Tirane" || iana == "Europe/Skopje") return L"Central European Standard Time";
     if (iana == "Europe/Athens" || iana == "Europe/Helsinki" || iana == "Europe/Bucharest" ||
-        iana == "Europe/Sofia" || iana == "Europe/Kyiv" || iana == "Europe/Riga" ||
-        iana == "Europe/Tallinn" || iana == "Europe/Vilnius") return L"FLE Standard Time";
+        iana == "Europe/Sofia" || iana == "Europe/Kyiv" || iana == "Europe/Kiev" ||
+        iana == "Europe/Riga" || iana == "Europe/Tallinn" || iana == "Europe/Vilnius" ||
+        iana == "Asia/Nicosia" || iana == "Europe/Nicosia") return L"FLE Standard Time";
+    if (iana == "Europe/Chisinau") return L"E. Europe Standard Time";
     if (iana == "Europe/Moscow" || iana == "Europe/Minsk") return L"Russian Standard Time";
     if (iana == "Asia/Baku") return L"Azerbaijan Standard Time";
+    if (iana == "Asia/Tbilisi") return L"Georgian Standard Time";
+    if (iana == "Asia/Yerevan") return L"Caucasus Standard Time";
     if (iana == "Asia/Riyadh" || iana == "Asia/Qatar" || iana == "Asia/Kuwait" ||
-        iana == "Asia/Baghdad") return L"Arab Standard Time";
+        iana == "Asia/Baghdad" || iana == "Asia/Bahrain" || iana == "Asia/Aden") return L"Arab Standard Time";
     if (iana == "Asia/Dubai" || iana == "Asia/Muscat") return L"Arabian Standard Time";
     if (iana == "Asia/Amman") return L"Jordan Standard Time";
     if (iana == "Asia/Tehran") return L"Iran Standard Time";
     if (iana == "Asia/Karachi") return L"Pakistan Standard Time";
     if (iana == "Asia/Kabul") return L"Afghanistan Standard Time";
     if (iana == "Asia/Kolkata" || iana == "Asia/Calcutta") return L"India Standard Time";
+    if (iana == "Asia/Colombo") return L"Sri Lanka Standard Time";
     if (iana == "Asia/Dhaka") return L"Bangladesh Standard Time";
     if (iana == "Asia/Kathmandu") return L"Nepal Standard Time";
-    if (iana == "Asia/Kuala_Lumpur" || iana == "Asia/Singapore" || iana == "Asia/Manila") return L"Singapore Standard Time";
+    if (iana == "Asia/Yangon") return L"Myanmar Standard Time";
+    if (iana == "Asia/Kuala_Lumpur" || iana == "Asia/Kuching" || iana == "Asia/Singapore" ||
+        iana == "Asia/Manila" || iana == "Asia/Makassar") return L"Singapore Standard Time";
     if (iana == "Asia/Jakarta" || iana == "Asia/Bangkok" || iana == "Asia/Ho_Chi_Minh") return L"SE Asia Standard Time";
-    if (iana == "Asia/Tashkent" || iana == "Asia/Almaty") return L"Central Asia Standard Time";
-    if (iana == "Asia/Bishkek") return L"Central Asia Standard Time";
+    if (iana == "Asia/Jayapura") return L"Tokyo Standard Time";
+    if (iana == "Asia/Tashkent" || iana == "Asia/Ashgabat") return L"West Asia Standard Time";
+    if (iana == "Asia/Almaty" || iana == "Asia/Bishkek") return L"Central Asia Standard Time";
     if (iana == "Asia/Dushanbe") return L"West Asia Standard Time";
     if (iana == "Asia/Yekaterinburg") return L"Ekaterinburg Standard Time";
     if (iana == "Asia/Krasnoyarsk") return L"North Asia Standard Time";
     if (iana == "Asia/Vladivostok") return L"Vladivostok Standard Time";
     if (iana == "Asia/Shanghai" || iana == "Asia/Hong_Kong" || iana == "Asia/Urumqi") return L"China Standard Time";
     if (iana == "Asia/Jerusalem") return L"Israel Standard Time";
+    if (iana == "Asia/Gaza" || iana == "Asia/Hebron") return L"West Bank Standard Time";
     if (iana == "Asia/Beirut") return L"Middle East Standard Time";
     if (iana == "Asia/Damascus") return L"Syria Standard Time";
     if (iana == "Asia/Seoul") return L"Korea Standard Time";
@@ -117,13 +128,14 @@ std::wstring MapIanaToWindowsTimeZone(std::string_view iana) {
     if (iana == "Africa/Tripoli") return L"Libya Standard Time";
     if (iana == "Africa/Khartoum") return L"Sudan Standard Time";
     if (iana == "Africa/Windhoek") return L"Namibia Standard Time";
-    if (iana == "America/New_York" || iana == "America/Toronto" || iana == "America/Detroit") return L"Eastern Standard Time";
+    if (iana == "America/New_York" || iana == "America/Toronto" || iana == "America/Detroit" ||
+        iana == "America/Montreal") return L"Eastern Standard Time";
     if (iana == "America/Chicago" || iana == "America/Winnipeg" || iana == "America/Mexico_City" ||
         iana == "America/Monterrey") return L"Central Standard Time";
     if (iana == "America/Regina") return L"Canada Central Standard Time";
-    if (iana == "America/Denver") return L"Mountain Standard Time";
+    if (iana == "America/Denver" || iana == "America/Edmonton") return L"Mountain Standard Time";
     if (iana == "America/Phoenix") return L"US Mountain Standard Time";
-    if (iana == "America/Los_Angeles" || iana == "America/Vancouver") return L"Pacific Standard Time";
+    if (iana == "America/Los_Angeles" || iana == "America/Vancouver" || iana == "America/Tijuana") return L"Pacific Standard Time";
     if (iana == "America/Anchorage") return L"Alaskan Standard Time";
     if (iana == "Pacific/Honolulu") return L"Hawaiian Standard Time";
     if (iana == "America/Halifax") return L"Atlantic Standard Time";
@@ -155,11 +167,384 @@ std::wstring GetSystemTimeZoneId() {
     return tz.TimeZoneKeyName;
 }
 
-std::optional<std::pair<double, double>> GetWindowsLocationCoordinates() {
-    HRESULT initResult = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-    if (FAILED(initResult)) return std::nullopt;
+std::wstring GetSystemRegionCountryCode() {
+    using GetGeoNameFn = int(WINAPI*)(LPWSTR, int);
+    HMODULE k32 = GetModuleHandleW(L"kernel32.dll");
+    if (!k32) return L"";
+    auto fn = reinterpret_cast<GetGeoNameFn>(reinterpret_cast<void*>(GetProcAddress(k32, "GetUserDefaultGeoName")));
+    if (!fn) return L"";
+    wchar_t buf[16]{};
+    int len = fn(buf, 16);
+    if (len >= 2) {
+        std::wstring code(buf);
+        if (code.size() == 2 &&
+            ((code[0] >= L'A' && code[0] <= L'Z') || (code[0] >= L'a' && code[0] <= L'z')) &&
+            ((code[1] >= L'A' && code[1] <= L'Z') || (code[1] >= L'a' && code[1] <= L'z'))) {
+            return code;
+        }
+    }
+    return L"";
+}
 
-    std::optional<std::pair<double, double>> coordinates;
+bool IsValidCoordinates(double lat, double lon) {
+    if (!std::isfinite(lat) || !std::isfinite(lon)) return false;
+    if (lat < -90.0 || lat > 90.0 || lon < -180.0 || lon > 180.0) return false;
+    if (std::abs(lat) < 0.0001 && std::abs(lon) < 0.0001) return false;
+    return true;
+}
+
+std::string CleanGeoField(std::string_view raw) {
+    size_t start = 0;
+    size_t end = raw.size();
+    auto isWs = [](char ch) { return ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n'; };
+    while (start < end && isWs(raw[start])) ++start;
+    while (end > start && isWs(raw[end - 1])) --end;
+    std::string_view trimmed = raw.substr(start, end - start);
+    if (trimmed.empty()) return {};
+
+    auto eqCi = [](std::string_view a, std::string_view b) {
+        if (a.size() != b.size()) return false;
+        for (size_t i = 0; i < a.size(); ++i) {
+            char ca = (a[i] >= 'A' && a[i] <= 'Z') ? static_cast<char>(a[i] - 'A' + 'a') : a[i];
+            if (ca != b[i]) return false;
+        }
+        return true;
+    };
+    if (eqCi(trimmed, "nil") || eqCi(trimmed, "null") || eqCi(trimmed, "none") ||
+        eqCi(trimmed, "unknown") || trimmed == "-") {
+        return {};
+    }
+    return std::string(trimmed);
+}
+
+struct WindowsLocationFix {
+    double latitude = 0.0;
+    double longitude = 0.0;
+    std::wstring civicCity;
+    std::wstring civicCountry;
+};
+
+struct GeoRawComUnknown {
+    struct Vtbl {
+        HRESULT (STDMETHODCALLTYPE* QueryInterface)(void* self, REFIID riid, void** ppv);
+        ULONG (STDMETHODCALLTYPE* AddRef)(void* self);
+        ULONG (STDMETHODCALLTYPE* Release)(void* self);
+    };
+    const Vtbl* lpVtbl;
+};
+
+struct GeoAbiAsyncInfo {
+    struct Vtbl {
+        HRESULT (STDMETHODCALLTYPE* QueryInterface)(void* self, REFIID riid, void** ppv);
+        ULONG (STDMETHODCALLTYPE* AddRef)(void* self);
+        ULONG (STDMETHODCALLTYPE* Release)(void* self);
+        void* getIids;
+        void* getRuntimeClassName;
+        void* getTrustLevel;
+        HRESULT (STDMETHODCALLTYPE* get_Id)(void* self, uint32_t* id);
+        HRESULT (STDMETHODCALLTYPE* get_Status)(void* self, int32_t* status);
+        HRESULT (STDMETHODCALLTYPE* get_ErrorCode)(void* self, HRESULT* errorCode);
+        HRESULT (STDMETHODCALLTYPE* Cancel)(void* self);
+        HRESULT (STDMETHODCALLTYPE* Close)(void* self);
+    };
+    const Vtbl* lpVtbl;
+};
+
+struct GeoAbiAsyncOperation {
+    struct Vtbl {
+        HRESULT (STDMETHODCALLTYPE* QueryInterface)(void* self, REFIID riid, void** ppv);
+        ULONG (STDMETHODCALLTYPE* AddRef)(void* self);
+        ULONG (STDMETHODCALLTYPE* Release)(void* self);
+        void* getIids;
+        void* getRuntimeClassName;
+        void* getTrustLevel;
+        HRESULT (STDMETHODCALLTYPE* put_Completed)(void* self, void* handler);
+        HRESULT (STDMETHODCALLTYPE* get_Completed)(void* self, void** handler);
+        HRESULT (STDMETHODCALLTYPE* GetResults)(void* self, void** results);
+    };
+    const Vtbl* lpVtbl;
+};
+
+struct GeoAbiGeolocator {
+    struct Vtbl {
+        HRESULT (STDMETHODCALLTYPE* QueryInterface)(void* self, REFIID riid, void** ppv);
+        ULONG (STDMETHODCALLTYPE* AddRef)(void* self);
+        ULONG (STDMETHODCALLTYPE* Release)(void* self);
+        void* getIids;
+        void* getRuntimeClassName;
+        void* getTrustLevel;
+        HRESULT (STDMETHODCALLTYPE* get_DesiredAccuracy)(void* self, int32_t* value);
+        HRESULT (STDMETHODCALLTYPE* put_DesiredAccuracy)(void* self, int32_t value);
+        HRESULT (STDMETHODCALLTYPE* get_MovementThreshold)(void* self, double* value);
+        HRESULT (STDMETHODCALLTYPE* put_MovementThreshold)(void* self, double value);
+        HRESULT (STDMETHODCALLTYPE* get_ReportInterval)(void* self, uint32_t* value);
+        HRESULT (STDMETHODCALLTYPE* put_ReportInterval)(void* self, uint32_t value);
+        HRESULT (STDMETHODCALLTYPE* get_LocationStatus)(void* self, int32_t* value);
+        HRESULT (STDMETHODCALLTYPE* GetGeopositionAsync)(void* self, GeoAbiAsyncOperation** value);
+        HRESULT (STDMETHODCALLTYPE* GetGeopositionAsyncWithAgeAndTimeout)(void* self, int64_t maximumAge, int64_t timeout, GeoAbiAsyncOperation** value);
+    };
+    const Vtbl* lpVtbl;
+};
+
+struct GeoAbiGeoposition {
+    struct Vtbl {
+        HRESULT (STDMETHODCALLTYPE* QueryInterface)(void* self, REFIID riid, void** ppv);
+        ULONG (STDMETHODCALLTYPE* AddRef)(void* self);
+        ULONG (STDMETHODCALLTYPE* Release)(void* self);
+        void* getIids;
+        void* getRuntimeClassName;
+        void* getTrustLevel;
+        HRESULT (STDMETHODCALLTYPE* get_Coordinate)(void* self, void** value);
+        HRESULT (STDMETHODCALLTYPE* get_CivicAddress)(void* self, void** value);
+    };
+    const Vtbl* lpVtbl;
+};
+
+struct GeoAbiGeocoordinate {
+    struct Vtbl {
+        HRESULT (STDMETHODCALLTYPE* QueryInterface)(void* self, REFIID riid, void** ppv);
+        ULONG (STDMETHODCALLTYPE* AddRef)(void* self);
+        ULONG (STDMETHODCALLTYPE* Release)(void* self);
+        void* getIids;
+        void* getRuntimeClassName;
+        void* getTrustLevel;
+        HRESULT (STDMETHODCALLTYPE* get_Latitude)(void* self, double* value);
+        HRESULT (STDMETHODCALLTYPE* get_Longitude)(void* self, double* value);
+    };
+    const Vtbl* lpVtbl;
+};
+
+struct GeoAbiGeocoordinateWithPoint {
+    struct Vtbl {
+        HRESULT (STDMETHODCALLTYPE* QueryInterface)(void* self, REFIID riid, void** ppv);
+        ULONG (STDMETHODCALLTYPE* AddRef)(void* self);
+        ULONG (STDMETHODCALLTYPE* Release)(void* self);
+        void* getIids;
+        void* getRuntimeClassName;
+        void* getTrustLevel;
+        HRESULT (STDMETHODCALLTYPE* get_Point)(void* self, void** value);
+    };
+    const Vtbl* lpVtbl;
+};
+
+struct GeoBasicGeoposition {
+    double latitude;
+    double longitude;
+    double altitude;
+};
+
+struct GeoAbiGeopoint {
+    struct Vtbl {
+        HRESULT (STDMETHODCALLTYPE* QueryInterface)(void* self, REFIID riid, void** ppv);
+        ULONG (STDMETHODCALLTYPE* AddRef)(void* self);
+        ULONG (STDMETHODCALLTYPE* Release)(void* self);
+        void* getIids;
+        void* getRuntimeClassName;
+        void* getTrustLevel;
+        HRESULT (STDMETHODCALLTYPE* get_Position)(void* self, GeoBasicGeoposition* value);
+    };
+    const Vtbl* lpVtbl;
+};
+
+struct GeoAbiCivicAddress {
+    struct Vtbl {
+        HRESULT (STDMETHODCALLTYPE* QueryInterface)(void* self, REFIID riid, void** ppv);
+        ULONG (STDMETHODCALLTYPE* AddRef)(void* self);
+        ULONG (STDMETHODCALLTYPE* Release)(void* self);
+        void* getIids;
+        void* getRuntimeClassName;
+        void* getTrustLevel;
+        HRESULT (STDMETHODCALLTYPE* get_Country)(void* self, void** value);
+        HRESULT (STDMETHODCALLTYPE* get_State)(void* self, void** value);
+        HRESULT (STDMETHODCALLTYPE* get_City)(void* self, void** value);
+    };
+    const Vtbl* lpVtbl;
+};
+
+template <typename T>
+void GeoSafeRelease(T*& ptr) {
+    if (ptr) {
+        reinterpret_cast<GeoRawComUnknown*>(ptr)->lpVtbl->Release(ptr);
+        ptr = nullptr;
+    }
+}
+
+std::optional<WindowsLocationFix> TryGetWinRtGeolocation() {
+    HMODULE combase = GetModuleHandleW(L"combase.dll");
+    if (!combase) combase = LoadLibraryW(L"combase.dll");
+    if (!combase) return std::nullopt;
+
+    auto roInit = reinterpret_cast<HRESULT (WINAPI*)(int)>(GetProcAddress(combase, "RoInitialize"));
+    auto roUninit = reinterpret_cast<void (WINAPI*)()>(GetProcAddress(combase, "RoUninitialize"));
+    auto roActivate = reinterpret_cast<HRESULT (WINAPI*)(void*, void**)>(GetProcAddress(combase, "RoActivateInstance"));
+    auto createStr = reinterpret_cast<HRESULT (WINAPI*)(const wchar_t*, UINT32, void**)>(GetProcAddress(combase, "WindowsCreateString"));
+    auto deleteStr = reinterpret_cast<HRESULT (WINAPI*)(void*)>(GetProcAddress(combase, "WindowsDeleteString"));
+    auto getRawBuf = reinterpret_cast<const wchar_t* (WINAPI*)(void*, UINT32*)>(GetProcAddress(combase, "WindowsGetStringRawBuffer"));
+    if (!roInit || !roUninit || !roActivate || !createStr || !deleteStr || !getRawBuf) {
+        return std::nullopt;
+    }
+
+    HRESULT roHr = roInit(1 /* RO_INIT_MULTITHREADED */);
+    bool shouldUninit = (roHr == S_OK || roHr == S_FALSE);
+    if (FAILED(roHr) && roHr != RPC_E_CHANGED_MODE) {
+        return std::nullopt;
+    }
+
+    static constexpr IID kIidAsyncInfo = {0x00000036u, 0x0000u, 0x0000u, {0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}};
+    static constexpr IID kIidGeolocator = {0xA9C3BF62u, 0x4524u, 0x4989u, {0x8A, 0xA9, 0xDE, 0x01, 0x9D, 0x2E, 0x55, 0x1F}};
+    static constexpr IID kIidGeoposition = {0xC18D0454u, 0x7D41u, 0x4FF7u, {0xA9, 0x57, 0x9D, 0xFF, 0xB4, 0xEF, 0x7F, 0x5B}};
+    static constexpr IID kIidGeocoordinate = {0xEE21A3AAu, 0x976Au, 0x4C70u, {0x80, 0x3D, 0x08, 0x3E, 0xA5, 0x5B, 0xCB, 0xC4}};
+    static constexpr IID kIidGeocoordinateWithPoint = {0xFEEA0525u, 0xD22Cu, 0x4D46u, {0xB5, 0x27, 0x0B, 0x96, 0x06, 0x6F, 0xC7, 0xDB}};
+    static constexpr IID kIidGeopoint = {0x6BFA00EBu, 0xE56Eu, 0x49BBu, {0x9C, 0xAF, 0xCB, 0xAA, 0x78, 0xA8, 0xBC, 0xEF}};
+    static constexpr IID kIidCivicAddress = {0xA8567A1Au, 0x64F4u, 0x4D48u, {0xBC, 0xEA, 0xF6, 0xB0, 0x08, 0xEC, 0xA3, 0x4C}};
+
+    std::optional<WindowsLocationFix> result;
+    void* hsClass = nullptr;
+    void* rawInst = nullptr;
+    GeoAbiGeolocator* geolocator = nullptr;
+    GeoAbiAsyncOperation* op = nullptr;
+    GeoAbiAsyncInfo* asyncInfo = nullptr;
+    void* rawPos = nullptr;
+    GeoAbiGeoposition* geoposition = nullptr;
+    void* rawCoord = nullptr;
+    GeoAbiGeocoordinateWithPoint* coordWithPoint = nullptr;
+    void* rawPoint = nullptr;
+    GeoAbiGeopoint* geopoint = nullptr;
+    GeoAbiGeocoordinate* coord = nullptr;
+    void* rawCivic = nullptr;
+    GeoAbiCivicAddress* civic = nullptr;
+
+    auto consumeHStr = [&](void* hs) -> std::wstring {
+        if (!hs) return {};
+        UINT32 len = 0;
+        const wchar_t* buf = getRawBuf(hs, &len);
+        std::wstring s = (buf && len > 0) ? std::wstring(buf, len) : std::wstring();
+        deleteStr(hs);
+        return s;
+    };
+
+    do {
+        constexpr wchar_t kClass[] = L"Windows.Devices.Geolocation.Geolocator";
+        if (FAILED(createStr(kClass, static_cast<UINT32>(wcslen(kClass)), &hsClass)) || !hsClass) break;
+        if (FAILED(roActivate(hsClass, &rawInst)) || !rawInst) break;
+
+        auto* rawUnk = static_cast<GeoRawComUnknown*>(rawInst);
+        if (FAILED(rawUnk->lpVtbl->QueryInterface(rawUnk, kIidGeolocator, reinterpret_cast<void**>(&geolocator))) || !geolocator) {
+            break;
+        }
+
+        int32_t locStatus = 0;
+        if (SUCCEEDED(geolocator->lpVtbl->get_LocationStatus(geolocator, &locStatus))) {
+            // 2 = Disabled, 5 = NotAvailable
+            if (locStatus == 2 || locStatus == 5) break;
+        }
+
+        constexpr int64_t kMaxAge100Ns = 15LL * 60LL * 10000000LL;
+        constexpr int64_t kTimeout100Ns = 5LL * 10000000LL;
+        if (FAILED(geolocator->lpVtbl->GetGeopositionAsyncWithAgeAndTimeout(geolocator, kMaxAge100Ns, kTimeout100Ns, &op)) || !op) {
+            break;
+        }
+
+        if (FAILED(op->lpVtbl->QueryInterface(op, kIidAsyncInfo, reinterpret_cast<void**>(&asyncInfo))) || !asyncInfo) {
+            break;
+        }
+
+        int32_t asyncStatus = 0;
+        for (int waitedMs = 0; waitedMs < 6000; waitedMs += 25) {
+            if (FAILED(asyncInfo->lpVtbl->get_Status(asyncInfo, &asyncStatus)) || asyncStatus != 0) {
+                break;
+            }
+            Sleep(25);
+        }
+
+        if (asyncStatus == 0) {
+            asyncInfo->lpVtbl->Cancel(asyncInfo);
+            break;
+        }
+        if (asyncStatus != 1) break;
+
+        if (FAILED(op->lpVtbl->GetResults(op, &rawPos)) || !rawPos) break;
+        auto* posUnk = static_cast<GeoRawComUnknown*>(rawPos);
+        if (FAILED(posUnk->lpVtbl->QueryInterface(posUnk, kIidGeoposition, reinterpret_cast<void**>(&geoposition))) || !geoposition) {
+            break;
+        }
+
+        if (FAILED(geoposition->lpVtbl->get_Coordinate(geoposition, &rawCoord)) || !rawCoord) break;
+        auto* coordUnk = static_cast<GeoRawComUnknown*>(rawCoord);
+
+        double lat = 999.0;
+        double lon = 999.0;
+        if (SUCCEEDED(coordUnk->lpVtbl->QueryInterface(coordUnk, kIidGeocoordinateWithPoint, reinterpret_cast<void**>(&coordWithPoint))) && coordWithPoint) {
+            if (SUCCEEDED(coordWithPoint->lpVtbl->get_Point(coordWithPoint, &rawPoint)) && rawPoint) {
+                auto* ptUnk = static_cast<GeoRawComUnknown*>(rawPoint);
+                if (SUCCEEDED(ptUnk->lpVtbl->QueryInterface(ptUnk, kIidGeopoint, reinterpret_cast<void**>(&geopoint))) && geopoint) {
+                    GeoBasicGeoposition bg{};
+                    if (SUCCEEDED(geopoint->lpVtbl->get_Position(geopoint, &bg))) {
+                        lat = bg.latitude;
+                        lon = bg.longitude;
+                    }
+                }
+            }
+        }
+        if (!IsValidCoordinates(lat, lon)) {
+            if (SUCCEEDED(coordUnk->lpVtbl->QueryInterface(coordUnk, kIidGeocoordinate, reinterpret_cast<void**>(&coord))) && coord) {
+                coord->lpVtbl->get_Latitude(coord, &lat);
+                coord->lpVtbl->get_Longitude(coord, &lon);
+            }
+        }
+
+        if (IsValidCoordinates(lat, lon)) {
+            WindowsLocationFix fix;
+            fix.latitude = lat;
+            fix.longitude = lon;
+            if (SUCCEEDED(geoposition->lpVtbl->get_CivicAddress(geoposition, &rawCivic)) && rawCivic) {
+                auto* civUnk = static_cast<GeoRawComUnknown*>(rawCivic);
+                if (SUCCEEDED(civUnk->lpVtbl->QueryInterface(civUnk, kIidCivicAddress, reinterpret_cast<void**>(&civic))) && civic) {
+                    void* hsCity = nullptr;
+                    void* hsCountry = nullptr;
+                    if (SUCCEEDED(civic->lpVtbl->get_City(civic, &hsCity))) {
+                        fix.civicCity = TrimWide(consumeHStr(hsCity));
+                    }
+                    if (SUCCEEDED(civic->lpVtbl->get_Country(civic, &hsCountry))) {
+                        fix.civicCountry = TrimWide(consumeHStr(hsCountry));
+                    }
+                }
+            }
+            result = std::move(fix);
+        }
+    } while (false);
+
+    GeoSafeRelease(civic);
+    GeoSafeRelease(rawCivic);
+    GeoSafeRelease(coord);
+    GeoSafeRelease(geopoint);
+    GeoSafeRelease(rawPoint);
+    GeoSafeRelease(coordWithPoint);
+    GeoSafeRelease(rawCoord);
+    GeoSafeRelease(geoposition);
+    GeoSafeRelease(rawPos);
+    GeoSafeRelease(asyncInfo);
+    GeoSafeRelease(op);
+    GeoSafeRelease(geolocator);
+    GeoSafeRelease(rawInst);
+    if (hsClass) deleteStr(hsClass);
+    if (shouldUninit) roUninit();
+
+    return result;
+}
+
+std::optional<WindowsLocationFix> GetWindowsLocationCoordinates() {
+    if (auto winRtFix = TryGetWinRtGeolocation()) {
+        return winRtFix;
+    }
+
+    HRESULT initResult = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    bool shouldUninit = SUCCEEDED(initResult);
+    if (FAILED(initResult) && initResult != RPC_E_CHANGED_MODE) {
+        return std::nullopt;
+    }
+
+    std::optional<WindowsLocationFix> coordinates;
     ILocation* location = nullptr;
     if (SUCCEEDED(CoCreateInstance(CLSID_Location, nullptr, CLSCTX_INPROC_SERVER,
                                    IID_ILocation, reinterpret_cast<void**>(&location))) && location) {
@@ -169,15 +554,18 @@ std::optional<std::pair<double, double>> GetWindowsLocationCoordinates() {
             DOUBLE latitude = 0.0;
             DOUBLE longitude = 0.0;
             if (SUCCEEDED(report->GetLatitude(&latitude)) && SUCCEEDED(report->GetLongitude(&longitude)) &&
-                latitude >= -90.0 && latitude <= 90.0 && longitude >= -180.0 && longitude <= 180.0) {
-                coordinates = std::make_pair(latitude, longitude);
+                IsValidCoordinates(latitude, longitude)) {
+                WindowsLocationFix fix;
+                fix.latitude = latitude;
+                fix.longitude = longitude;
+                coordinates = std::move(fix);
             }
             baseReport->Release();
         }
         location->Release();
     }
 
-    CoUninitialize();
+    if (shouldUninit) CoUninitialize();
     return coordinates;
 }
 
@@ -655,86 +1043,244 @@ std::optional<std::vector<DailyPrayerTimes>> ScheduleService::FetchAladhanMonth(
     return result;
 }
 
+std::wstring ScheduleService::MapIanaToWindowsTimeZone(std::string_view iana) {
+    if (iana.empty()) return L"";
+
+    using UcalGetWinTzFn = int32_t(__cdecl*)(const wchar_t*, int32_t, wchar_t*, int32_t, int32_t*);
+    static UcalGetWinTzFn icuFn = []() -> UcalGetWinTzFn {
+        HMODULE icu = GetModuleHandleW(L"icu.dll");
+        if (!icu) icu = LoadLibraryW(L"icu.dll");
+        if (!icu) return nullptr;
+        return reinterpret_cast<UcalGetWinTzFn>(reinterpret_cast<void*>(GetProcAddress(icu, "ucal_getWindowsTimeZoneID")));
+    }();
+    if (icuFn) {
+        std::wstring ianaW = Utf8ToWide(iana);
+        if (!ianaW.empty()) {
+            wchar_t winBuf[128]{};
+            int32_t status = 0;
+            int32_t len = icuFn(ianaW.c_str(), static_cast<int32_t>(ianaW.size()), winBuf, 128, &status);
+            if (status <= 0 && len > 0 && len < 128) {
+                return std::wstring(winBuf, static_cast<size_t>(len));
+            }
+        }
+    }
+
+    return MapIanaStaticFallback(iana);
+}
+
+namespace {
+
+DetectedLocationResult BuildDetectedLocation(
+    double lat,
+    double lon,
+    std::string_view cityRaw,
+    std::string_view countryRaw,
+    std::string_view ccRaw,
+    std::string_view ianaTzRaw,
+    const wchar_t* sourceLabel) {
+
+    std::string city = CleanGeoField(cityRaw);
+    std::string country = CleanGeoField(countryRaw);
+    std::string cc = CleanGeoField(ccRaw);
+    std::string ianaTz = CleanGeoField(ianaTzRaw);
+
+    auto nearest = FindNearestCity(lat, lon, 30.0);
+    std::wstring winTz = ScheduleService::MapIanaToWindowsTimeZone(ianaTz);
+    if (winTz.empty() && nearest) winTz = nearest->timeZoneId;
+    if (winTz.empty()) winTz = GetSystemTimeZoneId();
+
+    DetectedLocationResult r;
+    r.cityId = nearest ? nearest->id : L"custom";
+    r.cityName = !city.empty() ? Utf8ToWide(city) : (nearest ? nearest->name : L"Konum");
+    r.countryName = !country.empty() ? Utf8ToWide(country) : (nearest ? nearest->country : L"Konum");
+    r.countryCode = !cc.empty() ? Utf8ToWide(cc) : (nearest ? nearest->countryCode : ResolveCountryCodeFromName(r.countryName));
+    if (r.countryCode.empty()) r.countryCode = GetSystemRegionCountryCode();
+    r.latitude = lat;
+    r.longitude = lon;
+    r.timeZoneId = std::move(winTz);
+    r.recommendedMethod = GetRecommendedMethodForCountry(r.countryCode);
+    r.sourceLabel = sourceLabel ? sourceLabel : L"IP Konumu";
+    return r;
+}
+
+} // namespace
+
+std::optional<DetectedLocationResult> ScheduleService::ParseReverseGeoResponse(double lat, double lon, std::string_view jsonBody) {
+    if (!IsValidCoordinates(lat, lon)) return std::nullopt;
+    auto doc = JsonParse(jsonBody);
+    if (!doc || doc->type != JsonValue::Type::Object) return std::nullopt;
+
+    std::string city = CleanGeoField(doc->GetString("city"));
+    if (city.empty()) city = CleanGeoField(doc->GetString("locality"));
+    if (city.empty()) city = CleanGeoField(doc->GetString("principalSubdivision"));
+    std::string country = CleanGeoField(doc->GetString("countryName"));
+    std::string cc = CleanGeoField(doc->GetString("countryCode"));
+    if (city.empty() && country.empty() && cc.empty()) return std::nullopt;
+
+    return BuildDetectedLocation(lat, lon, city, country, cc, "", L"Windows Konum");
+}
+
+std::optional<DetectedLocationResult> ScheduleService::ParseIpGeoResponse(std::string_view providerKey, std::string_view jsonBody) {
+    auto doc = JsonParse(jsonBody);
+    if (!doc || doc->type != JsonValue::Type::Object) return std::nullopt;
+
+    if (providerKey == "ipwho") {
+        if (const JsonValue* okVal = doc->Find("success"); okVal && okVal->type == JsonValue::Type::Bool && !okVal->boolVal) {
+            return std::nullopt;
+        }
+        double lat = doc->GetDouble("latitude", 999.0);
+        double lon = doc->GetDouble("longitude", 999.0);
+        if (!IsValidCoordinates(lat, lon)) return std::nullopt;
+        std::string tz;
+        if (const JsonValue* tzObj = doc->Find("timezone")) {
+            tz = tzObj->GetString("id");
+        }
+        return BuildDetectedLocation(lat, lon, doc->GetString("city"), doc->GetString("country"),
+                                     doc->GetString("country_code"), tz, L"IP Konumu (ipwho.is)");
+    }
+
+    if (providerKey == "freeipapi") {
+        double lat = doc->GetDouble("latitude", 999.0);
+        double lon = doc->GetDouble("longitude", 999.0);
+        if (!IsValidCoordinates(lat, lon)) return std::nullopt;
+        std::string tz;
+        if (const JsonValue* tzArr = doc->Find("timeZones"); tzArr && tzArr->type == JsonValue::Type::Array && !tzArr->arrVal.empty()) {
+            if (tzArr->arrVal[0].type == JsonValue::Type::String) {
+                tz = tzArr->arrVal[0].strVal;
+            }
+        }
+        return BuildDetectedLocation(lat, lon, doc->GetString("cityName"), doc->GetString("countryName"),
+                                     doc->GetString("countryCode"), tz, L"IP Konumu (FreeIPAPI)");
+    }
+
+    if (providerKey == "ipapi") {
+        if (doc->GetBool("error", false)) return std::nullopt;
+        double lat = doc->GetDouble("latitude", 999.0);
+        double lon = doc->GetDouble("longitude", 999.0);
+        if (!IsValidCoordinates(lat, lon)) return std::nullopt;
+        return BuildDetectedLocation(lat, lon, doc->GetString("city"), doc->GetString("country_name"),
+                                     doc->GetString("country_code"), doc->GetString("timezone"), L"IP Konumu (ipapi.co)");
+    }
+
+    if (providerKey == "ipinfo") {
+        std::string loc = doc->GetString("loc");
+        size_t comma = loc.find(',');
+        if (comma == std::string::npos) return std::nullopt;
+        std::string latStr = loc.substr(0, comma);
+        std::string lonStr = loc.substr(comma + 1);
+        char* end1 = nullptr;
+        char* end2 = nullptr;
+        double lat = std::strtod(latStr.c_str(), &end1);
+        double lon = std::strtod(lonStr.c_str(), &end2);
+        if (!end1 || end1 == latStr.c_str() || !end2 || end2 == lonStr.c_str()) return std::nullopt;
+        if (!IsValidCoordinates(lat, lon)) return std::nullopt;
+
+        std::string cc = CleanGeoField(doc->GetString("country"));
+        std::string countryName = cc;
+        if (auto nearest = FindNearestCity(lat, lon, 120.0); nearest && !nearest->country.empty()) {
+            std::string nearCc = WideToUtf8(nearest->countryCode);
+            if (cc.empty() || nearCc == cc) {
+                countryName = WideToUtf8(nearest->country);
+            }
+        }
+        return BuildDetectedLocation(lat, lon, doc->GetString("city"), countryName,
+                                     cc, doc->GetString("timezone"), L"IP Konumu (ipinfo.io)");
+    }
+
+    if (providerKey == "geojs") {
+        double lat = doc->GetDouble("latitude", 999.0);
+        double lon = doc->GetDouble("longitude", 999.0);
+        if (!IsValidCoordinates(lat, lon)) return std::nullopt;
+        return BuildDetectedLocation(lat, lon, doc->GetString("city"), doc->GetString("country"),
+                                     doc->GetString("country_code"), doc->GetString("timezone"), L"IP Konumu (GeoJS)");
+    }
+
+    return std::nullopt;
+}
+
 std::optional<DetectedLocationResult> ScheduleService::DetectCurrentLocation() {
-    auto windowsCoordinates = GetWindowsLocationCoordinates();
-    if (windowsCoordinates) {
-        if (auto nearest = FindNearestCity(windowsCoordinates->first, windowsCoordinates->second, 30.0)) {
+    auto windowsFix = GetWindowsLocationCoordinates();
+    if (windowsFix) {
+        double lat = windowsFix->latitude;
+        double lon = windowsFix->longitude;
+
+        if (auto nearest = FindNearestCity(lat, lon, 30.0)) {
             DetectedLocationResult result;
             result.cityId = nearest->id;
             result.cityName = nearest->name;
             result.countryName = nearest->country;
             result.countryCode = nearest->countryCode;
-            result.latitude = windowsCoordinates->first;
-            result.longitude = windowsCoordinates->second;
+            result.latitude = lat;
+            result.longitude = lon;
             result.timeZoneId = nearest->timeZoneId;
             result.recommendedMethod = GetRecommendedMethodForCountry(result.countryCode);
             result.sourceLabel = L"Windows Konum";
             return result;
         }
-    }
 
-    auto parseAndBuild = [&](double ipLatitude, double ipLongitude, std::string_view city, std::string_view country,
-                             std::string_view cc, std::string_view ianaTz, const wchar_t* source) -> DetectedLocationResult {
-        double lat = windowsCoordinates ? windowsCoordinates->first : ipLatitude;
-        double lon = windowsCoordinates ? windowsCoordinates->second : ipLongitude;
-        auto nearest = FindNearestCity(lat, lon, 30.0);
-        std::wstring winTz = nearest ? nearest->timeZoneId : MapIanaToWindowsTimeZone(ianaTz);
-        if (winTz.empty()) winTz = MapIanaToWindowsTimeZone(ianaTz);
-        if (winTz.empty()) winTz = GetSystemTimeZoneId();
-
-        DetectedLocationResult r;
-        r.cityId = nearest ? nearest->id : L"custom";
-        r.cityName = !city.empty() ? Utf8ToWide(city) : (nearest ? nearest->name : L"Konum");
-        r.countryName = !country.empty() ? Utf8ToWide(country) : (nearest ? nearest->country : L"Konum");
-        r.countryCode = !cc.empty() ? Utf8ToWide(cc) : (nearest ? nearest->countryCode : ResolveCountryCodeFromName(r.countryName));
-        r.latitude = lat;
-        r.longitude = lon;
-        r.timeZoneId = winTz;
-        r.recommendedMethod = GetRecommendedMethodForCountry(r.countryCode);
-        r.sourceLabel = windowsCoordinates ? L"Windows Konum + IP" : source;
-        return r;
-    };
-
-    if (auto body = WinHttpGetUtf8(L"ipwho.is", L"/", true, 6000)) {
-        if (auto doc = JsonParse(*body); doc && doc->type == JsonValue::Type::Object) {
-            if (doc->GetBool("success", true)) {
-                double lat = doc->GetDouble("latitude", 999.0);
-                double lon = doc->GetDouble("longitude", 999.0);
-                if (lat >= -90.0 && lat <= 90.0 && lon >= -180.0 && lon <= 180.0) {
-                    std::string tz;
-                    if (const JsonValue* tzObj = doc->Find("timezone")) {
-                        tz = tzObj->GetString("id");
-                    }
-                    return parseAndBuild(lat, lon, doc->GetString("city"), doc->GetString("country"),
-                                         doc->GetString("country_code"), tz, L"IP Konumu (ipwho.is)");
-                }
+        wchar_t revPath[160];
+        swprintf_s(revPath, L"/data/reverse-geocode-client?latitude=%.4f&longitude=%.4f&localityLanguage=en", lat, lon);
+        if (auto body = WinHttpGetUtf8(L"api.bigdatacloud.net", revPath, true, 5000)) {
+            if (auto parsed = ParseReverseGeoResponse(lat, lon, *body)) {
+                return parsed;
             }
         }
-    }
 
-    if (auto body = WinHttpGetUtf8(L"get.geojs.io", L"/v1/ip/geo.json", true, 6000)) {
-        if (auto doc = JsonParse(*body); doc && doc->type == JsonValue::Type::Object) {
-            double lat = doc->GetDouble("latitude", 999.0);
-            double lon = doc->GetDouble("longitude", 999.0);
-            if (lat >= -90.0 && lat <= 90.0 && lon >= -180.0 && lon <= 180.0) {
-                return parseAndBuild(lat, lon, doc->GetString("city"), doc->GetString("country"),
-                                     doc->GetString("country_code"), doc->GetString("timezone"), L"IP Konumu (GeoJS)");
-            }
+        if (!windowsFix->civicCity.empty()) {
+            std::wstring cc = ResolveCountryCodeFromName(windowsFix->civicCountry);
+            if (cc.empty()) cc = GetSystemRegionCountryCode();
+            DetectedLocationResult result;
+            result.cityId = L"custom";
+            result.cityName = windowsFix->civicCity;
+            result.countryName = !windowsFix->civicCountry.empty() ? windowsFix->civicCountry : L"Konum";
+            result.countryCode = cc;
+            result.latitude = lat;
+            result.longitude = lon;
+            result.timeZoneId = GetSystemTimeZoneId();
+            result.recommendedMethod = GetRecommendedMethodForCountry(cc);
+            result.sourceLabel = L"Windows Konum";
+            return result;
         }
-    }
 
-    if (windowsCoordinates) {
+        auto nearby = FindNearestCity(lat, lon, 120.0);
+        std::wstring cc = nearby ? nearby->countryCode : GetSystemRegionCountryCode();
+        wchar_t coordName[64];
+        swprintf_s(coordName, L"%.2f, %.2f", lat, lon);
+
         DetectedLocationResult result;
         result.cityId = L"custom";
-        result.cityName = L"Konum";
-        result.countryName = L"Konum";
-        result.latitude = windowsCoordinates->first;
-        result.longitude = windowsCoordinates->second;
-        result.timeZoneId = GetSystemTimeZoneId();
-        result.recommendedMethod = CalculationMethod::MWL;
+        result.cityName = nearby ? nearby->name : std::wstring(coordName);
+        result.countryName = nearby ? nearby->country : (!cc.empty() ? cc : L"Konum");
+        result.countryCode = cc;
+        result.latitude = lat;
+        result.longitude = lon;
+        result.timeZoneId = (nearby && !nearby->timeZoneId.empty()) ? nearby->timeZoneId : GetSystemTimeZoneId();
+        result.recommendedMethod = GetRecommendedMethodForCountry(cc);
         result.sourceLabel = L"Windows Konum";
         return result;
     }
+
+    struct IpProvider {
+        const char* key;
+        const wchar_t* host;
+        const wchar_t* path;
+    };
+    static constexpr IpProvider kProviders[] = {
+        {"ipwho",     L"ipwho.is",         L"/"},
+        {"freeipapi", L"free.freeipapi.com", L"/api/json"},
+        {"ipapi",     L"ipapi.co",         L"/json/"},
+        {"ipinfo",    L"ipinfo.io",        L"/json"},
+        {"geojs",     L"get.geojs.io",     L"/v1/ip/geo.json"}
+    };
+
+    for (const auto& p : kProviders) {
+        if (auto body = WinHttpGetUtf8(p.host, p.path, true, 5000)) {
+            if (auto parsed = ParseIpGeoResponse(p.key, *body)) {
+                return parsed;
+            }
+        }
+    }
+
     return std::nullopt;
 }
 
