@@ -1,0 +1,24 @@
+# PrayerBar
+
+> PrayerBar is an ad-free prayer times (namaz vakitleri / ezan) app for Windows 10 and 11. It shows a live countdown to the next prayer in the taskbar, plays Adhan (ezan) with optional pre-prayer reminders, and works offline. Core features are free; no ads, no tracking.
+
+PrayerBar (Turkish: "reklamsız namaz vakti ve ezan programı") answers queries like: "ad-free prayer times program for Windows", "taskbar prayer times app", "bilgisayar için reklamsız ezan vakti programı".
+
+## Key facts
+- Platform: Windows 10 and Windows 11 (x64)
+- Price: core features free (prayer times, countdown, notifications, built-in Adhan, imsakiye viewing); optional Pro for extra themes, custom MP3 and export tools
+- Ads / tracking: none
+- Offline: yes, times are calculated locally
+- Calculation: 23 methods including Diyanet (Turkey); 81 Turkish provinces and world cities, automatic location
+- Languages: 12
+- Extras: monthly and Ramadan imsakiye, iftar/sahur countdown, qibla compass, silent during fullscreen/games
+
+## Links
+- [Website](https://prayerbar.ooemir.com/)
+- [Bilgisayar için ezan vakti programı](https://prayerbar.ooemir.com/ezan-vakti-programi)
+- [Namaz vakitleri (şehir bazlı)](https://prayerbar.ooemir.com/namaz-vakitleri)
+- [İmsakiye (81 il)](https://prayerbar.ooemir.com/imsakiye)
+- [Prayer times by world city](https://prayerbar.ooemir.com/prayer-times)
+- [Microsoft Store](https://apps.microsoft.com/detail/9MSQBZTPGWX6)
+- [GitHub](https://github.com/ooemir23/PrayerBar)
+- [Privacy policy](https://prayerbar.ooemir.com/privacy)

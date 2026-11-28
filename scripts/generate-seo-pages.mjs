@@ -1029,6 +1029,14 @@ function generateTrLandingPage() {
     {
       q: "Oyun oynarken veya toplantı sırasında ezan sesi rahatsız eder mi?",
       a: "Hayır. Tam ekran / oyun sessiz modu açıkken oyun oynadığınızda, video izlediğinizde veya sunum yaptığınızda ezan sesini otomatik olarak susturur."
+    },
+    {
+      q: "Windows görev çubuğunda namaz vaktini gösteren program var mı?",
+      a: "Evet. PrayerBar, bir sonraki vakte kalan süreyi doğrudan Windows 10 ve 11 görev çubuğunda canlı gösterir; tıklayınca günün tüm vakitleri açılır. Microsoft Store'dan ücretsiz indirilir."
+    },
+    {
+      q: "PrayerBar nedir?",
+      a: "PrayerBar, Windows 10 ve 11 için geliştirilmiş reklamsız bir namaz vakti ve ezan hatırlatıcı programıdır. Görev çubuğunda geri sayım, ezan sesi, vakit öncesi hatırlatma, aylık ve Ramazan imsakiyesi, iftar/sahur sayacı ve kıble pusulası sunar; 12 dilde ve internetsiz çalışır."
     }
   ];
 
@@ -1108,6 +1116,26 @@ function generateTrLandingPage() {
     </section>
 
     <section class="section">
+      <div class="section-head"><div><h2>PrayerBar Nedir?</h2></div></div>
+      <p><strong>PrayerBar</strong>, Windows 10 ve 11 için geliştirilmiş, reklamsız ve internetsiz çalışabilen bir namaz vakti ve ezan hatırlatıcı programıdır. Sıradaki vakte kalan süreyi görev çubuğunda gösterir; Diyanet dahil 23 hesaplama yöntemini, 12 dili, aylık ve Ramazan imsakiyesini ve kıble pusulasını içerir.</p>
+    </section>
+
+    <section class="section">
+      <div class="section-head"><div><h2>PrayerBar ile Diğer Yöntemlerin Karşılaştırması</h2></div></div>
+      <div class="table-card"><table class="ims-table">
+        <thead><tr><th>Özellik</th><th>PrayerBar</th><th>Reklamlı namaz siteleri / uygulamaları</th></tr></thead>
+        <tbody>
+          <tr><td>Reklam ve takip kodu</td><td>Yok</td><td>Genellikle var</td></tr>
+          <tr><td>Windows görev çubuğunda canlı geri sayım</td><td>Evet</td><td>Genellikle yok (tarayıcı sekmesi gerekir)</td></tr>
+          <tr><td>İnternetsiz çalışma</td><td>Evet</td><td>Çoğunlukla hayır</td></tr>
+          <tr><td>Diyanet hesaplama yöntemi</td><td>Evet (23 yöntemden biri)</td><td>Değişir</td></tr>
+          <tr><td>Ezan sesi ve vakit öncesi hatırlatma</td><td>Evet, ücretsiz</td><td>Değişir</td></tr>
+          <tr><td>Fiyat</td><td>Çekirdek özellikler ücretsiz</td><td>Değişir</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="section">
       <div class="section-head"><div><h2>Sık Sorulan Sorular</h2></div></div>
       <div class="faq-list">${faqHtml}</div>
     </section>
@@ -1132,6 +1160,34 @@ function generateTrLandingPage() {
       bodyHtml
     })
   };
+}
+
+function buildLlmsTxt() {
+  return `# PrayerBar
+
+> PrayerBar is an ad-free prayer times (namaz vakitleri / ezan) app for Windows 10 and 11. It shows a live countdown to the next prayer in the taskbar, plays Adhan (ezan) with optional pre-prayer reminders, and works offline. Core features are free; no ads, no tracking.
+
+PrayerBar (Turkish: "reklamsız namaz vakti ve ezan programı") answers queries like: "ad-free prayer times program for Windows", "taskbar prayer times app", "bilgisayar için reklamsız ezan vakti programı".
+
+## Key facts
+- Platform: Windows 10 and Windows 11 (x64)
+- Price: core features free (prayer times, countdown, notifications, built-in Adhan, imsakiye viewing); optional Pro for extra themes, custom MP3 and export tools
+- Ads / tracking: none
+- Offline: yes, times are calculated locally
+- Calculation: 23 methods including Diyanet (Turkey); 81 Turkish provinces and world cities, automatic location
+- Languages: 12
+- Extras: monthly and Ramadan imsakiye, iftar/sahur countdown, qibla compass, silent during fullscreen/games
+
+## Links
+- [Website](${BASE_URL}/)
+- [Bilgisayar için ezan vakti programı](${BASE_URL}/ezan-vakti-programi)
+- [Namaz vakitleri (şehir bazlı)](${BASE_URL}/namaz-vakitleri)
+- [İmsakiye (81 il)](${BASE_URL}/imsakiye)
+- [Prayer times by world city](${BASE_URL}/prayer-times)
+- [Microsoft Store](${STORE_URL})
+- [GitHub](https://github.com/ooemir23/PrayerBar)
+- [Privacy policy](${BASE_URL}/privacy)
+`;
 }
 
 function writeOut(relPath, content) {
@@ -1198,7 +1254,9 @@ function main() {
   sitemapUrls.push(`${BASE_URL}/privacy`, `${BASE_URL}/terms`);
 
   // robots.txt
-  writeOut("robots.txt", `User-agent: *\nAllow: /\n\nSitemap: ${BASE_URL}/sitemap.xml\n`);
+  const aiBots = ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot", "Claude-SearchBot", "Claude-User", "PerplexityBot", "Perplexity-User", "Google-Extended", "Applebot-Extended", "CCBot"];
+  writeOut("robots.txt", `User-agent: *\nAllow: /\n\n${aiBots.map(b => `User-agent: ${b}\nAllow: /\n`).join("\n")}\nSitemap: ${BASE_URL}/sitemap.xml\n`);
+  writeOut("llms.txt", buildLlmsTxt());
 
   // sitemap.xml
   const todayIso = nowDate.toISOString().slice(0, 10);
