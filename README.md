@@ -41,6 +41,14 @@
 
 ## Screenshots
 
+<div align="center">
+  <img src="website/images/taskbar-preview.png" alt="PrayerBar live countdown on the Windows 11 taskbar" width="100%" />
+  <br />
+  <sub><strong>Windows Taskbar Countdown &amp; Flyout</strong> — Always visible beside your system tray across 4 taskbar positions and 9 display styles</sub>
+</div>
+
+<br />
+
 <table>
   <tr>
     <td align="center" width="33%">
